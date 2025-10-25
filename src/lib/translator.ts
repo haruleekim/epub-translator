@@ -3,13 +3,17 @@ import _ from "lodash";
 export class ContentId {
     readonly path: readonly number[];
 
-    constructor(...path: number[]) {
+    constructor(path: readonly number[]) {
         if (path.length === 0) throw new Error("Cannot create ContentId with empty array");
-        this.path = path;
+        this.path = [...path];
     }
 
     get(index: number): number {
         return this.path[index];
+    }
+
+    getLeafOrder(): number {
+        return this.path[this.path.length - 1];
     }
 
     get length(): number {
@@ -17,10 +21,17 @@ export class ContentId {
     }
 
     sibling(relativePosition: number): ContentId {
-        return new ContentId(
-            ..._.initial(this.path),
-            this.path[this.path.length - 1] + relativePosition,
-        );
+        const path = _.initial(this.path);
+        path.push(this.path[this.path.length - 1] + relativePosition);
+        return new ContentId(path);
+    }
+
+    parent(): ContentId {
+        return new ContentId(_.initial(this.path));
+    }
+
+    firstChild(): ContentId {
+        return new ContentId([...this.path, 0]);
     }
 
     static compare(cid1: ContentId, cid2: ContentId): number {
@@ -80,7 +91,7 @@ export interface Translation {
 }
 
 export class Translator {
-    original: Document;
+    original: XMLDocument;
     translations: Translation[] = [];
 
     constructor(original: string) {
@@ -114,10 +125,9 @@ export class Translator {
         this.translations.splice(index, 0, translation);
     }
 
+    /** invariant: parameter `translationIndices` must be sorted */
     hasOverlappingTranslations(translationIndices?: number[]): boolean {
-        const indices = translationIndices
-            ? [...translationIndices].sort()
-            : _.range(this.translations.length);
+        const indices = translationIndices ?? _.range(this.translations.length);
         for (let i = 0; i < indices.length - 1; i++) {
             const a = this.translations[indices[i]];
             const b = this.translations[indices[i + 1]];
@@ -125,6 +135,76 @@ export class Translator {
             if (Number.isNaN(result) || result >= 0) return true;
         }
         return false;
+    }
+
+    render(translationIndices: number[]) {
+        const indices = translationIndices
+            ? translationIndices.sort()
+            : _.range(this.translations.length);
+
+        if (this.hasOverlappingTranslations(indices)) {
+            throw new Error("Overlapping translations");
+        }
+
+        let result = "";
+
+        let node: Node | null = this.original.firstChild;
+        if (!node) return "";
+        let contentId = new ContentId([0]);
+
+        const translations = indices.map((index) => this.translations[index]);
+        let index = 0;
+
+        while (
+            node.parentNode &&
+            !(
+                node.parentNode === this.original &&
+                !node.nextSibling &&
+                contentId.getLeafOrder() >= node.parentNode.childNodes.length
+            )
+        ) {
+            if (contentId.getLeafOrder() >= node.parentNode.childNodes.length) {
+                if (node.parentNode instanceof Element && node.parentNode.hasChildNodes()) {
+                    result += `</${node.parentNode.tagName}>`;
+                }
+                contentId = contentId.parent().sibling(1);
+                node = node.parentNode.nextSibling ?? node.parentNode;
+            } else if (translations.at(index)?.partition.contains(contentId)) {
+                result += translations[index].content;
+                let size = translations[index++].partition.size;
+                contentId = contentId.sibling(size);
+                while (node.nextSibling && size--) node = node.nextSibling;
+            } else {
+                // TODO: implement attributes handling
+                if (node instanceof Element) {
+                    result += `<${node.tagName}`;
+                    for (const attr of node.attributes) {
+                        result += ` ${attr.name}="${attr.value}"`;
+                    }
+                    if (node.firstChild) {
+                        result += ">";
+                        contentId = contentId.firstChild();
+                        node = node.firstChild;
+                    } else {
+                        result += "/>";
+                        contentId = contentId.sibling(1);
+                        node = node.nextSibling ?? node;
+                    }
+                } else if (node instanceof Text) {
+                    result += node.textContent;
+                    contentId = contentId.sibling(1);
+                    node = node.nextSibling ?? node;
+                } else if (node instanceof DocumentType) {
+                    result += `<!DOCTYPE ${node.name} PUBLIC "${node.publicId}" "${node.systemId}">`;
+                    contentId = contentId.sibling(1);
+                    node = node.nextSibling ?? node;
+                } else {
+                    contentId = contentId.sibling(1);
+                    node = node.nextSibling ?? node;
+                }
+            }
+        }
+        return result;
     }
 }
 
