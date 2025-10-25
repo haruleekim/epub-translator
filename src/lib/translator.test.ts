@@ -35,10 +35,10 @@ test("register translation", async () => {
         { type: "full", contentId: [1, 1, 2] },
         "<p>C'est mon livre.</p>",
     );
-    expect(translator.checkOverlap()).toBe(false);
+    expect(translator.overlapping()).toBe(false);
 
     translator.registerTranslation({ type: "full", contentId: [1, 1, 1, 0] }, "Bonjour monde!");
-    expect(translator.checkOverlap()).toBe(true);
+    expect(translator.overlapping()).toBe(true);
 });
 
 test("compare partitions", () => {
@@ -125,6 +125,12 @@ test("compare partitions", () => {
     result = comparePartition(
         { type: "slice", contentId: [1, 2], start: 0, size: 4 },
         { type: "slice", contentId: [1, 2, 3], start: 0, size: 1 },
+    );
+    expect(result).toBeNaN();
+
+    result = comparePartition(
+        { type: "slice", contentId: [1], start: 0, size: 3 },
+        { type: "full", contentId: [1, 2, 3] },
     );
     expect(result).toBeNaN();
 });

@@ -30,6 +30,30 @@ export class Translator {
         return node;
     }
 
+    getOriginalChildrenLength(contentId: ContentId): number {
+        const node = this.getOriginal(contentId);
+        return node.childNodes.length;
+    }
+
+    findContainingTranslationIndices(contentId: ContentId): number[] {
+        const result = [];
+        for (let index = 0; index < this.translations.length; index++) {
+            const [partition] = this.translations[index];
+            if (!comparePartition({ type: "full", contentId }, partition)) continue;
+            if (partition.type === "full" && partition.contentId.length <= contentId.length) {
+                result.push(index);
+            } else if (
+                partition.type === "slice" &&
+                partition.contentId.length < contentId.length &&
+                contentId[partition.contentId.length] >= partition.start &&
+                contentId[partition.contentId.length] < partition.start + partition.size
+            ) {
+                result.push(index);
+            }
+        }
+        return result;
+    }
+
     registerTranslation(partition: Partition, text: string): string {
         const translation = [partition, text] as Translation;
         const index = binarySearchIndex(this.translations, translation, ([a], [b]) =>
@@ -39,7 +63,7 @@ export class Translator {
         return text;
     }
 
-    checkOverlap(): boolean {
+    overlapping(): boolean {
         for (let i = 0; i < this.translations.length - 1; i++) {
             const [partition1] = this.translations[i];
             const [partition2] = this.translations[i + 1];
@@ -70,8 +94,8 @@ export function comparePartition(p1: Partition, p2: Partition): number {
     } else if (p1.type === "slice" && p2.type === "full") {
         return -comparePartition(p2, p1);
     } else if (p1.type === "slice" && p2.type === "slice") {
-        const contentIdCmp = compareContentId(p1.contentId, p2.contentId);
-        if (contentIdCmp === 0 && p1.start === p2.start && p1.size === p2.size) return 0;
+        const cidCmp = compareContentId(p1.contentId, p2.contentId);
+        if (cidCmp === 0 && p1.start === p2.start && p1.size === p2.size) return 0;
         const isLt = compareContentId(
             [...p1.contentId, p1.start + p1.size - 1],
             [...p2.contentId, p2.start],
@@ -87,18 +111,14 @@ export function comparePartition(p1: Partition, p2: Partition): number {
     return NaN;
 }
 
-function binarySearchIndex<T>(
-    array: T[],
-    target: T,
-    compare: (a: T, b: T) => number | null,
-): number {
+function binarySearchIndex<T>(array: T[], target: T, compare: (a: T, b: T) => number): number {
     let left = 0;
     let right = array.length - 1;
     while (left <= right) {
         const mid = Math.floor((left + right) / 2);
         const result = compare(array[mid], target);
-        if (result != null && result < 0) left = mid + 1;
-        else if (result != null && result > 0) right = mid - 1;
+        if (result < 0) left = mid + 1;
+        else if (result > 0) right = mid - 1;
         else return mid;
     }
     return left;
