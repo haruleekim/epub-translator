@@ -125,7 +125,7 @@ export class Translator {
         this.translations.splice(index, 0, translation);
     }
 
-    /** invariant: parameter `translationIndices` must be sorted */
+    /** invariant: parameter `translationIndices` must be sorted before calling this function. */
     hasOverlappingTranslations(translationIndices?: number[]): boolean {
         const indices = translationIndices ?? _.range(this.translations.length);
         for (let i = 0; i < indices.length - 1; i++) {
@@ -146,7 +146,7 @@ export class Translator {
             throw new Error("Overlapping translations");
         }
 
-        let result = "";
+        let result = ""; // TODO: prepend XML declaration
 
         let node: Node | null = this.original.firstChild;
         if (!node) return "";
@@ -175,7 +175,7 @@ export class Translator {
                 contentId = contentId.sibling(size);
                 while (node.nextSibling && size--) node = node.nextSibling;
             } else {
-                // TODO: implement attributes handling
+                // TODO: handle more node types
                 if (node instanceof Element) {
                     result += `<${node.tagName}`;
                     for (const attr of node.attributes) {

@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import { ContentId, Partition, Translator } from "~/lib/translator.ts";
 
-const sampleDoc: string = `<?xml version="1.0" encoding="utf-8" standalone="no"?>
+const sampleDoc: string = `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
 <head>
     <title>My Book</title>
     <meta charset="utf-8"/>
@@ -29,15 +29,15 @@ test("register translation", async () => {
     const translator = new Translator(sampleDoc);
     translator.registerTranslation(
         new Partition(new ContentId([1, 0])),
-        '<head><title>Mon livre</title><meta charset="utf-8"/></head>',
+        `<head><title>Mon livre</title><meta charset="utf-8"/></head>`,
     );
     translator.registerTranslation(
         new Partition(new ContentId([1, 1, 0]), 2),
-        "<h1>Mon livre</h1><p>Bonjour monde!</p>",
+        `<h1>Mon livre</h1><p>Bonjour monde!</p>`,
     );
     translator.registerTranslation(
         new Partition(new ContentId([1, 1, 2])),
-        "<p>C'est mon livre.</p>",
+        `<p>C'est mon livre.</p>`,
     );
     expect(translator.hasOverlappingTranslations()).toBe(false);
 
@@ -46,10 +46,10 @@ test("register translation", async () => {
     expect(translator.hasOverlappingTranslations([0, 1, 3])).toBe(false);
     expect(translator.hasOverlappingTranslations([0, 2, 3])).toBe(false);
 
+    expect(translator.render([])).toBe(sampleDoc);
     expect(translator.render([0, 1, 3])).toBe(
-        `<?xml version="1.0" encoding="utf-8" standalone="no"?>
-        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-        <html>
+        `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+        <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
         <head>
             <title>Mon livre</title>
             <meta charset="utf-8"/>
@@ -64,7 +64,6 @@ test("register translation", async () => {
             .map((line) => line.trim())
             .join(""),
     );
-    expect(translator.render([])).toBe(sampleDoc);
 });
 
 test("compare content ids", () => {
