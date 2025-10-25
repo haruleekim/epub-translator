@@ -1,18 +1,79 @@
-export type ContentId = number[];
+import _ from "lodash";
 
-export type Partition =
-    | {
-          type: "full";
-          contentId: ContentId;
-      }
-    | {
-          type: "slice";
-          contentId: ContentId;
-          start: number;
-          size: number;
-      };
+export class ContentId {
+    constructor(private readonly path: readonly number[]) {
+        if (path.length === 0) throw new Error("Cannot create ContentId with empty array");
+    }
 
-export type Translation = [Partition, string];
+    get(index: number): number {
+        return this.path[index];
+    }
+
+    get length(): number {
+        return this.path.length;
+    }
+
+    sibling(relativePosition: number): ContentId {
+        const path = _.initial(this.path);
+        path.push(this.path[this.path.length - 1] + relativePosition);
+        return new ContentId(path);
+    }
+
+    static compare(cid1: ContentId, cid2: ContentId): number {
+        for (let i = 0; i < Math.min(cid1.path.length, cid2.path.length); i++) {
+            if (cid1.path[i] !== cid2.path[i]) return cid1.path[i] - cid2.path[i];
+        }
+        if (cid1.path.length === cid2.path.length) return 0;
+        return NaN;
+    }
+
+    static totalOrderCompare(cid1: ContentId, cid2: ContentId): number {
+        for (let i = 0; i < Math.min(cid1.path.length, cid2.path.length); i++) {
+            if (cid1.path[i] !== cid2.path[i]) return cid1.path[i] - cid2.path[i];
+        }
+        return cid1.path.length - cid2.path.length;
+    }
+}
+
+export class Partition {
+    constructor(
+        private readonly offset: ContentId,
+        readonly size: number = 1,
+    ) {
+        if (size <= 0) throw new Error("Size must be positive");
+    }
+
+    get first(): ContentId {
+        return this.offset;
+    }
+
+    get last(): ContentId {
+        return this.offset.sibling(this.size - 1);
+    }
+
+    contains(contentId: ContentId): boolean {
+        return (
+            ContentId.compare(contentId, this.first) >= 0 &&
+            ContentId.compare(contentId, this.last) <= 0
+        );
+    }
+
+    static compare(p1: Partition, p2: Partition): number {
+        if (_.isEqual(p1.offset, p2.offset) && p1.size === p2.size) return 0;
+        if (ContentId.compare(p1.last, p2.first) < 0) return -1;
+        if (ContentId.compare(p1.first, p2.last) > 0) return 1;
+        return NaN;
+    }
+
+    static totalOrderCompare(p1: Partition, p2: Partition): number {
+        return ContentId.totalOrderCompare(p1.offset, p2.offset) || p1.size - p2.size;
+    }
+}
+
+export interface Translation {
+    partition: Partition;
+    content: string;
+}
 
 export class Translator {
     original: Document;
@@ -22,93 +83,42 @@ export class Translator {
         this.original = new DOMParser().parseFromString(original, "text/xml");
     }
 
-    getOriginal(contentId: ContentId): Node {
+    getOriginalNode(contentId: ContentId): Node {
         let node: Node = this.original;
         for (let index = 0; index < contentId.length; index++) {
-            node = node.childNodes.item(contentId[index]);
+            node = node.childNodes.item(contentId.get(index));
         }
         return node;
     }
 
-    getOriginalChildrenLength(contentId: ContentId): number {
-        const node = this.getOriginal(contentId);
-        return node.childNodes.length;
-    }
-
-    findContainingTranslationIndices(contentId: ContentId): number[] {
+    findTranslationIndices(contentId: ContentId): number[] {
         const result = [];
         for (let index = 0; index < this.translations.length; index++) {
-            const [partition] = this.translations[index];
-            if (!comparePartition({ type: "full", contentId }, partition)) continue;
-            if (partition.type === "full" && partition.contentId.length <= contentId.length) {
-                result.push(index);
-            } else if (
-                partition.type === "slice" &&
-                partition.contentId.length < contentId.length &&
-                contentId[partition.contentId.length] >= partition.start &&
-                contentId[partition.contentId.length] < partition.start + partition.size
-            ) {
+            const { partition } = this.translations[index];
+            if (partition.contains(contentId)) {
                 result.push(index);
             }
         }
         return result;
     }
 
-    registerTranslation(partition: Partition, text: string): string {
-        const translation = [partition, text] as Translation;
-        const index = binarySearchIndex(this.translations, translation, ([a], [b]) =>
-            comparePartition(a, b),
+    registerTranslation(partition: Partition, content: string) {
+        const translation: Translation = { partition, content };
+        const index = binarySearchIndex(this.translations, translation, (a, b) =>
+            Partition.totalOrderCompare(a.partition, b.partition),
         );
         this.translations.splice(index, 0, translation);
-        return text;
     }
 
-    overlapping(): boolean {
+    hasOverlappingTranslations(): boolean {
         for (let i = 0; i < this.translations.length - 1; i++) {
-            const [partition1] = this.translations[i];
-            const [partition2] = this.translations[i + 1];
-            const result = comparePartition(partition1, partition2);
+            const a = this.translations[i];
+            const b = this.translations[i + 1];
+            const result = Partition.compare(a.partition, b.partition);
             if (Number.isNaN(result) || result >= 0) return true;
         }
         return false;
     }
-}
-
-export function compareContentId(cid1: ContentId, cid2: ContentId): number {
-    for (let i = 0; i < Math.min(cid1.length, cid2.length); i++) {
-        if (cid1[i] !== cid2[i]) return cid1[i] - cid2[i];
-    }
-    if (cid1.length === cid2.length) return 0;
-    return NaN;
-}
-
-export function comparePartition(p1: Partition, p2: Partition): number {
-    if (p1.type === "full" && p2.type === "full") {
-        return compareContentId(p1.contentId, p2.contentId);
-    } else if (p1.type === "full" && p2.type === "slice") {
-        const isLt = compareContentId(p1.contentId, [...p2.contentId, p2.start]);
-        if (isLt < 0) return -1;
-        const isGt = compareContentId(p1.contentId, [...p2.contentId, p2.start + p2.size - 1]);
-        if (isGt > 0) return 1;
-        return NaN;
-    } else if (p1.type === "slice" && p2.type === "full") {
-        return -comparePartition(p2, p1);
-    } else if (p1.type === "slice" && p2.type === "slice") {
-        const cidCmp = compareContentId(p1.contentId, p2.contentId);
-        if (cidCmp === 0 && p1.start === p2.start && p1.size === p2.size) return 0;
-        const isLt = compareContentId(
-            [...p1.contentId, p1.start + p1.size - 1],
-            [...p2.contentId, p2.start],
-        );
-        if (isLt < 0) return -1;
-        const isGt = compareContentId(
-            [...p1.contentId, p1.start],
-            [...p2.contentId, p2.start + p2.size - 1],
-        );
-        if (isGt > 0) return 1;
-        return NaN;
-    }
-    return NaN;
 }
 
 function binarySearchIndex<T>(array: T[], target: T, compare: (a: T, b: T) => number): number {

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { comparePartition, Translator } from "~/lib/translator.ts";
+import { ContentId, Partition, Translator } from "~/lib/translator.ts";
 
 const sampleDoc: string = `<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
@@ -18,119 +18,87 @@ const sampleDoc: string = `<?xml version="1.0" encoding="utf-8" standalone="no"?
 
 test("get original content", async () => {
     const translator = new Translator(sampleDoc);
-    expect(translator.getOriginal([1, 1, 1]).textContent).toEqual("My Book");
+    expect(translator.getOriginalNode(new ContentId([1, 1, 1])).textContent).toEqual("My Book");
 });
 
 test("register translation", async () => {
     const translator = new Translator(sampleDoc);
     translator.registerTranslation(
-        { type: "full", contentId: [1, 0] },
+        new Partition(new ContentId([1, 0])),
         '<head><title>Mon livre</title><meta charset="utf-8" /></head>',
     );
     translator.registerTranslation(
-        { type: "slice", contentId: [1, 1], start: 0, size: 2 },
+        new Partition(new ContentId([1, 1, 0]), 2),
         "<h1>Mon livre</h1><p>Bonjour monde!</p>",
     );
     translator.registerTranslation(
-        { type: "full", contentId: [1, 1, 2] },
+        new Partition(new ContentId([1, 1, 2])),
         "<p>C'est mon livre.</p>",
     );
-    expect(translator.overlapping()).toBe(false);
+    expect(translator.hasOverlappingTranslations()).toBe(false);
 
-    translator.registerTranslation({ type: "full", contentId: [1, 1, 1, 0] }, "Bonjour monde!");
-    expect(translator.overlapping()).toBe(true);
+    translator.registerTranslation(new Partition(new ContentId([1, 1, 1, 0])), "Bonjour monde!");
+    expect(translator.hasOverlappingTranslations()).toBe(true);
+});
+
+test("compare content ids", () => {
+    let result: number;
+
+    result = ContentId.compare(new ContentId([1, 1]), new ContentId([1, 2]));
+    expect(result).toBeLessThan(0);
+
+    result = ContentId.compare(new ContentId([1, 1]), new ContentId([1, 1]));
+    expect(result).toBe(0);
+
+    result = ContentId.compare(new ContentId([1, 1]), new ContentId([1, 0]));
+    expect(result).toBeGreaterThan(0);
+
+    result = ContentId.compare(new ContentId([1, 1]), new ContentId([1, 1, 1]));
+    expect(result).toBeNaN();
 });
 
 test("compare partitions", () => {
     let result: number;
 
-    result = comparePartition(
-        { type: "full", contentId: [1, 2] },
-        { type: "full", contentId: [1, 3] },
+    result = Partition.compare(
+        new Partition(new ContentId([1, 2])),
+        new Partition(new ContentId([1, 3])),
     );
     expect(result).toBeLessThan(0);
 
-    result = comparePartition(
-        { type: "full", contentId: [1, 2] },
-        { type: "full", contentId: [1, 1] },
+    result = Partition.compare(
+        new Partition(new ContentId([1, 2])),
+        new Partition(new ContentId([1, 1])),
     );
     expect(result).toBeGreaterThan(0);
 
-    result = comparePartition(
-        { type: "full", contentId: [1, 2] },
-        { type: "full", contentId: [1, 2] },
+    result = Partition.compare(
+        new Partition(new ContentId([1, 2])),
+        new Partition(new ContentId([1, 2])),
     );
     expect(result).toBe(0);
 
-    result = comparePartition(
-        { type: "full", contentId: [1, 2] },
-        { type: "slice", contentId: [1], start: 3, size: 1 },
+    result = Partition.compare(
+        new Partition(new ContentId([1, 2])),
+        new Partition(new ContentId([1, 3])),
     );
     expect(result).toBeLessThan(0);
 
-    result = comparePartition(
-        { type: "full", contentId: [1, 2] },
-        { type: "slice", contentId: [1], start: 0, size: 2 },
+    result = Partition.compare(
+        new Partition(new ContentId([1, 2])),
+        new Partition(new ContentId([1, 0]), 2),
     );
     expect(result).toBeGreaterThan(0);
 
-    result = comparePartition(
-        { type: "full", contentId: [1, 2] },
-        { type: "slice", contentId: [1], start: 2, size: 1 },
-    );
-    expect(result).toBeNaN();
-
-    result = comparePartition(
-        { type: "slice", contentId: [1, 2], start: 1, size: 2 },
-        { type: "slice", contentId: [1, 2], start: 1, size: 2 },
-    );
-    expect(result).toBe(0);
-
-    result = comparePartition(
-        { type: "slice", contentId: [1, 2], start: 1, size: 2 },
-        { type: "slice", contentId: [1, 2], start: 3, size: 2 },
+    result = Partition.compare(
+        new Partition(new ContentId([1, 0])),
+        new Partition(new ContentId([1, 1, 0]), 2),
     );
     expect(result).toBeLessThan(0);
 
-    result = comparePartition(
-        { type: "slice", contentId: [1, 2], start: 1, size: 2 },
-        { type: "slice", contentId: [1, 2], start: 0, size: 1 },
-    );
-    expect(result).toBeGreaterThan(0);
-
-    result = comparePartition(
-        { type: "slice", contentId: [1, 2], start: 1, size: 2 },
-        { type: "slice", contentId: [1, 2], start: 2, size: 3 },
-    );
-    expect(result).toBeNaN();
-
-    result = comparePartition(
-        { type: "slice", contentId: [1, 2], start: 0, size: 3 },
-        { type: "slice", contentId: [1, 2, 3], start: 0, size: 1 },
-    );
-    expect(result).toBeLessThan(0);
-
-    result = comparePartition(
-        { type: "slice", contentId: [1, 2], start: 0, size: 4 },
-        { type: "slice", contentId: [1], start: 0, size: 2 },
-    );
-    expect(result).toBeGreaterThan(0);
-
-    result = comparePartition(
-        { type: "slice", contentId: [1, 2], start: 0, size: 4 },
-        { type: "slice", contentId: [1], start: 0, size: 3 },
-    );
-    expect(result).toBeNaN();
-
-    result = comparePartition(
-        { type: "slice", contentId: [1, 2], start: 0, size: 4 },
-        { type: "slice", contentId: [1, 2, 3], start: 0, size: 1 },
-    );
-    expect(result).toBeNaN();
-
-    result = comparePartition(
-        { type: "slice", contentId: [1], start: 0, size: 3 },
-        { type: "full", contentId: [1, 2, 3] },
+    result = Partition.compare(
+        new Partition(new ContentId([1, 1]), 4),
+        new Partition(new ContentId([1, 2, 4])),
     );
     expect(result).toBeNaN();
 });
