@@ -1,8 +1,11 @@
 import _ from "lodash";
 
 export class ContentId {
-    constructor(private readonly path: readonly number[]) {
+    readonly path: readonly number[];
+
+    constructor(...path: number[]) {
         if (path.length === 0) throw new Error("Cannot create ContentId with empty array");
+        this.path = path;
     }
 
     get(index: number): number {
@@ -14,9 +17,10 @@ export class ContentId {
     }
 
     sibling(relativePosition: number): ContentId {
-        const path = _.initial(this.path);
-        path.push(this.path[this.path.length - 1] + relativePosition);
-        return new ContentId(path);
+        return new ContentId(
+            ..._.initial(this.path),
+            this.path[this.path.length - 1] + relativePosition,
+        );
     }
 
     static compare(cid1: ContentId, cid2: ContentId): number {
@@ -110,10 +114,13 @@ export class Translator {
         this.translations.splice(index, 0, translation);
     }
 
-    hasOverlappingTranslations(): boolean {
-        for (let i = 0; i < this.translations.length - 1; i++) {
-            const a = this.translations[i];
-            const b = this.translations[i + 1];
+    hasOverlappingTranslations(translationIndices?: number[]): boolean {
+        const indices = translationIndices
+            ? [...translationIndices].sort()
+            : _.range(this.translations.length);
+        for (let i = 0; i < indices.length - 1; i++) {
+            const a = this.translations[indices[i]];
+            const b = this.translations[indices[i + 1]];
             const result = Partition.compare(a.partition, b.partition);
             if (Number.isNaN(result) || result >= 0) return true;
         }

@@ -18,42 +18,43 @@ const sampleDoc: string = `<?xml version="1.0" encoding="utf-8" standalone="no"?
 
 test("get original content", async () => {
     const translator = new Translator(sampleDoc);
-    expect(translator.getOriginalNode(new ContentId([1, 1, 1])).textContent).toEqual("My Book");
+    expect(translator.getOriginalNode(new ContentId(1, 1, 1)).textContent).toEqual("My Book");
 });
 
 test("register translation", async () => {
     const translator = new Translator(sampleDoc);
     translator.registerTranslation(
-        new Partition(new ContentId([1, 0])),
+        new Partition(new ContentId(1, 0)),
         '<head><title>Mon livre</title><meta charset="utf-8" /></head>',
     );
     translator.registerTranslation(
-        new Partition(new ContentId([1, 1, 0]), 2),
+        new Partition(new ContentId(1, 1, 0), 2),
         "<h1>Mon livre</h1><p>Bonjour monde!</p>",
     );
     translator.registerTranslation(
-        new Partition(new ContentId([1, 1, 2])),
+        new Partition(new ContentId(1, 1, 2)),
         "<p>C'est mon livre.</p>",
     );
     expect(translator.hasOverlappingTranslations()).toBe(false);
 
-    translator.registerTranslation(new Partition(new ContentId([1, 1, 1, 0])), "Bonjour monde!");
+    translator.registerTranslation(new Partition(new ContentId(1, 1, 1, 0)), "Bonjour monde!");
     expect(translator.hasOverlappingTranslations()).toBe(true);
+    expect(translator.hasOverlappingTranslations([0, 2])).toBe(false);
 });
 
 test("compare content ids", () => {
     let result: number;
 
-    result = ContentId.compare(new ContentId([1, 1]), new ContentId([1, 2]));
+    result = ContentId.compare(new ContentId(1, 1), new ContentId(1, 2));
     expect(result).toBeLessThan(0);
 
-    result = ContentId.compare(new ContentId([1, 1]), new ContentId([1, 1]));
+    result = ContentId.compare(new ContentId(1, 1), new ContentId(1, 1));
     expect(result).toBe(0);
 
-    result = ContentId.compare(new ContentId([1, 1]), new ContentId([1, 0]));
+    result = ContentId.compare(new ContentId(1, 1), new ContentId(1, 0));
     expect(result).toBeGreaterThan(0);
 
-    result = ContentId.compare(new ContentId([1, 1]), new ContentId([1, 1, 1]));
+    result = ContentId.compare(new ContentId(1, 1), new ContentId(1, 1, 1));
     expect(result).toBeNaN();
 });
 
@@ -61,44 +62,44 @@ test("compare partitions", () => {
     let result: number;
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 2])),
-        new Partition(new ContentId([1, 3])),
+        new Partition(new ContentId(1, 2)),
+        new Partition(new ContentId(1, 3)),
     );
     expect(result).toBeLessThan(0);
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 2])),
-        new Partition(new ContentId([1, 1])),
+        new Partition(new ContentId(1, 2)),
+        new Partition(new ContentId(1, 1)),
     );
     expect(result).toBeGreaterThan(0);
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 2])),
-        new Partition(new ContentId([1, 2])),
+        new Partition(new ContentId(1, 2)),
+        new Partition(new ContentId(1, 2)),
     );
     expect(result).toBe(0);
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 2])),
-        new Partition(new ContentId([1, 3])),
+        new Partition(new ContentId(1, 2)),
+        new Partition(new ContentId(1, 3)),
     );
     expect(result).toBeLessThan(0);
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 2])),
-        new Partition(new ContentId([1, 0]), 2),
+        new Partition(new ContentId(1, 2)),
+        new Partition(new ContentId(1, 0), 2),
     );
     expect(result).toBeGreaterThan(0);
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 0])),
-        new Partition(new ContentId([1, 1, 0]), 2),
+        new Partition(new ContentId(1, 0)),
+        new Partition(new ContentId(1, 1, 0), 2),
     );
     expect(result).toBeLessThan(0);
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 1]), 4),
-        new Partition(new ContentId([1, 2, 4])),
+        new Partition(new ContentId(1, 1), 4),
+        new Partition(new ContentId(1, 2, 4)),
     );
     expect(result).toBeNaN();
 });
