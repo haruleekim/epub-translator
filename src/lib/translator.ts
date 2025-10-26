@@ -6,20 +6,11 @@ export class ContentId {
     readonly path: readonly number[];
 
     constructor(path: readonly number[]) {
-        if (path.length === 0) throw new Error("Cannot create ContentId with empty array");
         this.path = [...path];
     }
 
-    get(index: number): number {
-        return this.path[index];
-    }
-
-    getLeafOrder(): number {
+    leafOrder(): number {
         return this.path[this.path.length - 1];
-    }
-
-    get length(): number {
-        return this.path.length;
     }
 
     sibling(relativePosition: number): ContentId {
@@ -113,9 +104,9 @@ export class Translator {
 
     #getOriginalNode(contentId: ContentId): AnyNode {
         let node: AnyNode = this.originalDom;
-        for (let index = 0; index < contentId.length; index++) {
+        for (let index = 0; index < contentId.path.length; index++) {
             if (node instanceof Element || node instanceof Document) {
-                node = node.childNodes[contentId.get(index)];
+                node = node.children[contentId.path[index]];
             }
         }
         return node;
@@ -175,38 +166,27 @@ export class Translator {
         const translations = indices.map((index) => this.translations[index]);
         let index = 0;
 
-        while (
-            node.parentNode &&
-            !(
-                node.parentNode === this.originalDom &&
-                !node.nextSibling &&
-                contentId.getLeafOrder() >= node.parentNode.childNodes.length
-            )
-        ) {
-            if (contentId.getLeafOrder() >= node.parentNode.childNodes.length) {
-                if (node.parentNode instanceof Element && node.parentNode.childNodes.length > 0) {
-                    result += this.original.slice(
-                        node.endIndex! + 1,
-                        node.parentNode.endIndex! + 1,
-                    );
-                }
+        while (node.parent) {
+            if (contentId.leafOrder() >= node.parent.children.length) {
+                result += this.original.slice(node.endIndex! + 1, node.parent.endIndex! + 1);
                 contentId = contentId.parent().sibling(1);
-                node = node.parentNode.nextSibling ?? node.parentNode;
+                node = node.parent.nextSibling ?? node.parent;
             } else if (translations.at(index)?.partition.contains(contentId)) {
                 result += translations[index].content;
                 let size = translations[index++].partition.size;
                 contentId = contentId.sibling(size);
                 while (node.nextSibling && size--) node = node.nextSibling;
-            } else if (node instanceof Element && node.childNodes.length > 0) {
-                result += this.original.slice(node.startIndex!, node.firstChild!.startIndex!);
+            } else if (node instanceof Element && node.firstChild) {
+                result += this.original.slice(node.startIndex!, node.firstChild.startIndex!);
                 contentId = contentId.firstChild();
-                node = node.firstChild!;
+                node = node.firstChild;
             } else {
                 result += this.original.slice(node.startIndex!, node.endIndex! + 1);
                 contentId = contentId.sibling(1);
                 node = node.nextSibling ?? node;
             }
         }
+
         return result;
     }
 }
