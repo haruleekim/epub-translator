@@ -1,3 +1,6 @@
+import { render } from "dom-serializer";
+import { type AnyNode, Document, Element } from "domhandler";
+import { parseDocument } from "htmlparser2";
 import _ from "lodash";
 
 export class ContentId {
@@ -91,17 +94,19 @@ export interface Translation {
 }
 
 export class Translator {
-    original: XMLDocument;
+    original: Document;
     translations: Translation[] = [];
 
     constructor(original: string) {
-        this.original = new DOMParser().parseFromString(original, "text/xml");
+        this.original = parseDocument(original, { xmlMode: true });
     }
 
-    getOriginalNode(contentId: ContentId): Node {
-        let node: Node = this.original;
+    getOriginalNode(contentId: ContentId): AnyNode {
+        let node: AnyNode = this.original;
         for (let index = 0; index < contentId.length; index++) {
-            node = node.childNodes.item(contentId.get(index));
+            if (node instanceof Element || node instanceof Document) {
+                node = node.childNodes[contentId.get(index)];
+            }
         }
         return node;
     }
@@ -146,9 +151,9 @@ export class Translator {
             throw new Error("Overlapping translations");
         }
 
-        let result = ""; // TODO: prepend XML declaration
+        let result = "";
 
-        let node: Node | null = this.original.firstChild;
+        let node: AnyNode | null = this.original.firstChild;
         if (!node) return "";
         let contentId = new ContentId([0]);
 
@@ -164,7 +169,7 @@ export class Translator {
             )
         ) {
             if (contentId.getLeafOrder() >= node.parentNode.childNodes.length) {
-                if (node.parentNode instanceof Element && node.parentNode.hasChildNodes()) {
+                if (node.parentNode instanceof Element && node.parentNode.childNodes.length > 0) {
                     result += `</${node.parentNode.tagName}>`;
                 }
                 contentId = contentId.parent().sibling(1);
@@ -190,15 +195,8 @@ export class Translator {
                         contentId = contentId.sibling(1);
                         node = node.nextSibling ?? node;
                     }
-                } else if (node instanceof Text) {
-                    result += node.textContent;
-                    contentId = contentId.sibling(1);
-                    node = node.nextSibling ?? node;
-                } else if (node instanceof DocumentType) {
-                    result += `<!DOCTYPE ${node.name} PUBLIC "${node.publicId}" "${node.systemId}">`;
-                    contentId = contentId.sibling(1);
-                    node = node.nextSibling ?? node;
                 } else {
+                    result += render(node);
                     contentId = contentId.sibling(1);
                     node = node.nextSibling ?? node;
                 }

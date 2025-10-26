@@ -1,7 +1,8 @@
+import { render } from "dom-serializer";
 import { expect, test } from "vitest";
 import { ContentId, Partition, Translator } from "~/lib/translator.ts";
 
-const sampleDoc: string = `
+const sampleDoc: string = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
 <head>
@@ -20,35 +21,36 @@ const sampleDoc: string = `
 
 test("get original content", async () => {
     const translator = new Translator(sampleDoc);
-    expect(translator.getOriginalNode(new ContentId([1, 1, 1])).textContent).toEqual(
-        "Hello world!",
+    expect(render(translator.getOriginalNode(new ContentId([2, 1, 1])))).toEqual(
+        "<p>Hello world!</p>",
     );
 });
 
 test("register translation", async () => {
     const translator = new Translator(sampleDoc);
     translator.registerTranslation(
-        new Partition(new ContentId([1, 0])),
+        new Partition(new ContentId([2, 0])),
         `<head><title>Mon livre</title><meta charset="utf-8"/></head>`,
     );
     translator.registerTranslation(
-        new Partition(new ContentId([1, 1, 0]), 2),
+        new Partition(new ContentId([2, 1, 0]), 2),
         `<h1>Mon livre</h1><p>Bonjour monde!</p>`,
     );
     translator.registerTranslation(
-        new Partition(new ContentId([1, 1, 2])),
+        new Partition(new ContentId([2, 1, 2])),
         `<p>C'est mon livre.</p>`,
     );
     expect(translator.hasOverlappingTranslations()).toBe(false);
 
-    translator.registerTranslation(new Partition(new ContentId([1, 1, 1, 0])), "Bonjour monde!");
+    translator.registerTranslation(new Partition(new ContentId([2, 1, 1, 0])), "Bonjour monde!");
     expect(translator.hasOverlappingTranslations()).toBe(true);
     expect(translator.hasOverlappingTranslations([0, 1, 3])).toBe(false);
     expect(translator.hasOverlappingTranslations([0, 2, 3])).toBe(false);
 
     expect(translator.render([])).toBe(sampleDoc);
     expect(translator.render([0, 1, 3])).toBe(
-        `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+        `<?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
         <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
         <head>
             <title>Mon livre</title>
