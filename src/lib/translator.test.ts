@@ -1,4 +1,3 @@
-import { render } from "dom-serializer";
 import { expect, test } from "vitest";
 import { ContentId, Partition, Translator } from "~/lib/translator.ts";
 
@@ -21,9 +20,8 @@ const sampleDoc: string = `<?xml version="1.0" encoding="UTF-8"?>
 
 test("get original content", async () => {
     const translator = new Translator(sampleDoc);
-    expect(render(translator.getOriginalNode(new ContentId([2, 1, 1])))).toEqual(
-        "<p>Hello world!</p>",
-    );
+    const content = translator.getOriginalContent(new ContentId([2, 1, 1]));
+    expect(content).toEqual("<p>Hello world!</p>");
 });
 
 test("register translation", async () => {

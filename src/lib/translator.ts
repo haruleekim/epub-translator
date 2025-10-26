@@ -106,7 +106,12 @@ export class Translator {
         });
     }
 
-    getOriginalNode(contentId: ContentId): AnyNode {
+    getOriginalContent(contentId: ContentId): string {
+        const { startIndex, endIndex } = this.#getOriginalNode(contentId);
+        return this.original.slice(startIndex!, endIndex! + 1);
+    }
+
+    #getOriginalNode(contentId: ContentId): AnyNode {
         let node: AnyNode = this.originalDom;
         for (let index = 0; index < contentId.length; index++) {
             if (node instanceof Element || node instanceof Document) {
@@ -135,12 +140,17 @@ export class Translator {
         this.translations.splice(index, 0, translation);
     }
 
-    /** invariant: parameter `translationIndices` must be sorted before calling this function. */
     hasOverlappingTranslations(translationIndices?: number[]): boolean {
-        const indices = translationIndices ?? _.range(this.translations.length);
-        for (let i = 0; i < indices.length - 1; i++) {
-            const a = this.translations[indices[i]];
-            const b = this.translations[indices[i + 1]];
+        const indices = translationIndices
+            ? [...translationIndices].sort()
+            : _.range(this.translations.length);
+        return this.#hasOverlappingTranslations(indices);
+    }
+
+    #hasOverlappingTranslations(translationIndices: number[]): boolean {
+        for (let i = 0; i < translationIndices.length - 1; i++) {
+            const a = this.translations[translationIndices[i]];
+            const b = this.translations[translationIndices[i + 1]];
             const result = Partition.compare(a.partition, b.partition);
             if (Number.isNaN(result) || result >= 0) return true;
         }
@@ -149,17 +159,17 @@ export class Translator {
 
     render(translationIndices: number[]) {
         const indices = translationIndices
-            ? translationIndices.sort()
+            ? [...translationIndices].sort()
             : _.range(this.translations.length);
 
-        if (this.hasOverlappingTranslations(indices)) {
+        if (this.#hasOverlappingTranslations(indices)) {
             throw new Error("Overlapping translations");
         }
 
         let result = "";
 
-        let node: AnyNode | null = this.originalDom.firstChild;
-        if (!node) return "";
+        if (!this.originalDom.firstChild) return result;
+        let node: AnyNode = this.originalDom.firstChild;
         let contentId = new ContentId([0]);
 
         const translations = indices.map((index) => this.translations[index]);
