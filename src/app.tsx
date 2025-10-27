@@ -1,4 +1,5 @@
-import { type ReactEventHandler, useEffect, useLayoutEffect, useState } from "react";
+import cn from "classnames";
+import { type ReactEventHandler, useEffect, useState } from "react";
 import Epub from "~/lib/epub";
 import { usePrevious, usePromise } from "~/utils/hooks";
 
@@ -52,24 +53,28 @@ function Viewer(props: { epub: Epub }) {
 
     return (
         <div className="flex flex-1 overflow-y-auto">
-            <ViewerNavigation spine={props.epub.spine} onNavigate={setIndex} />
+            <ViewerNavigation index={index} spine={props.epub.spine} onNavigate={setIndex} />
             <ViewerFrame url={contentUrl} />
         </div>
     );
 }
 
 function ViewerNavigation(props: {
+    index: number;
     spine: readonly string[];
     onNavigate: (index: number) => void;
 }) {
     return (
         <nav className="text-xs min-w-fit h-full overflow-y-auto">
-            <ul className="list">
+            <ul className="list m-2">
                 {props.spine.map((path, index) => (
                     <li key={path}>
                         <button
                             type="button"
-                            className="link hover:link-accent"
+                            className={cn(
+                                "w-full p-0.5 text-justify link link-hover",
+                                index === props.index ? "link-accent" : null,
+                            )}
                             onClick={() => props.onNavigate(index)}
                         >
                             {path}
