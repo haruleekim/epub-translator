@@ -20,7 +20,7 @@ export default class Epub {
         const container = await JSZip.loadAsync(file);
 
         const containerXmlFile = container.file("META-INF/container.xml");
-        if (!containerXmlFile) throw new Error("`META-INF/container.xml` file not found");
+        if (!containerXmlFile) throw new Error("Container file not found");
 
         const containerXml = parseDocument(await containerXmlFile.async("text"), { xmlMode: true });
 
