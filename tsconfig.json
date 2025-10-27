@@ -22,6 +22,10 @@
         "noFallthroughCasesInSwitch": true,
         "noUncheckedSideEffectImports": true,
 
+        /* JSX */
+        "jsx": "react-jsx",
+        "jsxImportSource": "react",
+
         /* Paths */
         "baseUrl": ".",
         "paths": {

@@ -6,8 +6,12 @@ import JSZip from "jszip";
 export default class Epub {
     private constructor(
         private container: JSZip,
-        private spine: string[],
+        readonly spine: readonly string[],
     ) {}
+
+    get length() {
+        return this.spine.length;
+    }
 
     async getContent(index: number): Promise<string> {
         const href = this.spine[index];
