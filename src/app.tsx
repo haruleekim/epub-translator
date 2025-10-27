@@ -1,6 +1,6 @@
-import { type ReactEventHandler, useState } from "react";
+import { type ReactEventHandler, useEffect, useLayoutEffect, useState } from "react";
 import Epub from "~/lib/epub";
-import { usePromise } from "~/utils/hooks";
+import { usePrevious, usePromise } from "~/utils/hooks";
 
 export default function App() {
     const [epubPromise, setEpubPromise] = useState<Promise<Epub | null>>(Promise.resolve(null));
@@ -35,12 +35,25 @@ function Uploader(props: { onChange: (file: File | null) => void }) {
 }
 
 function Viewer(props: { epub: Epub }) {
+    const prevEpub = usePrevious(props.epub);
     const [index, setIndex] = useState(0);
+    const [contentUrl, setContentUrl] = useState<Promise<string>>(() =>
+        props.epub.getContentVirtualUrl(index),
+    );
+
+    useEffect(() => {
+        if (props.epub === prevEpub) {
+            setContentUrl(props.epub.getContentVirtualUrl(index));
+        } else {
+            setIndex(0);
+            setContentUrl(props.epub.getContentVirtualUrl(0));
+        }
+    }, [props.epub, index]);
 
     return (
         <div className="flex flex-1 overflow-y-auto">
             <ViewerNavigation spine={props.epub.spine} onNavigate={setIndex} />
-            <ViewerFrame url={props.epub.getContentVirtualUrl(index)} />
+            <ViewerFrame url={contentUrl} />
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function usePromise<T>(promise: Promise<T>): [T | undefined, true] | [T, false] {
     const [value, setValue] = useState<T>();
@@ -19,4 +19,12 @@ export function usePromise<T>(promise: Promise<T>): [T | undefined, true] | [T, 
     }, [promise]);
 
     return [value, loading] as [T | undefined, true] | [T, false];
+}
+
+export function usePrevious<T>(value: T): T | undefined {
+    const ref = useRef<T>(undefined);
+    useEffect(() => {
+        ref.current = value;
+    });
+    return ref.current;
 }
