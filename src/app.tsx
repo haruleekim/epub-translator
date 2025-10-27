@@ -38,9 +38,9 @@ function Viewer(props: { epub: Epub }) {
     const [index, setIndex] = useState(0);
 
     return (
-        <div className="flex overflow-y-auto">
+        <div className="flex flex-1 overflow-y-auto">
             <ViewerNavigation spine={props.epub.spine} onNavigate={setIndex} />
-            <ViewerFrame content={props.epub.getContent(index)} />
+            <ViewerFrame url={props.epub.getContentVirtualUrl(index)} />
         </div>
     );
 }
@@ -68,8 +68,8 @@ function ViewerNavigation(props: {
     );
 }
 
-function ViewerFrame(props: { content: Promise<string> }) {
-    const [content, loading] = usePromise(props.content);
+function ViewerFrame(props: { url: Promise<string> }) {
+    const [url, loading] = usePromise(props.url);
 
     const handleFrameLoad: ReactEventHandler<HTMLIFrameElement> = (evt) => {
         const contentDocument = evt.currentTarget.contentDocument!;
@@ -85,7 +85,7 @@ function ViewerFrame(props: { content: Promise<string> }) {
             ) : (
                 <iframe
                     title="EPUB Viewer"
-                    srcDoc={content}
+                    src={url}
                     className="w-full h-full"
                     onLoad={handleFrameLoad}
                 />

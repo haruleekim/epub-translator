@@ -6,7 +6,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import "vitest/config";
 
 export default {
-    plugins: [tailwindcss(), react(), tsconfigPaths()],
+    plugins: [tsconfigPaths(), tailwindcss(), react()],
     test: {
         browser: {
             enabled: true,

@@ -3,9 +3,17 @@ import type { Element, Node } from "domhandler";
 import { parseDocument } from "htmlparser2";
 import JSZip from "jszip";
 
+interface Resource {
+    id: string;
+    path: string;
+    virtualUrl(): Promise<string>;
+    [Symbol.dispose](): void;
+}
+
 export default class Epub {
     private constructor(
         private container: JSZip,
+        private resources: Record<string, Resource>,
         readonly spine: readonly string[],
     ) {}
 
@@ -13,11 +21,10 @@ export default class Epub {
         return this.spine.length;
     }
 
-    async getContent(index: number): Promise<string> {
-        const href = this.spine[index];
-        const file = this.container.file(href);
-        if (!file) throw new Error(`File not found: ${href}`);
-        return await file.async("text");
+    async getContentVirtualUrl(index: number): Promise<string> {
+        const path = this.spine[index];
+        const file = this.resources[path];
+        return await file.virtualUrl();
     }
 
     static async from(file: Blob): Promise<Epub> {
@@ -43,15 +50,33 @@ export default class Epub {
             xmlMode: true,
         });
 
-        const resources: Record<string, string> = {};
+        const resources: Record<string, Resource> = {};
+        const resourceMap: Record<string, string> = {};
         for (const entry of CSS.selectAll<Node, Element>(
-            CSS.compile("manifest > item[id][href]"),
+            CSS.compile("manifest > item[id][href][media-type]"),
             packageDocument,
             { xmlMode: true },
         )) {
             const id = entry.attribs.id;
-            const href = entry.attribs.href;
-            resources[id] = Epub.resolvePath(href, packageDocumentPath);
+            const mediaType = entry.attribs["media-type"];
+            const path = Epub.resolvePath(entry.attribs.href, packageDocumentPath);
+            const file = container.file(path);
+            if (!file) throw new Error(`Resource not found: ${path}`);
+            let virtualUrl: string | null = null;
+            resources[path] = {
+                id,
+                path,
+                async virtualUrl() {
+                    if (virtualUrl) return virtualUrl;
+                    const blob = new Blob([await file.async("blob")], { type: mediaType });
+                    virtualUrl = URL.createObjectURL(blob);
+                    return virtualUrl;
+                },
+                [Symbol.dispose]() {
+                    if (virtualUrl) URL.revokeObjectURL(virtualUrl);
+                },
+            };
+            resourceMap[id] = path;
         }
 
         const spine: string[] = [];
@@ -61,11 +86,11 @@ export default class Epub {
             { xmlMode: true },
         )) {
             const idref = entry.attribs.idref;
-            const resource = resources[idref];
+            const resource = resourceMap[idref];
             spine.push(resource);
         }
 
-        return new Epub(container, spine);
+        return new Epub(container, resources, spine);
     }
 
     static resolvePath(path: string, base: string): string {
