@@ -106,7 +106,7 @@ export class Translator {
         let node: AnyNode = this.originalDom;
         for (let index = 0; index < contentId.path.length; index++) {
             if (node instanceof Element || node instanceof Document) {
-                node = node.children[contentId.path[index]];
+                node = node.childNodes[contentId.path[index]];
             }
         }
         return node;
@@ -166,11 +166,11 @@ export class Translator {
         const translations = indices.map((index) => this.translations[index]);
         let index = 0;
 
-        while (node.parent) {
-            if (contentId.leafOrder() >= node.parent.children.length) {
-                result += this.original.slice(node.endIndex! + 1, node.parent.endIndex! + 1);
+        while (node.parentNode) {
+            if (contentId.leafOrder() >= node.parentNode.childNodes.length) {
+                result += this.original.slice(node.endIndex! + 1, node.parentNode.endIndex! + 1);
                 contentId = contentId.parent().sibling(1);
-                node = node.parent.nextSibling ?? node.parent;
+                node = node.parentNode.nextSibling ?? node.parentNode;
             } else if (translations.at(index)?.partition.contains(contentId)) {
                 result += translations[index].content;
                 let size = translations[index++].partition.size;

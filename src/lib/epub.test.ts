@@ -10,7 +10,7 @@ test("resolve resource url", () => {
 });
 
 test("load sample epub", async () => {
-    const url = (await import("~/tests/data/pbr.epub?url")).default;
+    const { default: url } = await import("~/tests/data/pbr.epub?url");
     const resp = await fetch(url);
     const file = await resp.blob();
     const epub = await Epub.from(file);
