@@ -12,16 +12,14 @@ export function usePromise<T, E = unknown>(promise: Promise<T>): PromiseState<T,
         let canceled = false;
         promise
             .then((result) => {
-                if (!canceled) {
-                    setResult(result);
-                    setLoading(false);
-                }
+                if (canceled) return;
+                setResult(result);
+                setLoading(false);
             })
             .catch((err) => {
-                if (!canceled) {
-                    setError(err);
-                    setLoading(false);
-                }
+                if (canceled) return;
+                setError(err);
+                setLoading(false);
             });
         return () => {
             canceled = true;

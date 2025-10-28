@@ -113,20 +113,19 @@ export default class Epub {
         const content = await file.async("text");
         const doc = parseDocument(content, { xmlMode: true });
 
-        for (const element of CSS.selectAll<Node, Element>(CSS.compile("*[src],*[href]"), doc, {
-            xmlMode: true,
-        })) {
-            const src = element.attribs.src
-                ? Epub.resolvePath(element.attribs.src, file.name)
-                : null;
-            const href = element.attribs.href
-                ? Epub.resolvePath(element.attribs.href, file.name)
-                : null;
-            if (src && resources[src] && !MEDIA_TYPES.includes(resources[src].mediaType)) {
-                element.attribs.src = await resources[src].virtualUrl();
-            }
-            if (href && resources[href] && !MEDIA_TYPES.includes(resources[href].mediaType)) {
-                element.attribs.href = await resources[href].virtualUrl();
+        const ATTRS = ["src", "href", "xlink:href"];
+        for (const element of CSS.selectAll<Node, Element>(
+            CSS.compile(ATTRS.map((attr) => `*[${attr.replace(":", "\\:")}]`).join(", ")),
+            doc,
+            { xmlMode: true },
+        )) {
+            for (const attr of ["src", "href", "xlink:href"]) {
+                const path = element.attribs[attr]
+                    ? Epub.resolvePath(element.attribs[attr], file.name)
+                    : null;
+                if (path && resources[path] && !MEDIA_TYPES.includes(resources[path].mediaType)) {
+                    element.attribs[attr] = await resources[path].virtualUrl();
+                }
             }
         }
 
