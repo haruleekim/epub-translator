@@ -126,19 +126,22 @@ function handleContentSelectionChange(this: Document) {
     const selection = this.getSelection();
     if (!selection || selection.rangeCount !== 1) return;
 
-    const range = selection.getRangeAt(0);
-    const { startContainer, endContainer, commonAncestorContainer } = range;
+    const { startContainer, endContainer, commonAncestorContainer } = selection.getRangeAt(0);
 
-    let offset: Node, size: number;
+    let start: Node, end: Node, size: number;
     if (startContainer === commonAncestorContainer || endContainer === commonAncestorContainer) {
-        [offset, size] = [commonAncestorContainer, 1];
+        [start, end, size] = [commonAncestorContainer, commonAncestorContainer, 1];
     } else {
         let [s, e] = [startContainer, endContainer];
         while (s.parentNode !== commonAncestorContainer) s = s.parentNode!;
         while (e.parentNode !== commonAncestorContainer) e = e.parentNode!;
-        [offset, size] = [s, 1];
+        [start, end, size] = [s, e, 1];
         while (s !== e && size++) s = s.nextSibling!;
     }
 
-    console.log(offset, size);
+    const range = new Range();
+    range.setStartBefore(start);
+    range.setEndAfter(end);
+
+    console.log(start, end, size);
 }

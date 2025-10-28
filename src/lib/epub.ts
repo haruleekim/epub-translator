@@ -136,7 +136,7 @@ async function createViewUrl(
         doc,
         OPTION,
     )) {
-        for (const attr of ["src", "href", "xlink:href"]) {
+        for (const attr of ATTRS) {
             const path = element.attribs[attr]
                 ? Epub.resolvePath(element.attribs[attr], filePath)
                 : null;
