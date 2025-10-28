@@ -14,7 +14,7 @@ test("load sample epub", async () => {
     const resp = await fetch(url);
     const file = await resp.blob();
     const epub = await Epub.from(file);
-    const contentUrl = await epub.getContentVirtualUrl(9);
+    const contentUrl = await epub.getContentViewUrl(9);
     expect(contentUrl).include("blob:http://localhost");
     const contentResp = await fetch(contentUrl);
     const content = await contentResp.text();

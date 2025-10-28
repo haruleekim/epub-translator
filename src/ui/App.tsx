@@ -44,15 +44,15 @@ function Viewer(props: { epub: Epub }) {
     const prevEpub = usePrevious(props.epub);
     const [index, setIndex] = useState(0);
     const [contentUrl, setContentUrl] = useState<Promise<string>>(() =>
-        props.epub.getContentVirtualUrl(index),
+        props.epub.getContentViewUrl(index),
     );
 
     useEffect(() => {
         if (props.epub === prevEpub) {
-            setContentUrl(props.epub.getContentVirtualUrl(index));
+            setContentUrl(props.epub.getContentViewUrl(index));
         } else {
             setIndex(0);
-            setContentUrl(props.epub.getContentVirtualUrl(0));
+            setContentUrl(props.epub.getContentViewUrl(0));
         }
     }, [props.epub, index]);
 
