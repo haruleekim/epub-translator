@@ -1,4 +1,5 @@
 import * as CSS from "css-select";
+import { render } from "dom-serializer";
 import type { Element, Node } from "domhandler";
 import { parseDocument } from "htmlparser2";
 import JSZip from "jszip";
@@ -6,6 +7,7 @@ import JSZip from "jszip";
 interface Resource {
     id: string;
     path: string;
+    mediaType: string;
     virtualUrl(): Promise<string>;
     [Symbol.dispose](): void;
 }
@@ -66,9 +68,10 @@ export default class Epub {
             resources[path] = {
                 id,
                 path,
+                mediaType,
                 async virtualUrl() {
                     if (virtualUrl) return virtualUrl;
-                    const blob = new Blob([await file.async("blob")], { type: mediaType });
+                    const blob = await Epub.replaceResourceUrls(file, mediaType, resources);
                     virtualUrl = URL.createObjectURL(blob);
                     return virtualUrl;
                 },
@@ -95,5 +98,38 @@ export default class Epub {
 
     static resolvePath(path: string, base: string): string {
         return new URL(path, `file:///${base}`).pathname.slice(1);
+    }
+
+    static async replaceResourceUrls(
+        file: JSZip.JSZipObject,
+        mediaType: string,
+        resources: Record<string, Resource>,
+    ): Promise<Blob> {
+        const MEDIA_TYPES = ["application/xhtml+xml", "application/xml", "text/html", "text/xml"];
+        if (!MEDIA_TYPES.includes(mediaType)) {
+            return new Blob([await file.async("blob")], { type: mediaType });
+        }
+
+        const content = await file.async("text");
+        const doc = parseDocument(content, { xmlMode: true });
+
+        for (const element of CSS.selectAll<Node, Element>(CSS.compile("*[src],*[href]"), doc, {
+            xmlMode: true,
+        })) {
+            const src = element.attribs.src
+                ? Epub.resolvePath(element.attribs.src, file.name)
+                : null;
+            const href = element.attribs.href
+                ? Epub.resolvePath(element.attribs.href, file.name)
+                : null;
+            if (src && resources[src] && !MEDIA_TYPES.includes(resources[src].mediaType)) {
+                element.attribs.src = await resources[src].virtualUrl();
+            }
+            if (href && resources[href] && !MEDIA_TYPES.includes(resources[href].mediaType)) {
+                element.attribs.href = await resources[href].virtualUrl();
+            }
+        }
+
+        return new Blob([render(doc, { xmlMode: true })], { type: mediaType });
     }
 }

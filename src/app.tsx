@@ -5,7 +5,7 @@ import { usePrevious, usePromise } from "~/utils/hooks";
 
 export default function App() {
     const [epubPromise, setEpubPromise] = useState<Promise<Epub | null>>(Promise.resolve(null));
-    const [epub, loading] = usePromise(epubPromise);
+    const [epub, error, loading] = usePromise(epubPromise);
 
     const handleUpload = (file: File | null) => {
         setEpubPromise(file ? Epub.from(file) : Promise.resolve(null));
@@ -13,7 +13,12 @@ export default function App() {
 
     return (
         <div className="h-screen flex flex-col">
-            {loading ? <div className="loading loading-infinity" /> : null}
+            {loading ? <progress className="progress w-full m-0" /> : null}
+            {error ? (
+                <div className="alert alert-error">
+                    {error instanceof Error ? error.message : JSON.stringify(error)}
+                </div>
+            ) : null}
             {epub ? <Viewer epub={epub} /> : null}
             <Uploader onChange={handleUpload} />
         </div>
@@ -87,7 +92,7 @@ function ViewerNavigation(props: {
 }
 
 function ViewerFrame(props: { url: Promise<string> }) {
-    const [url, loading] = usePromise(props.url);
+    const [url, error, loading] = usePromise(props.url);
 
     const handleFrameLoad: ReactEventHandler<HTMLIFrameElement> = (evt) => {
         const contentDocument = evt.currentTarget.contentDocument!;
@@ -99,6 +104,10 @@ function ViewerFrame(props: { url: Promise<string> }) {
             {loading ? (
                 <div className="flex items-center justify-center w-full h-full">
                     <div className="loading loading-spinner" />
+                </div>
+            ) : error ? (
+                <div className="alert alert-error">
+                    {error instanceof Error ? error.message : JSON.stringify(error)}
                 </div>
             ) : (
                 <iframe
