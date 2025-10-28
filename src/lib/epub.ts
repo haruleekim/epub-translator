@@ -4,6 +4,8 @@ import type { Element, Node } from "domhandler";
 import { parseDocument } from "htmlparser2";
 import JSZip from "jszip";
 
+const OPTION = { xmlMode: true, decodeEntities: false };
+
 interface Resource {
     id: string;
     path: string;
@@ -35,12 +37,15 @@ export default class Epub {
         const containerXmlFile = container.file("META-INF/container.xml");
         if (!containerXmlFile) throw new Error("Container file not found");
 
-        const containerXml = parseDocument(await containerXmlFile.async("text"), { xmlMode: true });
+        const containerXml = parseDocument(await containerXmlFile.async("text"), {
+            xmlMode: true,
+            decodeEntities: false,
+        });
 
         const packageDocumentPath = CSS.selectOne<Node, Element>(
             CSS.compile("rootfile"),
             containerXml,
-            { xmlMode: true },
+            OPTION,
         )?.attribs["full-path"];
         if (!packageDocumentPath) throw new Error("Cannot resolve package document path");
 
@@ -48,16 +53,14 @@ export default class Epub {
         if (!packageDocumentFile)
             throw new Error(`Package document not found: ${packageDocumentPath}`);
 
-        const packageDocument = parseDocument(await packageDocumentFile.async("text"), {
-            xmlMode: true,
-        });
+        const packageDocument = parseDocument(await packageDocumentFile.async("text"), OPTION);
 
         const resources: Record<string, Resource> = {};
         const resourceMap: Record<string, string> = {};
         for (const entry of CSS.selectAll<Node, Element>(
             CSS.compile("manifest > item[id][href][media-type]"),
             packageDocument,
-            { xmlMode: true },
+            OPTION,
         )) {
             const id = entry.attribs.id;
             const mediaType = entry.attribs["media-type"];
@@ -86,7 +89,7 @@ export default class Epub {
         for (const entry of CSS.selectAll<Node, Element>(
             CSS.compile("spine > itemref[idref]"),
             packageDocument,
-            { xmlMode: true },
+            OPTION,
         )) {
             const idref = entry.attribs.idref;
             const resource = resourceMap[idref];
@@ -111,13 +114,13 @@ export default class Epub {
         }
 
         const content = await file.async("text");
-        const doc = parseDocument(content, { xmlMode: true });
+        const doc = parseDocument(content, OPTION);
 
         const ATTRS = ["src", "href", "xlink:href"];
         for (const element of CSS.selectAll<Node, Element>(
             CSS.compile(ATTRS.map((attr) => `*[${attr.replace(":", "\\:")}]`).join(", ")),
             doc,
-            { xmlMode: true },
+            OPTION,
         )) {
             for (const attr of ["src", "href", "xlink:href"]) {
                 const path = element.attribs[attr]
@@ -129,6 +132,8 @@ export default class Epub {
             }
         }
 
-        return new Blob([render(doc, { xmlMode: true })], { type: mediaType });
+        return new Blob([render(doc, OPTION)], {
+            type: mediaType,
+        });
     }
 }

@@ -114,6 +114,7 @@ function ViewerFrame(props: { url: Promise<string> }) {
                     title="EPUB Viewer"
                     src={url}
                     className="w-full h-full"
+                    sandbox="allow-same-origin allow-scripts"
                     onLoad={handleFrameLoad}
                 />
             )}
