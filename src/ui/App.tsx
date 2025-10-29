@@ -3,7 +3,7 @@ import { type ReactEventHandler, useEffect, useState } from "react";
 import Epub from "~/lib/epub";
 import { ContentId, Partition } from "~/lib/translator";
 import { usePrevious, usePromise } from "~/utils/hooks";
-import { CONTENT_ID_ATTRIBUTE, createContentDocument } from "./converter";
+import { CONTENT_ID_ATTRIBUTE, createPreviewDocument } from "./converter";
 
 export default function App() {
     const [epubPromise, setEpubPromise] = useState<Promise<Epub | null>>(Promise.resolve(null));
@@ -46,15 +46,15 @@ function Viewer(props: { epub: Epub }) {
     const prevEpub = usePrevious(props.epub);
     const [spineIndex, setSpineIndex] = useState(0);
     const [content, setContent] = useState<Promise<string>>(() =>
-        createContentDocument(props.epub, spineIndex),
+        createPreviewDocument(props.epub, spineIndex),
     );
 
     useEffect(() => {
         if (props.epub === prevEpub) {
-            setContent(createContentDocument(props.epub, spineIndex));
+            setContent(createPreviewDocument(props.epub, spineIndex));
         } else {
             setSpineIndex(0);
-            setContent(createContentDocument(props.epub, 0));
+            setContent(createPreviewDocument(props.epub, 0));
         }
     }, [props.epub, spineIndex]);
 
@@ -65,7 +65,7 @@ function Viewer(props: { epub: Epub }) {
                 index={spineIndex}
                 onNavigate={setSpineIndex}
             />
-            <ViewerFrame content={content} />
+            <ViewerPreview content={content} />
         </div>
     );
 }
@@ -97,7 +97,7 @@ function ViewerNavigation(props: {
     );
 }
 
-function ViewerFrame(props: { content: Promise<string> }) {
+function ViewerPreview(props: { content: Promise<string> }) {
     const [content, error, loading] = usePromise(props.content);
 
     const handleFrameLoad: ReactEventHandler<HTMLIFrameElement> = (evt) => {

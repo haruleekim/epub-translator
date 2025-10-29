@@ -8,7 +8,7 @@ const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
 const REFERENCING_ATTRIBUTES = ["src", "href", "xlink:href"];
 export const CONTENT_ID_ATTRIBUTE = "data-translator-content-id";
 
-export async function createContentDocument(epub: Epub, spineIndex: number): Promise<string> {
+export async function createPreviewDocument(epub: Epub, spineIndex: number): Promise<string> {
     const resource = epub.getSpineItem(spineIndex);
     const content = await resource.getBlob().then((blob) => blob.text());
     const doc = parseDocument(content, DOM_OPTIONS);
