@@ -5,7 +5,7 @@ import JSZip from "jszip";
 
 const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
 
-export interface Resource {
+export interface ManifestResource {
     readonly id: string;
     readonly path: string;
     readonly mediaType: string;
@@ -16,7 +16,7 @@ export interface Resource {
 
 export default class Epub {
     private constructor(
-        private resources: Record<string, Resource>,
+        private resources: Record<string, ManifestResource>,
         readonly spine: readonly string[],
     ) {}
 
@@ -28,7 +28,7 @@ export default class Epub {
         return this.resources[path];
     }
 
-    getSpineItem(index: number): Resource {
+    getSpineItem(index: number): ManifestResource {
         const path = this.spine[index];
         return this.resources[path];
     }
@@ -57,7 +57,7 @@ export default class Epub {
 
         const packageDocument = parseDocument(await packageDocumentFile.async("text"), DOM_OPTIONS);
 
-        const resources: Record<string, Resource> = {};
+        const resources: Record<string, ManifestResource> = {};
         const resourceMap: Record<string, string> = {};
         for (const entry of CSS.selectAll<Node, Element>(
             CSS.compile("manifest > item[id][href][media-type]"),

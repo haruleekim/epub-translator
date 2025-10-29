@@ -1,41 +1,38 @@
-import cn from "classnames";
-import { type ReactEventHandler, useEffect, useState } from "react";
+import type { JSX, Resource } from "solid-js";
+import { createEffect, createResource, createSignal, For, Show } from "solid-js";
 import Epub from "~/lib/epub";
 import { ContentId, Partition } from "~/lib/translator";
-import { usePrevious, usePromise } from "~/utils/hooks";
 import { CONTENT_ID_ATTRIBUTE, createPreviewDocument } from "./converter";
 
 export default function App() {
-    const [epubPromise, setEpubPromise] = useState<Promise<Epub | null>>(Promise.resolve(null));
-    const [epub, error, loading] = usePromise(epubPromise);
-
-    const handleUpload = (file: File | null) => {
-        setEpubPromise(file ? Epub.from(file) : Promise.resolve(null));
-    };
+    const [file, setFile] = createSignal<File>();
+    const [epub] = createResource(file, Epub.from);
 
     return (
-        <div className="h-screen flex flex-col">
-            {loading ? <progress className="progress w-full m-0" /> : null}
-            {error ? (
-                <div className="alert alert-error">
-                    {error instanceof Error ? error.message : JSON.stringify(error)}
+        <div class="h-screen flex flex-col">
+            <Show when={epub.loading}>
+                <progress class="progress w-full m-0" />
+            </Show>
+            <Show when={epub.error}>
+                <div class="alert alert-error">
+                    {epub.error instanceof Error ? epub.error.message : JSON.stringify(epub.error)}
                 </div>
-            ) : null}
-            {epub ? <Viewer epub={epub} /> : null}
-            <Uploader onChange={handleUpload} />
+            </Show>
+            <Show when={epub()}>{(epub) => <Viewer epub={epub()} />}</Show>
+            <Uploader onChange={setFile} />
         </div>
     );
 }
 
-function Uploader(props: { onChange: (file: File | null) => void }) {
+function Uploader(props: { onChange: (file: File | undefined) => void }) {
     return (
-        <label className="btn btn-primary">
+        <label class="btn btn-primary">
             <input
                 type="file"
                 accept="application/epub+zip"
                 hidden
-                className="input input-lg"
-                onChange={(event) => props.onChange(event.target.files?.[0] ?? null)}
+                class="input input-lg"
+                onChange={(event) => props.onChange(event.target.files?.[0] ?? undefined)}
             />
             Upload EPUB File
         </label>
@@ -43,29 +40,25 @@ function Uploader(props: { onChange: (file: File | null) => void }) {
 }
 
 function Viewer(props: { epub: Epub }) {
-    const prevEpub = usePrevious(props.epub);
-    const [spineIndex, setSpineIndex] = useState(0);
-    const [content, setContent] = useState<Promise<string>>(() =>
+    const [spineIndex, setSpineIndex] = createSignal(0);
+    const [previewContent, actions] = createResource<string, number>(spineIndex, (spineIndex) =>
         createPreviewDocument(props.epub, spineIndex),
     );
 
-    useEffect(() => {
-        if (props.epub === prevEpub) {
-            setContent(createPreviewDocument(props.epub, spineIndex));
-        } else {
-            setSpineIndex(0);
-            setContent(createPreviewDocument(props.epub, 0));
-        }
-    }, [props.epub, spineIndex]);
+    createEffect(() => {
+        props.epub;
+        setSpineIndex(0);
+        actions.refetch();
+    });
 
     return (
-        <div className="flex flex-1 overflow-y-auto">
+        <div class="flex flex-1 overflow-y-auto">
             <ViewerNavigation
                 spine={props.epub.spine}
-                index={spineIndex}
+                index={spineIndex()}
                 onNavigate={setSpineIndex}
             />
-            <ViewerPreview content={content} />
+            <ViewerPreview content={previewContent} />
         </div>
     );
 }
@@ -76,31 +69,29 @@ function ViewerNavigation(props: {
     onNavigate: (index: number) => void;
 }) {
     return (
-        <nav className="text-xs min-w-fit h-full overflow-y-auto">
-            <ul className="list m-2">
-                {props.spine.map((path, index) => (
-                    <li key={path}>
-                        <button
-                            type="button"
-                            className={cn(
-                                "w-full p-0.5 text-justify link link-hover",
-                                index === props.index ? "link-accent" : null,
-                            )}
-                            onClick={() => props.onNavigate(index)}
-                        >
-                            {path}
-                        </button>
-                    </li>
-                ))}
+        <nav class="text-xs min-w-fit h-full overflow-y-auto">
+            <ul class="list m-2">
+                <For each={props.spine}>
+                    {(path, index) => (
+                        <li>
+                            <button
+                                type="button"
+                                class="w-full p-0.5 text-justify link link-hover"
+                                classList={{ "link-accent": index() === props.index }}
+                                onClick={() => props.onNavigate(index())}
+                            >
+                                {path}
+                            </button>
+                        </li>
+                    )}
+                </For>
             </ul>
         </nav>
     );
 }
 
-function ViewerPreview(props: { content: Promise<string> }) {
-    const [content, error, loading] = usePromise(props.content);
-
-    const handleFrameLoad: ReactEventHandler<HTMLIFrameElement> = (evt) => {
+function ViewerPreview(props: { content: Resource<string> }) {
+    const handleFrameLoad: JSX.EventHandler<HTMLIFrameElement, Event> = (evt) => {
         const contentDocument = evt.currentTarget.contentDocument!;
         contentDocument.addEventListener("selectionchange", function () {
             const selection = this.getSelection();
@@ -112,24 +103,30 @@ function ViewerPreview(props: { content: Promise<string> }) {
     };
 
     return (
-        <main className="flex-1 h-full">
-            {loading ? (
-                <div className="flex items-center justify-center w-full h-full">
-                    <div className="loading loading-spinner" />
+        <main class="flex-1 h-full">
+            <Show when={props.content.error}>
+                <div class="alert alert-error">
+                    {props.content.error instanceof Error
+                        ? props.content.error.message
+                        : JSON.stringify(props.content.error)}
                 </div>
-            ) : error ? (
-                <div className="alert alert-error">
-                    {error instanceof Error ? error.message : JSON.stringify(error)}
-                </div>
-            ) : (
+            </Show>
+            <Show
+                when={props.content()}
+                fallback={
+                    <div class="flex items-center justify-center w-full h-full">
+                        <div class="loading loading-spinner" />
+                    </div>
+                }
+            >
                 <iframe
                     title="EPUB Viewer"
-                    srcDoc={content}
-                    className="w-full h-full"
+                    srcdoc={props.content()}
+                    class="w-full h-full"
                     sandbox="allow-same-origin allow-scripts"
                     onLoad={handleFrameLoad}
                 />
-            )}
+            </Show>
         </main>
     );
 }
