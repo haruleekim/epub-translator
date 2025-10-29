@@ -1,5 +1,6 @@
 import { createResource, createSignal, For, Show } from "solid-js";
 import Epub from "~/lib/epub";
+import Editor from "./Editor";
 import Preview from "./Preview";
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
 
 function Viewer(props: { epub: Epub }) {
     const [spineIndex, setSpineIndex] = createSignal(0);
+    const [mode, setMode] = createSignal<"editor" | "preview">("preview");
 
     return (
         <div class="flex flex-1 overflow-y-auto">
@@ -43,8 +45,29 @@ function Viewer(props: { epub: Epub }) {
                     onNavigate={setSpineIndex}
                 />
             </nav>
-            <main class="h-full flex-1">
-                <Preview epub={props.epub} spineIndex={spineIndex()} />
+            <main class="flex h-full flex-1 flex-col">
+                <div class="flex">
+                    <button
+                        class="btn flex-1"
+                        classList={{ "btn-active": mode() === "editor" }}
+                        onClick={() => setMode("editor")}
+                    >
+                        Editor
+                    </button>
+                    <button
+                        class="btn flex-1"
+                        classList={{ "btn-active": mode() === "preview" }}
+                        onClick={() => setMode("preview")}
+                    >
+                        Preview
+                    </button>
+                </div>
+                <Show when={mode() === "editor"}>
+                    <Editor epub={props.epub} spineIndex={spineIndex()} />
+                </Show>
+                <Show when={mode() === "preview"}>
+                    <Preview epub={props.epub} spineIndex={spineIndex()} />
+                </Show>
             </main>
         </div>
     );
