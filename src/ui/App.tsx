@@ -9,9 +9,9 @@ export default function App() {
     const [epub] = createResource(file, Epub.from);
 
     return (
-        <div class="h-screen flex flex-col">
+        <div class="flex h-screen flex-col">
             <Show when={epub.loading}>
-                <progress class="progress w-full m-0" />
+                <progress class="progress m-0 w-full" />
             </Show>
             <Show when={epub.error}>
                 <div class="alert alert-error">
@@ -69,14 +69,14 @@ function ViewerNavigation(props: {
     onNavigate: (index: number) => void;
 }) {
     return (
-        <nav class="text-xs min-w-fit h-full overflow-y-auto">
+        <nav class="h-full min-w-fit overflow-y-auto text-xs">
             <ul class="list m-2">
                 <For each={props.spine}>
                     {(path, index) => (
                         <li>
                             <button
                                 type="button"
-                                class="w-full p-0.5 text-justify link link-hover"
+                                class="w-full link p-0.5 text-justify link-hover"
                                 classList={{ "link-accent": index() === props.index }}
                                 onClick={() => props.onNavigate(index())}
                             >
@@ -103,7 +103,7 @@ function ViewerPreview(props: { content: Resource<string> }) {
     };
 
     return (
-        <main class="flex-1 h-full">
+        <main class="h-full flex-1">
             <Show when={props.content.error}>
                 <div class="alert alert-error">
                     {props.content.error instanceof Error
@@ -114,7 +114,7 @@ function ViewerPreview(props: { content: Resource<string> }) {
             <Show
                 when={props.content()}
                 fallback={
-                    <div class="flex items-center justify-center w-full h-full">
+                    <div class="flex h-full w-full items-center justify-center">
                         <div class="loading loading-spinner" />
                     </div>
                 }
@@ -122,7 +122,7 @@ function ViewerPreview(props: { content: Resource<string> }) {
                 <iframe
                     title="EPUB Viewer"
                     srcdoc={props.content()}
-                    class="w-full h-full"
+                    class="h-full w-full"
                     sandbox="allow-same-origin allow-scripts"
                     onLoad={handleFrameLoad}
                 />

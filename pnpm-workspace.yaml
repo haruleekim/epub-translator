@@ -1,4 +1,4 @@
 onlyBuiltDependencies:
-  - core-js
-  - es5-ext
-  - esbuild
+    - core-js
+    - es5-ext
+    - esbuild
