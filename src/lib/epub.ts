@@ -9,7 +9,7 @@ export interface ManifestResource {
     readonly mediaType: string;
     getBlob(): Promise<Blob>;
     getBlobUrl(): Promise<string>;
-    [Symbol.dispose](): void;
+    [Symbol.asyncDispose](): void;
 }
 
 export default class Epub {
@@ -69,17 +69,17 @@ export default class Epub {
             const file = container.file(path);
             if (!file) throw new Error(`Resource not found: ${path}`);
 
-            let _blob: Blob | null = null;
-            async function getBlob() {
+            let _blob: Promise<Blob> | null = null;
+            function getBlob() {
                 if (_blob) return _blob;
-                _blob = new Blob([await file!.async("blob")], { type: mediaType });
+                _blob = file!.async("blob").then((blob) => new Blob([blob], { type: mediaType }));
                 return _blob;
             }
 
-            let _blobUrl: string | null = null;
-            async function getBlobUrl() {
+            let _blobUrl: Promise<string> | null = null;
+            function getBlobUrl() {
                 if (_blobUrl) return _blobUrl;
-                _blobUrl = URL.createObjectURL(await getBlob());
+                _blobUrl = getBlob().then(URL.createObjectURL);
                 return _blobUrl;
             }
 
@@ -89,8 +89,8 @@ export default class Epub {
                 mediaType,
                 getBlob,
                 getBlobUrl,
-                [Symbol.dispose]() {
-                    if (_blobUrl) URL.revokeObjectURL(_blobUrl);
+                async [Symbol.asyncDispose]() {
+                    if (_blobUrl) URL.revokeObjectURL(await _blobUrl);
                 },
             };
 
