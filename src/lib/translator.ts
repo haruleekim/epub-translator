@@ -1,6 +1,5 @@
-import { type AnyNode, Document, Element } from "domhandler";
-import { parseDocument } from "htmlparser2";
 import _ from "lodash";
+import { type AnyNode, Document, Element, parseDocument } from "~/virtual-dom";
 
 export class ContentId {
     readonly path: readonly number[];

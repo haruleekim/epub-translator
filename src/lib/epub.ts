@@ -1,7 +1,5 @@
-import * as CSS from "css-select";
-import type { Element, Node } from "domhandler";
-import { parseDocument } from "htmlparser2";
 import JSZip from "jszip";
+import { CSS, parseDocument, type Element, type Node } from "~/virtual-dom";
 
 const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
 
