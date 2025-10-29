@@ -14,9 +14,7 @@ test("load sample epub", async () => {
     const resp = await fetch(url);
     const file = await resp.blob();
     const epub = await Epub.from(file);
-    const contentUrl = await epub.getContentViewUrl(9);
-    expect(contentUrl).include("blob:http://localhost");
-    const contentResp = await fetch(contentUrl);
-    const content = await contentResp.text();
-    expect(content).toContain("Physically Based Rendering");
+    const resource = epub.getSpineItem(9);
+    expect(await (await resource.getBlob()).text()).toContain("Physically Based Rendering");
+    expect(await resource.getBlobUrl()).include("blob:http://localhost");
 });

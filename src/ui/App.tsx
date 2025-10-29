@@ -2,6 +2,7 @@ import cn from "classnames";
 import { type ReactEventHandler, useEffect, useState } from "react";
 import Epub from "~/lib/epub";
 import { usePrevious, usePromise } from "~/utils/hooks";
+import { createContentDocument } from "./converter";
 
 export default function App() {
     const [epubPromise, setEpubPromise] = useState<Promise<Epub | null>>(Promise.resolve(null));
@@ -42,24 +43,28 @@ function Uploader(props: { onChange: (file: File | null) => void }) {
 
 function Viewer(props: { epub: Epub }) {
     const prevEpub = usePrevious(props.epub);
-    const [index, setIndex] = useState(0);
-    const [contentUrl, setContentUrl] = useState<Promise<string>>(() =>
-        props.epub.getContentViewUrl(index),
+    const [spineIndex, setSpineIndex] = useState(0);
+    const [content, setContent] = useState<Promise<string>>(() =>
+        createContentDocument(props.epub, spineIndex),
     );
 
     useEffect(() => {
         if (props.epub === prevEpub) {
-            setContentUrl(props.epub.getContentViewUrl(index));
+            setContent(createContentDocument(props.epub, spineIndex));
         } else {
-            setIndex(0);
-            setContentUrl(props.epub.getContentViewUrl(0));
+            setSpineIndex(0);
+            setContent(createContentDocument(props.epub, 0));
         }
-    }, [props.epub, index]);
+    }, [props.epub, spineIndex]);
 
     return (
         <div className="flex flex-1 overflow-y-auto">
-            <ViewerNavigation index={index} spine={props.epub.spine} onNavigate={setIndex} />
-            <ViewerFrame url={contentUrl} />
+            <ViewerNavigation
+                spine={props.epub.spine}
+                index={spineIndex}
+                onNavigate={setSpineIndex}
+            />
+            <ViewerFrame content={content} />
         </div>
     );
 }
@@ -91,8 +96,8 @@ function ViewerNavigation(props: {
     );
 }
 
-function ViewerFrame(props: { url: Promise<string> }) {
-    const [url, error, loading] = usePromise(props.url);
+function ViewerFrame(props: { content: Promise<string> }) {
+    const [content, error, loading] = usePromise(props.content);
 
     const handleFrameLoad: ReactEventHandler<HTMLIFrameElement> = (evt) => {
         const contentDocument = evt.currentTarget.contentDocument!;
@@ -112,7 +117,7 @@ function ViewerFrame(props: { url: Promise<string> }) {
             ) : (
                 <iframe
                     title="EPUB Viewer"
-                    src={url}
+                    srcDoc={content}
                     className="w-full h-full"
                     sandbox="allow-same-origin allow-scripts"
                     onLoad={handleFrameLoad}

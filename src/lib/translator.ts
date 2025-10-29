@@ -9,6 +9,16 @@ export class ContentId {
         this.path = [...path];
     }
 
+    static parse(text: string): ContentId {
+        if (text === "") return new ContentId([]);
+        const parts = text.split("/");
+        return new ContentId(parts.map(Number));
+    }
+
+    toString(): string {
+        return this.path.join("/");
+    }
+
     leafOrder(): number {
         return this.path[this.path.length - 1];
     }

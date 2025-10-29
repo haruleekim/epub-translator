@@ -66,6 +66,20 @@ test("register translation", async () => {
     );
 });
 
+test("parse content ids", () => {
+    expect(ContentId.parse("")).toStrictEqual(new ContentId([]));
+    expect(ContentId.parse("1")).toStrictEqual(new ContentId([1]));
+    expect(ContentId.parse("1/2")).toStrictEqual(new ContentId([1, 2]));
+    expect(ContentId.parse("1/2/3")).toStrictEqual(new ContentId([1, 2, 3]));
+});
+
+test("serialize content ids", () => {
+    expect(new ContentId([]).toString()).toBe("");
+    expect(new ContentId([1]).toString()).toBe("1");
+    expect(new ContentId([1, 2]).toString()).toBe("1/2");
+    expect(new ContentId([1, 2, 3]).toString()).toBe("1/2/3");
+});
+
 test("compare content ids", () => {
     let result: number;
 
