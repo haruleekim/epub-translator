@@ -1,8 +1,9 @@
 import cn from "classnames";
 import { type ReactEventHandler, useEffect, useState } from "react";
 import Epub from "~/lib/epub";
+import { ContentId, Partition } from "~/lib/translator";
 import { usePrevious, usePromise } from "~/utils/hooks";
-import { createContentDocument } from "./converter";
+import { CONTENT_ID_ATTRIBUTE, createContentDocument } from "./converter";
 
 export default function App() {
     const [epubPromise, setEpubPromise] = useState<Promise<Epub | null>>(Promise.resolve(null));
@@ -101,7 +102,13 @@ function ViewerFrame(props: { content: Promise<string> }) {
 
     const handleFrameLoad: ReactEventHandler<HTMLIFrameElement> = (evt) => {
         const contentDocument = evt.currentTarget.contentDocument!;
-        contentDocument.addEventListener("selectionchange", handleContentSelectionChange);
+        contentDocument.addEventListener("selectionchange", function () {
+            const selection = this.getSelection();
+            if (selection?.rangeCount) {
+                const [partition, range] = makePartitionFromRange(selection.getRangeAt(0));
+                console.log(partition, range);
+            }
+        });
     };
 
     return (
@@ -127,26 +134,39 @@ function ViewerFrame(props: { content: Promise<string> }) {
     );
 }
 
-function handleContentSelectionChange(this: Document) {
-    const selection = this.getSelection();
-    if (!selection || selection.rangeCount !== 1) return;
-
-    const { startContainer, endContainer, commonAncestorContainer } = selection.getRangeAt(0);
+function makePartitionFromRange(range: Range): [Partition, Range] {
+    const { startContainer, endContainer, commonAncestorContainer } = range;
+    const startElement = closestAncestorWithContentId(startContainer);
+    const endElement = closestAncestorWithContentId(endContainer);
+    const commonAncestorElement = closestAncestorWithContentId(commonAncestorContainer);
 
     let start: Node, end: Node, size: number;
-    if (startContainer === commonAncestorContainer || endContainer === commonAncestorContainer) {
-        [start, end, size] = [commonAncestorContainer, commonAncestorContainer, 1];
+    if (startElement === commonAncestorElement || endElement === commonAncestorElement) {
+        [start, end, size] = [commonAncestorElement, commonAncestorElement, 1];
     } else {
-        let [s, e] = [startContainer, endContainer];
-        while (s.parentNode !== commonAncestorContainer) s = s.parentNode!;
-        while (e.parentNode !== commonAncestorContainer) e = e.parentNode!;
+        let [s, e] = [startElement, endElement] as [Node, Node];
+        while (s.parentNode !== commonAncestorElement) s = s.parentNode!;
+        while (e.parentNode !== commonAncestorElement) e = e.parentNode!;
         [start, end, size] = [s, e, 1];
         while (s !== e && size++) s = s.nextSibling!;
     }
 
-    const range = new Range();
-    range.setStartBefore(start);
-    range.setEndAfter(end);
+    const offset = ContentId.parse((start as HTMLElement).getAttribute(CONTENT_ID_ATTRIBUTE)!);
 
-    console.log(start, end, size);
+    const partitionRange = new Range();
+    partitionRange.setStartBefore(start);
+    partitionRange.setEndAfter(end);
+
+    return [new Partition(offset, size), partitionRange];
+}
+
+function closestAncestorWithContentId(node: Node): Element {
+    while (
+        node.nodeType !== Node.ELEMENT_NODE ||
+        (node as Element).getAttribute(CONTENT_ID_ATTRIBUTE) == null
+    ) {
+        if (!node.parentNode) throw new Error("Cannot find ancestor with content ID");
+        node = node.parentNode;
+    }
+    return node as Element;
 }
