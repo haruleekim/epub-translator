@@ -1,12 +1,12 @@
 <script lang="ts">
     import type { EventHandler } from "svelte/elements";
     import Epub from "~/lib/epub";
-    import { ContentId, Partition } from "~/lib/translator";
+    import { NodeId, Partition } from "~/lib/translator";
     import * as vdom from "~/virtual-dom";
 
     const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
     const REFERENCING_ATTRIBUTES = ["src", "href", "xlink:href"];
-    const CONTENT_ID_ATTRIBUTE = "data-translator-content-id";
+    const NODE_ID_ATTRIBUTE = "data-translator-node-id";
 
     async function createViewerContent(epub: Epub, spineIndex: number): Promise<string> {
         const resource = epub.getSpineItem(spineIndex);
@@ -15,17 +15,17 @@
 
         if (!doc.firstChild) return vdom.render(doc, DOM_OPTIONS);
         let node: vdom.AnyNode = doc.firstChild;
-        let contentId = new ContentId([0]);
+        let id = new NodeId([0]);
 
         while (node.parentNode) {
-            if (contentId.leafOrder() >= node.parentNode.childNodes.length) {
-                contentId = contentId.parent().sibling(1);
+            if (id.leafOrder() >= node.parentNode.childNodes.length) {
+                id = id.parent().sibling(1);
                 node = node.parentNode.nextSibling ?? node.parentNode;
                 continue;
             }
 
             if (node instanceof vdom.Element) {
-                node.attribs[CONTENT_ID_ATTRIBUTE] = contentId.toString();
+                node.attribs[NODE_ID_ATTRIBUTE] = id.toString();
 
                 for (const attr of REFERENCING_ATTRIBUTES) {
                     const path = node.attribs[attr]
@@ -37,13 +37,13 @@
                 }
 
                 if (node.firstChild) {
-                    contentId = contentId.firstChild();
+                    id = id.firstChild();
                     node = node.firstChild;
                     continue;
                 }
             }
 
-            contentId = contentId.sibling(1);
+            id = id.sibling(1);
             node = node.nextSibling ?? node;
         }
 
@@ -52,9 +52,9 @@
 
     function makePartitionFromRange(range: Range): [Partition, Range] {
         const { startContainer, endContainer, commonAncestorContainer } = range;
-        const startElement = closestAncestorWithContentId(startContainer);
-        const endElement = closestAncestorWithContentId(endContainer);
-        const commonAncestorElement = closestAncestorWithContentId(commonAncestorContainer);
+        const startElement = closestAncestorWithNodeId(startContainer);
+        const endElement = closestAncestorWithNodeId(endContainer);
+        const commonAncestorElement = closestAncestorWithNodeId(commonAncestorContainer);
 
         let start: Node, end: Node, size: number;
         if (startElement === commonAncestorElement || endElement === commonAncestorElement) {
@@ -67,7 +67,7 @@
             while (s !== e && size++) s = s.nextSibling!;
         }
 
-        const offset = ContentId.parse((start as HTMLElement).getAttribute(CONTENT_ID_ATTRIBUTE)!);
+        const offset = NodeId.parse((start as HTMLElement).getAttribute(NODE_ID_ATTRIBUTE)!);
 
         const partitionRange = new Range();
         partitionRange.setStartBefore(start);
@@ -76,12 +76,12 @@
         return [new Partition(offset, size), partitionRange];
     }
 
-    function closestAncestorWithContentId(node: Node): Element {
+    function closestAncestorWithNodeId(node: Node): Element {
         while (
             node.nodeType !== Node.ELEMENT_NODE ||
-            (node as Element).getAttribute(CONTENT_ID_ATTRIBUTE) == null
+            (node as Element).getAttribute(NODE_ID_ATTRIBUTE) == null
         ) {
-            if (!node.parentNode) throw new Error("Cannot find ancestor with content ID");
+            if (!node.parentNode) throw new Error("Cannot find ancestor with node ID");
             node = node.parentNode;
         }
         return node as Element;

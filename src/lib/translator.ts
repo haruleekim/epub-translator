@@ -1,17 +1,17 @@
 import _ from "lodash";
 import { type AnyNode, Document, Element, parseDocument } from "~/virtual-dom";
 
-export class ContentId {
+export class NodeId {
     readonly path: readonly number[];
 
     constructor(path: readonly number[]) {
         this.path = [...path];
     }
 
-    static parse(text: string): ContentId {
-        if (text === "") return new ContentId([]);
+    static parse(text: string): NodeId {
+        if (text === "") return new NodeId([]);
         const parts = text.split("/");
-        return new ContentId(parts.map(Number));
+        return new NodeId(parts.map(Number));
     }
 
     toString(): string {
@@ -22,21 +22,21 @@ export class ContentId {
         return this.path[this.path.length - 1];
     }
 
-    sibling(relativePosition: number): ContentId {
+    sibling(relativePosition: number): NodeId {
         const path = _.initial(this.path);
         path.push(this.path[this.path.length - 1] + relativePosition);
-        return new ContentId(path);
+        return new NodeId(path);
     }
 
-    parent(): ContentId {
-        return new ContentId(_.initial(this.path));
+    parent(): NodeId {
+        return new NodeId(_.initial(this.path));
     }
 
-    firstChild(): ContentId {
-        return new ContentId([...this.path, 0]);
+    firstChild(): NodeId {
+        return new NodeId([...this.path, 0]);
     }
 
-    static compare(cid1: ContentId, cid2: ContentId): number {
+    static compare(cid1: NodeId, cid2: NodeId): number {
         for (let i = 0; i < Math.min(cid1.path.length, cid2.path.length); i++) {
             if (cid1.path[i] !== cid2.path[i]) return cid1.path[i] - cid2.path[i];
         }
@@ -44,7 +44,7 @@ export class ContentId {
         return NaN;
     }
 
-    static totalOrderCompare(cid1: ContentId, cid2: ContentId): number {
+    static totalOrderCompare(cid1: NodeId, cid2: NodeId): number {
         for (let i = 0; i < Math.min(cid1.path.length, cid2.path.length); i++) {
             if (cid1.path[i] !== cid2.path[i]) return cid1.path[i] - cid2.path[i];
         }
@@ -54,36 +54,33 @@ export class ContentId {
 
 export class Partition {
     constructor(
-        private readonly offset: ContentId,
+        private readonly offset: NodeId,
         readonly size: number = 1,
     ) {
         if (size <= 0) throw new Error("Size must be positive");
     }
 
-    get first(): ContentId {
+    get first(): NodeId {
         return this.offset;
     }
 
-    get last(): ContentId {
+    get last(): NodeId {
         return this.offset.sibling(this.size - 1);
     }
 
-    contains(contentId: ContentId): boolean {
-        return (
-            ContentId.compare(contentId, this.first) >= 0 &&
-            ContentId.compare(contentId, this.last) <= 0
-        );
+    contains(id: NodeId): boolean {
+        return NodeId.compare(id, this.first) >= 0 && NodeId.compare(id, this.last) <= 0;
     }
 
     static compare(p1: Partition, p2: Partition): number {
         if (_.isEqual(p1.offset, p2.offset) && p1.size === p2.size) return 0;
-        if (ContentId.compare(p1.last, p2.first) < 0) return -1;
-        if (ContentId.compare(p1.first, p2.last) > 0) return 1;
+        if (NodeId.compare(p1.last, p2.first) < 0) return -1;
+        if (NodeId.compare(p1.first, p2.last) > 0) return 1;
         return NaN;
     }
 
     static totalOrderCompare(p1: Partition, p2: Partition): number {
-        return ContentId.totalOrderCompare(p1.offset, p2.offset) || p1.size - p2.size;
+        return NodeId.totalOrderCompare(p1.offset, p2.offset) || p1.size - p2.size;
     }
 }
 
@@ -106,26 +103,26 @@ export class Translator {
         });
     }
 
-    getOriginalContent(contentId: ContentId): string {
-        const { startIndex, endIndex } = this.#getOriginalNode(contentId);
+    getOriginalContent(id: NodeId): string {
+        const { startIndex, endIndex } = this.#getOriginalNode(id);
         return this.original.slice(startIndex!, endIndex! + 1);
     }
 
-    #getOriginalNode(contentId: ContentId): AnyNode {
+    #getOriginalNode(id: NodeId): AnyNode {
         let node: AnyNode = this.originalDom;
-        for (let index = 0; index < contentId.path.length; index++) {
+        for (let index = 0; index < id.path.length; index++) {
             if (node instanceof Element || node instanceof Document) {
-                node = node.childNodes[contentId.path[index]];
+                node = node.childNodes[id.path[index]];
             }
         }
         return node;
     }
 
-    findTranslationIndices(contentId: ContentId): number[] {
+    findTranslationIndices(id: NodeId): number[] {
         const result = [];
         for (let index = 0; index < this.translations.length; index++) {
             const { partition } = this.translations[index];
-            if (partition.contains(contentId)) {
+            if (partition.contains(id)) {
                 result.push(index);
             }
         }
@@ -170,28 +167,28 @@ export class Translator {
 
         if (!this.originalDom.firstChild) return result;
         let node: AnyNode = this.originalDom.firstChild;
-        let contentId = new ContentId([0]);
+        let id = new NodeId([0]);
 
         const translations = indices.map((index) => this.translations[index]);
         let index = 0;
 
         while (node.parentNode) {
-            if (contentId.leafOrder() >= node.parentNode.childNodes.length) {
+            if (id.leafOrder() >= node.parentNode.childNodes.length) {
                 result += this.original.slice(node.endIndex! + 1, node.parentNode.endIndex! + 1);
-                contentId = contentId.parent().sibling(1);
+                id = id.parent().sibling(1);
                 node = node.parentNode.nextSibling ?? node.parentNode;
-            } else if (translations.at(index)?.partition.contains(contentId)) {
+            } else if (translations.at(index)?.partition.contains(id)) {
                 result += translations[index].content;
                 let size = translations[index++].partition.size;
-                contentId = contentId.sibling(size);
+                id = id.sibling(size);
                 while (node.nextSibling && size--) node = node.nextSibling;
             } else if (node instanceof Element && node.firstChild) {
                 result += this.original.slice(node.startIndex!, node.firstChild.startIndex!);
-                contentId = contentId.firstChild();
+                id = id.firstChild();
                 node = node.firstChild;
             } else {
                 result += this.original.slice(node.startIndex!, node.endIndex! + 1);
-                contentId = contentId.sibling(1);
+                id = id.sibling(1);
                 node = node.nextSibling ?? node;
             }
         }

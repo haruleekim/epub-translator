@@ -3,7 +3,7 @@ import { CSS, parseDocument, type Element, type Node } from "~/virtual-dom";
 
 const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
 
-export interface ManifestResource {
+export interface Resource {
     readonly id: string;
     readonly path: string;
     readonly mediaType: string;
@@ -14,7 +14,7 @@ export interface ManifestResource {
 
 export default class Epub {
     private constructor(
-        private resources: Record<string, ManifestResource>,
+        private resources: Record<string, Resource>,
         readonly spine: readonly string[],
     ) {}
 
@@ -26,7 +26,7 @@ export default class Epub {
         return this.resources[path];
     }
 
-    getSpineItem(index: number): ManifestResource {
+    getSpineItem(index: number): Resource {
         const path = this.spine[index];
         return this.resources[path];
     }
@@ -43,7 +43,7 @@ export default class Epub {
         });
 
         const packageDocumentPath = CSS.selectOne<Node, Element>(
-            CSS.compile("rootfile"),
+            "rootfile",
             containerXml,
             DOM_OPTIONS,
         )?.attribs["full-path"];
@@ -55,10 +55,10 @@ export default class Epub {
 
         const packageDocument = parseDocument(await packageDocumentFile.async("text"), DOM_OPTIONS);
 
-        const resources: Record<string, ManifestResource> = {};
+        const resources: Record<string, Resource> = {};
         const resourceMap: Record<string, string> = {};
         for (const entry of CSS.selectAll<Node, Element>(
-            CSS.compile("manifest > item[id][href][media-type]"),
+            "manifest > item[id][href][media-type]",
             packageDocument,
             DOM_OPTIONS,
         )) {
@@ -99,7 +99,7 @@ export default class Epub {
 
         const spine: string[] = [];
         for (const entry of CSS.selectAll<Node, Element>(
-            CSS.compile("spine > itemref[idref]"),
+            "spine > itemref[idref]",
             packageDocument,
             DOM_OPTIONS,
         )) {

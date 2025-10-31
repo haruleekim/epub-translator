@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { ContentId, Partition, Translator } from "~/lib/translator.ts";
+import { NodeId, Partition, Translator } from "~/lib/translator.ts";
 
 const sampleDoc: string = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
@@ -20,27 +20,24 @@ const sampleDoc: string = `<?xml version="1.0" encoding="UTF-8"?>
 
 test("get original content", async () => {
     const translator = new Translator(sampleDoc);
-    const content = translator.getOriginalContent(new ContentId([2, 1, 1]));
+    const content = translator.getOriginalContent(new NodeId([2, 1, 1]));
     expect(content).toEqual("<p>Hello world!</p>");
 });
 
 test("register translation", async () => {
     const translator = new Translator(sampleDoc);
     translator.registerTranslation(
-        new Partition(new ContentId([2, 0])),
+        new Partition(new NodeId([2, 0])),
         `<head><title>Mon livre</title><meta charset="utf-8"/></head>`,
     );
     translator.registerTranslation(
-        new Partition(new ContentId([2, 1, 0]), 2),
+        new Partition(new NodeId([2, 1, 0]), 2),
         `<h1>Mon livre</h1><p>Bonjour monde!</p>`,
     );
-    translator.registerTranslation(
-        new Partition(new ContentId([2, 1, 2])),
-        `<p>C'est mon livre.</p>`,
-    );
+    translator.registerTranslation(new Partition(new NodeId([2, 1, 2])), `<p>C'est mon livre.</p>`);
     expect(translator.hasOverlappingTranslations()).toBe(false);
 
-    translator.registerTranslation(new Partition(new ContentId([2, 1, 1, 0])), "Bonjour monde!");
+    translator.registerTranslation(new Partition(new NodeId([2, 1, 1, 0])), "Bonjour monde!");
     expect(translator.hasOverlappingTranslations()).toBe(true);
     expect(translator.hasOverlappingTranslations([0, 1, 3])).toBe(false);
     expect(translator.hasOverlappingTranslations([0, 2, 3])).toBe(false);
@@ -66,33 +63,33 @@ test("register translation", async () => {
     );
 });
 
-test("parse content ids", () => {
-    expect(ContentId.parse("")).toStrictEqual(new ContentId([]));
-    expect(ContentId.parse("1")).toStrictEqual(new ContentId([1]));
-    expect(ContentId.parse("1/2")).toStrictEqual(new ContentId([1, 2]));
-    expect(ContentId.parse("1/2/3")).toStrictEqual(new ContentId([1, 2, 3]));
+test("parse node ids", () => {
+    expect(NodeId.parse("")).toStrictEqual(new NodeId([]));
+    expect(NodeId.parse("1")).toStrictEqual(new NodeId([1]));
+    expect(NodeId.parse("1/2")).toStrictEqual(new NodeId([1, 2]));
+    expect(NodeId.parse("1/2/3")).toStrictEqual(new NodeId([1, 2, 3]));
 });
 
-test("serialize content ids", () => {
-    expect(new ContentId([]).toString()).toBe("");
-    expect(new ContentId([1]).toString()).toBe("1");
-    expect(new ContentId([1, 2]).toString()).toBe("1/2");
-    expect(new ContentId([1, 2, 3]).toString()).toBe("1/2/3");
+test("serialize node ids", () => {
+    expect(new NodeId([]).toString()).toBe("");
+    expect(new NodeId([1]).toString()).toBe("1");
+    expect(new NodeId([1, 2]).toString()).toBe("1/2");
+    expect(new NodeId([1, 2, 3]).toString()).toBe("1/2/3");
 });
 
-test("compare content ids", () => {
+test("compare node ids", () => {
     let result: number;
 
-    result = ContentId.compare(new ContentId([1, 1]), new ContentId([1, 2]));
+    result = NodeId.compare(new NodeId([1, 1]), new NodeId([1, 2]));
     expect(result).toBeLessThan(0);
 
-    result = ContentId.compare(new ContentId([1, 1]), new ContentId([1, 1]));
+    result = NodeId.compare(new NodeId([1, 1]), new NodeId([1, 1]));
     expect(result).toBe(0);
 
-    result = ContentId.compare(new ContentId([1, 1]), new ContentId([1, 0]));
+    result = NodeId.compare(new NodeId([1, 1]), new NodeId([1, 0]));
     expect(result).toBeGreaterThan(0);
 
-    result = ContentId.compare(new ContentId([1, 1]), new ContentId([1, 1, 1]));
+    result = NodeId.compare(new NodeId([1, 1]), new NodeId([1, 1, 1]));
     expect(result).toBeNaN();
 });
 
@@ -100,44 +97,44 @@ test("compare partitions", () => {
     let result: number;
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 2])),
-        new Partition(new ContentId([1, 3])),
+        new Partition(new NodeId([1, 2])),
+        new Partition(new NodeId([1, 3])),
     );
     expect(result).toBeLessThan(0);
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 2])),
-        new Partition(new ContentId([1, 1])),
+        new Partition(new NodeId([1, 2])),
+        new Partition(new NodeId([1, 1])),
     );
     expect(result).toBeGreaterThan(0);
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 2])),
-        new Partition(new ContentId([1, 2])),
+        new Partition(new NodeId([1, 2])),
+        new Partition(new NodeId([1, 2])),
     );
     expect(result).toBe(0);
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 2])),
-        new Partition(new ContentId([1, 3])),
+        new Partition(new NodeId([1, 2])),
+        new Partition(new NodeId([1, 3])),
     );
     expect(result).toBeLessThan(0);
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 2])),
-        new Partition(new ContentId([1, 0]), 2),
+        new Partition(new NodeId([1, 2])),
+        new Partition(new NodeId([1, 0]), 2),
     );
     expect(result).toBeGreaterThan(0);
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 0])),
-        new Partition(new ContentId([1, 1, 0]), 2),
+        new Partition(new NodeId([1, 0])),
+        new Partition(new NodeId([1, 1, 0]), 2),
     );
     expect(result).toBeLessThan(0);
 
     result = Partition.compare(
-        new Partition(new ContentId([1, 1]), 4),
-        new Partition(new ContentId([1, 2, 4])),
+        new Partition(new NodeId([1, 1]), 4),
+        new Partition(new NodeId([1, 2, 4])),
     );
     expect(result).toBeNaN();
 });
