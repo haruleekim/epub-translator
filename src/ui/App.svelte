@@ -1,8 +1,8 @@
 <script lang="ts">
     import type { EventHandler } from "svelte/elements";
-    import Epub from "~/lib/epub";
-    import { NodeId, Partition } from "~/lib/translator";
-    import * as vdom from "~/virtual-dom";
+    import Epub from "@/lib/epub";
+    import { NodeId, Partition } from "@/lib/translator";
+    import * as vdom from "@/virtual-dom";
 
     const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
     const REFERENCING_ATTRIBUTES = ["src", "href", "xlink:href"];
@@ -115,9 +115,7 @@
                         type="button"
                         class="w-full link p-0.5 text-justify link-hover aria-current:link-accent"
                         aria-current={index === spineIndex}
-                        onclick={() => {
-                            spineIndex = index;
-                        }}
+                        onclick={() => (spineIndex = index)}
                     >
                         {path}
                     </button>
@@ -149,9 +147,7 @@
                 onchange={(event) => {
                     const file = event.currentTarget.files?.[0];
                     epub = file && Epub.from(file);
-                    epub?.then(() => {
-                        spineIndex = 0;
-                    });
+                    epub?.then(() => (spineIndex = 0));
                 }}
             />
             {#await epub}

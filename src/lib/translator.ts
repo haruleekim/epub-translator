@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { type AnyNode, Document, Element, parseDocument } from "~/virtual-dom";
+import { type AnyNode, Document, Element, parseDocument } from "@/virtual-dom";
 
 export class NodeId {
     readonly path: readonly number[];

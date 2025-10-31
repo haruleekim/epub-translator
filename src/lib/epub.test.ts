@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import Epub from "~/lib/epub.ts";
+import Epub from "@/lib/epub";
 
 test("resolve resource url", () => {
     const packageDocumentUrl = Epub.resolvePath("OEBPS/package.opf", "/");
