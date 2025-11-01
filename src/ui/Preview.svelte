@@ -50,54 +50,6 @@
         return vdom.render(doc, DOM_OPTIONS);
     }
 
-    function makePartitionFromRange(range: Range): [Partition, Range] {
-        const { startContainer, endContainer, commonAncestorContainer } = range;
-        const startElement = closestAncestorWithNodeId(startContainer);
-        const endElement = closestAncestorWithNodeId(endContainer);
-        const commonAncestorElement = closestAncestorWithNodeId(commonAncestorContainer);
-
-        let start: Node, end: Node, size: number;
-        if (startElement === commonAncestorElement || endElement === commonAncestorElement) {
-            [start, end, size] = [commonAncestorElement, commonAncestorElement, 1];
-        } else {
-            let [s, e] = [startElement, endElement] as [Node, Node];
-            while (s.parentNode !== commonAncestorElement) s = s.parentNode!;
-            while (e.parentNode !== commonAncestorElement) e = e.parentNode!;
-            [start, end, size] = [s, e, 1];
-            while (s !== e && size++) s = s.nextSibling!;
-        }
-
-        const offset = NodeId.parse((start as HTMLElement).getAttribute(NODE_ID_ATTRIBUTE)!);
-
-        const partitionRange = new Range();
-        partitionRange.setStartBefore(start);
-        partitionRange.setEndAfter(end);
-
-        return [new Partition(offset, size), partitionRange];
-    }
-
-    function closestAncestorWithNodeId(node: Node): Element {
-        while (
-            node.nodeType !== Node.ELEMENT_NODE ||
-            (node as Element).getAttribute(NODE_ID_ATTRIBUTE) == null
-        ) {
-            if (!node.parentNode) throw new Error("Cannot find ancestor with node ID");
-            node = node.parentNode;
-        }
-        return node as Element;
-    }
-
-    const handleFrameLoad: EventHandler<Event, Element> = (evt) => {
-        const contentDocument = (evt.currentTarget as HTMLIFrameElement).contentDocument!;
-        contentDocument.addEventListener("selectionchange", function () {
-            const selection = this.getSelection();
-            if (selection?.rangeCount) {
-                const [partition, range] = makePartitionFromRange(selection.getRangeAt(0));
-                console.log(partition, range);
-            }
-        });
-    };
-
     const { epub, spineIndex }: { epub?: Promise<Epub>; spineIndex: number } = $props();
 </script>
 
@@ -107,6 +59,5 @@
         srcdoc={await createViewerContent(await epub, spineIndex)}
         sandbox="allow-same-origin allow-scripts"
         class="h-full w-full"
-        onload={handleFrameLoad}
     ></iframe>
 {/if}
