@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { CSS, parseDocument, type Element, type Node } from "@/virtual-dom";
+import { CSS, parseDocument, type Element, type Node } from "@/utils/virtual-dom";
 
 const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
 

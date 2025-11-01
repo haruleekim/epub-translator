@@ -1,8 +1,8 @@
 <script lang="ts">
     import type { EventHandler } from "svelte/elements";
-    import Epub from "@/lib/epub";
-    import { NodeId, Partition } from "@/lib/translator";
-    import * as vdom from "@/virtual-dom";
+    import Epub from "@/core/epub";
+    import { NodeId, Partition } from "@/core/translator";
+    import * as vdom from "@/utils/virtual-dom";
 
     const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
     const REFERENCING_ATTRIBUTES = ["src", "href", "xlink:href"];
