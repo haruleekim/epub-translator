@@ -63,6 +63,17 @@ test("register translation", async () => {
     );
 });
 
+test("parent of the root node is itself", () => {
+    const root = new NodeId([]);
+    expect(root.parent()).toStrictEqual(root);
+});
+
+test("a sibling of the root node are itself", () => {
+    const root = new NodeId([]);
+    expect(root.sibling(1)).toStrictEqual(root);
+    expect(root.sibling(-1)).toStrictEqual(root);
+});
+
 test("parse node ids", () => {
     expect(NodeId.parse("")).toStrictEqual(new NodeId([]));
     expect(NodeId.parse("1")).toStrictEqual(new NodeId([1]));

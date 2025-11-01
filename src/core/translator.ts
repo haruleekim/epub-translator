@@ -24,7 +24,7 @@ export class NodeId {
 
     sibling(relativePosition: number): NodeId {
         const path = _.initial(this.path);
-        path.push(this.path[this.path.length - 1] + relativePosition);
+        if (this.path.length) path.push(this.path[this.path.length - 1] + relativePosition);
         return new NodeId(path);
     }
 
