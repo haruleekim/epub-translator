@@ -83,6 +83,6 @@
     }
 
     ::highlight(translation-candidates) {
-        @apply bg-primary-content;
+        @apply bg-rose-400 dark:bg-rose-500;
     }
 </style>
