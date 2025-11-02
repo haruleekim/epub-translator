@@ -13,3 +13,6 @@ dist-ssr
 
 .DS_Store
 __screenshots__
+
+*storybook.log
+storybook-static
