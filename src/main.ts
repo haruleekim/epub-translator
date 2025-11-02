@@ -1,6 +1,6 @@
 import { mount } from "svelte";
 import App from "@/ui/App.svelte";
-import "./main.css";
+import "./tailwind.css";
 
 const app = mount(App, {
     target: document.getElementById("app")!,

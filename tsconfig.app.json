@@ -5,7 +5,7 @@
         "target": "ES2022",
         "useDefineForClassFields": true,
         "module": "ESNext",
-        "types": ["svelte", "vite/client"],
+        "types": ["svelte", "vite/client", "unplugin-icons/types/svelte"],
         "noEmit": true,
         /**
          * Typecheck JS in `.svelte` and `.js` files by default.
@@ -18,7 +18,14 @@
         "moduleDetection": "force",
 
         "baseUrl": ".",
-        "paths": { "@/*": ["./src/*"] }
+        "paths": { "@/*": ["./src/*"], "@/tests/*": ["./tests/*"] }
     },
-    "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"]
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.js",
+        "src/**/*.svelte",
+        "tests/**/*.ts",
+        "tests/**/*.js",
+        "tests/**/*.svelte"
+    ]
 }

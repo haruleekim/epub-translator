@@ -1,4 +1,5 @@
 import _ from "lodash";
+import { v4 as uuidv4 } from "uuid";
 import { type AnyNode, Document, Element, parseDocument } from "@/utils/virtual-dom";
 
 export class NodeId {
@@ -60,6 +61,10 @@ export class Partition {
         if (size <= 0) throw new Error("Size must be positive");
     }
 
+    toString(): string {
+        return `${this.offset.toString()}-${this.last.leafOrder()}`;
+    }
+
     get first(): NodeId {
         return this.offset;
     }
@@ -92,7 +97,7 @@ export interface Translation {
 export class Translator {
     private readonly original: string;
     private readonly originalDom: Document;
-    private translations: Translation[] = [];
+    readonly translations: Record<string, Translation> = {};
 
     constructor(original: string) {
         this.original = original;
@@ -103,63 +108,74 @@ export class Translator {
         });
     }
 
-    getOriginalContent(id: NodeId): string {
-        const { startIndex, endIndex } = this.#getOriginalNode(id);
-        return this.original.slice(startIndex!, endIndex! + 1);
+    getOriginalContent(nodeId: NodeId): string;
+    getOriginalContent(partition: Partition): string;
+    getOriginalContent(arg: NodeId | Partition): string {
+        if (arg instanceof NodeId) {
+            const { startIndex, endIndex } = this.#getOriginalNode(arg);
+            return this.original.slice(startIndex!, endIndex! + 1);
+        } else if (arg instanceof Partition) {
+            const { startIndex } = this.#getOriginalNode(arg.first);
+            const { endIndex } = this.#getOriginalNode(arg.last);
+            return this.original.slice(startIndex!, endIndex! + 1);
+        } else {
+            throw new Error("Invalid argument");
+        }
     }
 
-    #getOriginalNode(id: NodeId): AnyNode {
+    #getOriginalNode(nodeId: NodeId): AnyNode {
         let node: AnyNode = this.originalDom;
-        for (let index = 0; index < id.path.length; index++) {
+        for (let index = 0; index < nodeId.path.length; index++) {
             if (node instanceof Element || node instanceof Document) {
-                node = node.childNodes[id.path[index]];
+                node = node.childNodes[nodeId.path[index]];
             }
         }
         return node;
     }
 
-    findTranslationIndices(id: NodeId): number[] {
+    findTranslationIds(nodeId: NodeId): string[] {
         const result = [];
-        for (let index = 0; index < this.translations.length; index++) {
-            const { partition } = this.translations[index];
-            if (partition.contains(id)) {
-                result.push(index);
+        for (const translationId in this.translations) {
+            const { partition } = this.translations[translationId];
+            if (partition.contains(nodeId)) {
+                result.push(translationId);
             }
         }
         return result;
     }
 
-    registerTranslation(partition: Partition, content: string) {
+    registerTranslation(partition: Partition, content: string): string {
+        const translationId = uuidv4();
         const translation: Translation = { partition, content };
-        const index = binarySearchIndex(this.translations, translation, (a, b) =>
-            Partition.totalOrderCompare(a.partition, b.partition),
-        );
-        this.translations.splice(index, 0, translation);
+        this.translations[translationId] = translation;
+        return translationId;
     }
 
-    hasOverlappingTranslations(translationIndices?: number[]): boolean {
-        const indices = translationIndices
-            ? [...translationIndices].sort()
-            : _.range(this.translations.length);
-        return this.#hasOverlappingTranslations(indices);
+    hasOverlappingTranslations(translationIds?: string[]): boolean {
+        const translations = translationIds
+            ? translationIds.map((id) => this.translations[id])
+            : Object.values(this.translations);
+        translations.sort((a, b) => Partition.compare(a.partition, b.partition));
+        return this.#hasOverlappingTranslations(translations);
     }
 
-    #hasOverlappingTranslations(translationIndices: number[]): boolean {
-        for (let i = 0; i < translationIndices.length - 1; i++) {
-            const a = this.translations[translationIndices[i]];
-            const b = this.translations[translationIndices[i + 1]];
+    #hasOverlappingTranslations(translations: Translation[]): boolean {
+        for (let i = 0; i < translations.length - 1; i++) {
+            const a = translations[i];
+            const b = translations[i + 1];
             const result = Partition.compare(a.partition, b.partition);
             if (Number.isNaN(result) || result >= 0) return true;
         }
         return false;
     }
 
-    render(translationIndices: number[]) {
-        const indices = translationIndices
-            ? [...translationIndices].sort()
-            : _.range(this.translations.length);
+    render(translationIds: string[]) {
+        const translations = translationIds
+            ? translationIds.map((id) => this.translations[id])
+            : Object.values(this.translations);
+        translations.sort((a, b) => Partition.compare(a.partition, b.partition));
 
-        if (this.#hasOverlappingTranslations(indices)) {
+        if (this.#hasOverlappingTranslations(translations)) {
             throw new Error("Overlapping translations");
         }
 
@@ -167,45 +183,31 @@ export class Translator {
 
         if (!this.originalDom.firstChild) return result;
         let node: AnyNode = this.originalDom.firstChild;
-        let id = new NodeId([0]);
+        let nodeId = new NodeId([0]);
 
-        const translations = indices.map((index) => this.translations[index]);
         let index = 0;
 
         while (node.parentNode) {
-            if (id.leafOrder() >= node.parentNode.childNodes.length) {
+            if (nodeId.leafOrder() >= node.parentNode.childNodes.length) {
                 result += this.original.slice(node.endIndex! + 1, node.parentNode.endIndex! + 1);
-                id = id.parent().sibling(1);
+                nodeId = nodeId.parent().sibling(1);
                 node = node.parentNode.nextSibling ?? node.parentNode;
-            } else if (translations.at(index)?.partition.contains(id)) {
+            } else if (translations.at(index)?.partition.contains(nodeId)) {
                 result += translations[index].content;
                 let size = translations[index++].partition.size;
-                id = id.sibling(size);
+                nodeId = nodeId.sibling(size);
                 while (node.nextSibling && size--) node = node.nextSibling;
             } else if (node instanceof Element && node.firstChild) {
                 result += this.original.slice(node.startIndex!, node.firstChild.startIndex!);
-                id = id.firstChild();
+                nodeId = nodeId.firstChild();
                 node = node.firstChild;
             } else {
                 result += this.original.slice(node.startIndex!, node.endIndex! + 1);
-                id = id.sibling(1);
+                nodeId = nodeId.sibling(1);
                 node = node.nextSibling ?? node;
             }
         }
 
         return result;
     }
-}
-
-function binarySearchIndex<T>(array: T[], target: T, compare: (a: T, b: T) => number): number {
-    let left = 0;
-    let right = array.length - 1;
-    while (left <= right) {
-        const mid = Math.floor((left + right) / 2);
-        const result = compare(array[mid], target);
-        if (result < 0) left = mid + 1;
-        else if (result > 0) right = mid - 1;
-        else return mid;
-    }
-    return left;
 }

@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import Epub from "@/core/epub";
+import sample from "@/tests/sample.epub?url";
 
 test("resolve resource url", () => {
     const packageDocumentUrl = Epub.resolvePath("OEBPS/package.opf", "/");
@@ -10,11 +11,11 @@ test("resolve resource url", () => {
 });
 
 test("load sample epub", async () => {
-    const { default: url } = await import("../../tests/data/pbr.epub?url");
-    const resp = await fetch(url);
-    const file = await resp.blob();
-    const epub = await Epub.from(file);
-    const resource = epub.getSpineItem(9);
-    expect(await (await resource.getBlob()).text()).toContain("Physically Based Rendering");
+    const epub = await fetch(sample)
+        .then((resp) => resp.blob())
+        .then(Epub.from);
+    const resource = epub.getSpineItem(1);
+    const content = await (await resource.getBlob()).text();
+    expect(content).toContain("Alice's Adventures in Wonderland");
     expect(await resource.getBlobUrl()).include("blob:http://localhost");
 });

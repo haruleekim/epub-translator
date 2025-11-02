@@ -26,24 +26,30 @@ test("get original content", async () => {
 
 test("register translation", async () => {
     const translator = new Translator(sampleDoc);
-    translator.registerTranslation(
+    const tid0 = translator.registerTranslation(
         new Partition(new NodeId([2, 0])),
         `<head><title>Mon livre</title><meta charset="utf-8"/></head>`,
     );
-    translator.registerTranslation(
+    const tid1 = translator.registerTranslation(
         new Partition(new NodeId([2, 1, 0]), 2),
         `<h1>Mon livre</h1><p>Bonjour monde!</p>`,
     );
-    translator.registerTranslation(new Partition(new NodeId([2, 1, 2])), `<p>C'est mon livre.</p>`);
+    const tid2 = translator.registerTranslation(
+        new Partition(new NodeId([2, 1, 2])),
+        `<p>C'est mon livre.</p>`,
+    );
     expect(translator.hasOverlappingTranslations()).toBe(false);
 
-    translator.registerTranslation(new Partition(new NodeId([2, 1, 1, 0])), "Bonjour monde!");
+    const tid3 = translator.registerTranslation(
+        new Partition(new NodeId([2, 1, 1, 0])),
+        "Bonjour monde!",
+    );
     expect(translator.hasOverlappingTranslations()).toBe(true);
-    expect(translator.hasOverlappingTranslations([0, 1, 3])).toBe(false);
-    expect(translator.hasOverlappingTranslations([0, 2, 3])).toBe(false);
+    expect(translator.hasOverlappingTranslations([tid0, tid1, tid2])).toBe(false);
+    expect(translator.hasOverlappingTranslations([tid0, tid2, tid3])).toBe(false);
 
     expect(translator.render([])).toBe(sampleDoc);
-    expect(translator.render([0, 1, 3])).toBe(
+    expect(translator.render([tid0, tid1, tid2])).toBe(
         `<?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
         <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
