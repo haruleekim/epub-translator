@@ -1,9 +1,8 @@
 <script lang="ts">
     import _ from "lodash";
-    import type { Translator } from "@/core/translator";
+    import type { TranslationComposer } from "@/core/composer";
 
-    const { translator }: { translator: Translator } = $props();
-
+    const { translator }: { translator: TranslationComposer } = $props();
     const selectionFlags = $state<Record<string, boolean>>(
         _.mapValues(translator.translations, () => false),
     );

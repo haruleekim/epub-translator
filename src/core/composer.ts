@@ -94,7 +94,7 @@ export interface Translation {
     content: string;
 }
 
-export class Translator {
+export class TranslationComposer {
     private readonly original: string;
     private readonly originalDom: Document;
     readonly translations: Record<string, Translation> = {};

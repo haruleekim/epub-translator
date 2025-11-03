@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { NodeId, Partition, Translator } from "@/core/translator";
+import { NodeId, Partition, TranslationComposer } from "@/core/composer";
 
 const sampleDoc: string = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
@@ -19,37 +19,37 @@ const sampleDoc: string = `<?xml version="1.0" encoding="UTF-8"?>
     .join("");
 
 test("get original content", async () => {
-    const translator = new Translator(sampleDoc);
-    const content = translator.getOriginalContent(new NodeId([2, 1, 1]));
+    const composer = new TranslationComposer(sampleDoc);
+    const content = composer.getOriginalContent(new NodeId([2, 1, 1]));
     expect(content).toEqual("<p>Hello world!</p>");
 });
 
 test("register translation", async () => {
-    const translator = new Translator(sampleDoc);
-    const tid0 = translator.registerTranslation(
+    const composer = new TranslationComposer(sampleDoc);
+    const tid0 = composer.registerTranslation(
         new Partition(new NodeId([2, 0])),
         `<head><title>Mon livre</title><meta charset="utf-8"/></head>`,
     );
-    const tid1 = translator.registerTranslation(
+    const tid1 = composer.registerTranslation(
         new Partition(new NodeId([2, 1, 0]), 2),
         `<h1>Mon livre</h1><p>Bonjour monde!</p>`,
     );
-    const tid2 = translator.registerTranslation(
+    const tid2 = composer.registerTranslation(
         new Partition(new NodeId([2, 1, 2])),
         `<p>C'est mon livre.</p>`,
     );
-    expect(translator.hasOverlappingTranslations()).toBe(false);
+    expect(composer.hasOverlappingTranslations()).toBe(false);
 
-    const tid3 = translator.registerTranslation(
+    const tid3 = composer.registerTranslation(
         new Partition(new NodeId([2, 1, 1, 0])),
         "Bonjour monde!",
     );
-    expect(translator.hasOverlappingTranslations()).toBe(true);
-    expect(translator.hasOverlappingTranslations([tid0, tid1, tid2])).toBe(false);
-    expect(translator.hasOverlappingTranslations([tid0, tid2, tid3])).toBe(false);
+    expect(composer.hasOverlappingTranslations()).toBe(true);
+    expect(composer.hasOverlappingTranslations([tid0, tid1, tid2])).toBe(false);
+    expect(composer.hasOverlappingTranslations([tid0, tid2, tid3])).toBe(false);
 
-    expect(translator.render([])).toBe(sampleDoc);
-    expect(translator.render([tid0, tid1, tid2])).toBe(
+    expect(composer.render([])).toBe(sampleDoc);
+    expect(composer.render([tid0, tid1, tid2])).toBe(
         `<?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
         <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">

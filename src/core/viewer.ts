@@ -1,5 +1,5 @@
+import { NodeId } from "@/core/composer";
 import Epub from "@/core/epub";
-import { NodeId, Partition } from "@/core/translator";
 import * as vdom from "@/utils/virtual-dom";
 
 const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
