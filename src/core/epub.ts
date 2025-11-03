@@ -35,12 +35,14 @@ export default class Epub {
     }
 
     getResource(path: string) {
-        return this.resources[path];
+        const resource = this.resources[path];
+        if (!resource) throw new Error(`Resource not found: ${path}`);
+        return resource;
     }
 
     getSpineItem(index: number): Resource {
         const path = this.spine[index];
-        return this.resources[path];
+        return this.getResource(path);
     }
 
     static async load(input: Input): Promise<Epub> {

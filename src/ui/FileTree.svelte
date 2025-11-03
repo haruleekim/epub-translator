@@ -23,7 +23,7 @@
                 if (!parent.children) parent.children = {};
                 if (!(segment in parent.children)) {
                     parent.children[segment] = {
-                        path: `${parent.path}/${segment}`,
+                        path: parent.path ? `${parent.path}/${segment}` : segment,
                         children: null,
                     };
                 }

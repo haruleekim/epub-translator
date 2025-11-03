@@ -1,8 +1,6 @@
 <script lang="ts">
-    import type { Action } from "svelte/action";
     import type { Attachment } from "svelte/attachments";
     import Epub from "@/core/epub";
-    import { NodeId } from "@/core/translator";
     import { createNodeView, type NodeView } from "@/core/viewer";
 
     const addSelectionListener: Attachment = (root) => {

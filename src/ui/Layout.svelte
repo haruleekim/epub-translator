@@ -2,10 +2,14 @@
     import IconChevronLeft from "virtual:icons/mdi/chevron-left";
     import IconChevronRight from "virtual:icons/mdi/chevron-right";
     import type Epub from "@/core/epub";
+    import ResourceViewManager from "@/core/resource-view-manager";
     import FileTree from "./FileTree.svelte";
     import Navbar, { type Mode } from "./Navbar.svelte";
+    import ResourceViewer from "./ResourceViewer.svelte";
 
     const { epub }: { epub: Epub } = $props();
+
+    const resourceViewManager = $derived(new ResourceViewManager(epub));
 
     let mode = $state<Mode>("browse");
 
@@ -65,5 +69,9 @@
         {/if}
     </div>
 
-    <div class="col-start-2 row-start-2"></div>
+    <div class="col-start-2 row-start-2">
+        {#if currentResourcePath}
+            <ResourceViewer {epub} path={currentResourcePath} {resourceViewManager} />
+        {/if}
+    </div>
 </div>

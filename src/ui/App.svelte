@@ -61,7 +61,7 @@
                 hidden
                 onchange={(event) => {
                     const file = event.currentTarget.files?.[0];
-                    epub = file && Epub.from(file);
+                    epub = file && Epub.load(file);
                     epub?.then(() => (spineIndex = 0));
                 }}
             />
