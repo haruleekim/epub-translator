@@ -94,6 +94,21 @@ test("serialize node ids", () => {
     expect(new NodeId([1, 2, 3]).toString()).toBe("1/2/3");
 });
 
+test("get common ancestors", () => {
+    expect(NodeId.commonAncestor(new NodeId([1, 2, 3]), new NodeId([1, 2, 4]))).toStrictEqual(
+        new NodeId([1, 2]),
+    );
+    expect(NodeId.commonAncestor(new NodeId([1, 2, 3]), new NodeId([1, 2]))).toStrictEqual(
+        new NodeId([1, 2]),
+    );
+    expect(NodeId.commonAncestor(new NodeId([1, 2, 3]), new NodeId([1]))).toStrictEqual(
+        new NodeId([1]),
+    );
+    expect(NodeId.commonAncestor(new NodeId([1, 2, 3]), new NodeId([2]))).toStrictEqual(
+        new NodeId([]),
+    );
+});
+
 test("compare node ids", () => {
     let result: number;
 
@@ -154,4 +169,19 @@ test("compare partitions", () => {
         new Partition(new NodeId([1, 2, 4])),
     );
     expect(result).toBeNaN();
+});
+
+test("check if partition contains node id", () => {
+    let partition: Partition;
+
+    partition = new Partition(new NodeId([1, 2]));
+    expect(partition.contains(new NodeId([1, 2]))).toBe(true);
+    expect(partition.contains(new NodeId([1, 3]))).toBe(false);
+    expect(partition.contains(new NodeId([1, 2, 3]))).toBe(true);
+
+    partition = new Partition(new NodeId([1, 2]), 2);
+    expect(partition.contains(new NodeId([1, 2]))).toBe(true);
+    expect(partition.contains(new NodeId([1, 3]))).toBe(true);
+    expect(partition.contains(new NodeId([1, 4]))).toBe(false);
+    expect(partition.contains(new NodeId([1, 2, 3]))).toBe(true);
 });

@@ -35,7 +35,7 @@
 
     const { Story } = defineMeta({
         component: TranslationList,
-        args: { translator: composer },
+        args: { composer },
     });
 </script>
 

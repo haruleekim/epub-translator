@@ -2,21 +2,21 @@
     import _ from "lodash";
     import type { TranslationComposer } from "@/core/composer";
 
-    const { translator }: { translator: TranslationComposer } = $props();
+    const { composer }: { composer: TranslationComposer } = $props();
     const selectionFlags = $state<Record<string, boolean>>(
-        _.mapValues(translator.translations, () => false),
+        _.mapValues(composer.translations, () => false),
     );
     const selectedIds = $derived(
         Object.entries(selectionFlags)
             .filter(([, v]) => v)
             .map(([k]) => k),
     );
-    const overlapping = $derived(translator.hasOverlappingTranslations(selectedIds));
+    const overlapping = $derived(composer.hasOverlappingTranslations(selectedIds));
 </script>
 
 <div class="list bg-base-200 text-xs">
-    {#each Object.entries(translator.translations) as [id, translation] (id)}
-        {@const original = translator.getOriginalContent(translation.partition)}
+    {#each Object.entries(composer.translations) as [id, translation] (id)}
+        {@const original = composer.getOriginalContent(translation.partition)}
         <label class="list-row items-center">
             <input type="checkbox" class="checkbox" bind:checked={selectionFlags[id]} />
             <div class="flex flex-col gap-2">
@@ -31,6 +31,6 @@
     {#if overlapping}
         <div>Overlapping translations detected!</div>
     {:else}
-        <pre class="text-xs whitespace-pre-wrap">{translator.render(selectedIds)}</pre>
+        <pre class="text-xs whitespace-pre-wrap">{composer.render(selectedIds)}</pre>
     {/if}
 </div>

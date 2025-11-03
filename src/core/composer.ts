@@ -19,6 +19,10 @@ export class NodeId {
         return this.path.join("/");
     }
 
+    get length() {
+        return this.path.length;
+    }
+
     leafOrder(): number {
         return this.path[this.path.length - 1];
     }
@@ -35,6 +39,19 @@ export class NodeId {
 
     firstChild(): NodeId {
         return new NodeId([...this.path, 0]);
+    }
+
+    equals(other: NodeId): boolean {
+        return _.isEqual(this.path, other.path);
+    }
+
+    static commonAncestor(cid1: NodeId, cid2: NodeId): NodeId {
+        const path = [];
+        for (let i = 0; i < Math.min(cid1.path.length, cid2.path.length); i++) {
+            if (cid1.path[i] !== cid2.path[i]) break;
+            path.push(cid1.path[i]);
+        }
+        return new NodeId(path);
     }
 
     static compare(cid1: NodeId, cid2: NodeId): number {
@@ -74,7 +91,11 @@ export class Partition {
     }
 
     contains(id: NodeId): boolean {
-        return NodeId.compare(id, this.first) >= 0 && NodeId.compare(id, this.last) <= 0;
+        let s = NodeId.compare(this.first, id);
+        let e = NodeId.compare(this.last, id);
+        if (Number.isNaN(s)) s = this.first.path.length - id.path.length;
+        if (Number.isNaN(e)) e = id.path.length - this.last.path.length;
+        return s <= 0 && 0 <= e;
     }
 
     static compare(p1: Partition, p2: Partition): number {
