@@ -28,7 +28,7 @@
 </script>
 
 <div class="grid h-screen grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
-    <div class="col-span-full row-start-1 bg-base-200">
+    <div class="z-100 col-span-full row-start-1 bg-base-200 shadow">
         <Navbar bind:mode />
     </div>
 
@@ -70,8 +70,10 @@
     </div>
 
     <div class="col-start-2 row-start-2">
-        {#if currentResourcePath}
-            <ResourceViewer {epub} path={currentResourcePath} {resourceViewManager} />
+        {#if mode === "browse"}
+            {#if currentResourcePath}
+                <ResourceViewer {epub} path={currentResourcePath} {resourceViewManager} />
+            {/if}
         {/if}
     </div>
 </div>
