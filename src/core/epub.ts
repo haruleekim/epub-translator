@@ -12,6 +12,14 @@ export interface Resource {
     [Symbol.asyncDispose](): void;
 }
 
+export type Input =
+    | ArrayBuffer
+    | Blob
+    | Uint8Array
+    | URL
+    | string
+    | Promise<Uint8Array | ArrayBuffer | Blob | URL | string>;
+
 export default class Epub {
     private constructor(
         private resources: Record<string, Resource>,
@@ -20,6 +28,10 @@ export default class Epub {
 
     get length() {
         return this.spine.length;
+    }
+
+    getResourcePaths(): string[] {
+        return Object.keys(this.resources);
     }
 
     getResource(path: string) {
@@ -31,7 +43,15 @@ export default class Epub {
         return this.resources[path];
     }
 
-    static async from(file: Blob): Promise<Epub> {
+    static async load(input: Input): Promise<Epub> {
+        input = await input;
+        let file: ArrayBuffer | Blob | Uint8Array;
+        if (input instanceof URL || typeof input === "string") {
+            file = await fetch(input).then((resp) => resp.blob());
+        } else {
+            file = input;
+        }
+
         const container = await JSZip.loadAsync(file);
 
         const containerXmlFile = container.file("META-INF/container.xml");

@@ -1,12 +1,14 @@
 <script lang="ts">
-    import IconFile from "virtual:icons/mdi/file-outline";
-    import IconFolder from "virtual:icons/mdi/folder-outline";
+    import _ from "lodash";
+    import IconFileOutline from "virtual:icons/mdi/file-outline";
+    import IconFolderOutline from "virtual:icons/mdi/folder-outline";
 
     interface Props {
+        activePath?: string;
         paths?: readonly string[];
         onselect?: (path: string) => void;
     }
-    const { paths = [], onselect = () => {} }: Props = $props();
+    const { activePath, paths = [], onselect = () => {} }: Props = $props();
 
     interface Hierarchy {
         path: string;
@@ -36,7 +38,7 @@
     {#if hierarchy.children}
         <details>
             <summary>
-                <IconFolder class="size-4" />
+                <IconFolderOutline class="size-4" />
                 {name}
             </summary>
             <ul>
@@ -48,17 +50,28 @@
             </ul>
         </details>
     {:else}
-        <button onclick={() => onselect(hierarchy.path)}>
-            <IconFile class="size-4" />
+        <button
+            onclick={() => onselect(hierarchy.path)}
+            class={{ "menu-active": activePath === hierarchy.path }}
+        >
+            <IconFileOutline class="size-4" />
             {name}
         </button>
     {/if}
 {/snippet}
 
-<ul class="menu w-full max-w-xs menu-xs rounded-box bg-base-200">
-    {#each Object.entries(hierarchy.children!) as [segment, subhierarchy] (segment)}
-        <li>
-            {@render entry(segment, subhierarchy)}
-        </li>
-    {/each}
-</ul>
+<div class="h-full w-full">
+    {#if _.size(hierarchy.children)}
+        <ul class="menu w-full menu-xs">
+            {#each Object.entries(hierarchy.children!) as [segment, subhierarchy] (segment)}
+                <li>
+                    {@render entry(segment, subhierarchy)}
+                </li>
+            {/each}
+        </ul>
+    {:else}
+        <div class="hero h-full">
+            <div class="hero-content text-xl uppercase">Empty</div>
+        </div>
+    {/if}
+</div>

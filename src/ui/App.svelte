@@ -47,6 +47,7 @@
             <NodeViewer {epub} {spineIndex} />
         {/if}
     </div>
+    load
 
     <div class="col-start-3 row-start-2 bg-base-200">
         <div class="hero h-full">translation view</div>

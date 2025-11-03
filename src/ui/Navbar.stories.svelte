@@ -3,13 +3,7 @@
     import Navbar from "./Navbar.svelte";
 
     const { Story } = defineMeta({
-        title: "Navbar",
         component: Navbar,
-        tags: ["autodocs"],
-        argTypes: {},
-        args: {
-            onchange: (mode) => console.log(mode),
-        },
         parameters: { layout: "fullscreen" },
     });
 </script>

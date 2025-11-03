@@ -1,7 +1,7 @@
 <script lang="ts" module>
     import { defineMeta } from "@storybook/addon-svelte-csf";
     import { Translator, NodeId, Partition } from "@/core/translator";
-    import TranslationView from "./TranslationView.svelte";
+    import TranslationList from "./TranslationList.svelte";
 
     const sampleDoc: string = `<?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
@@ -34,10 +34,7 @@
     translator.registerTranslation(new Partition(new NodeId([2, 1, 1, 0])), "Bonjour monde!");
 
     const { Story } = defineMeta({
-        title: "TranslationView",
-        component: TranslationView,
-        tags: ["autodocs"],
-        argTypes: {},
+        component: TranslationList,
         args: { translator },
     });
 </script>

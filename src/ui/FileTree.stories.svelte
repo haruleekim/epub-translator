@@ -1,14 +1,9 @@
-<script module>
+<script lang="ts" module>
     import { defineMeta } from "@storybook/addon-svelte-csf";
     import FileTree from "./FileTree.svelte";
 
     const { Story } = defineMeta({
-        title: "FileTree",
         component: FileTree,
-        tags: ["autodocs"],
-        argTypes: {},
-        args: {},
-        parameters: { layout: "fullscreen" },
     });
 </script>
 
@@ -27,3 +22,5 @@
         onselect: (path) => console.log(path),
     }}
 />
+
+<Story name="Empty" />
