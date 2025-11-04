@@ -1,6 +1,7 @@
 <script lang="ts" module>
     import { defineMeta } from "@storybook/addon-svelte-csf";
-    import { TranslationComposer, NodeId, Partition } from "@/core/composer";
+    import { NodeId, Partition } from "@/core/common";
+    import TranslationComposer from "@/core/composer";
     import TranslationList from "./TranslationList.svelte";
 
     const sampleDoc: string = `<?xml version="1.0" encoding="UTF-8"?>
@@ -21,17 +22,17 @@
         .join("");
 
     const composer = new TranslationComposer(sampleDoc);
-    composer.registerTranslation(
+    composer.addTranslation(
         new Partition(new NodeId([2, 0])),
         `<head><title>Mon livre</title><meta charset="utf-8"/></head>`,
     );
-    composer.registerTranslation(
+    composer.addTranslation(
         new Partition(new NodeId([2, 1, 0]), 2),
         `<h1>Mon livre</h1><p>Bonjour monde!</p>`,
     );
-    composer.registerTranslation(new Partition(new NodeId([2, 1, 2])), `<p>C'est mon livre.</p>`);
+    composer.addTranslation(new Partition(new NodeId([2, 1, 2])), `<p>C'est mon livre.</p>`);
 
-    composer.registerTranslation(new Partition(new NodeId([2, 1, 1, 0])), "Bonjour monde!");
+    composer.addTranslation(new Partition(new NodeId([2, 1, 1, 0])), "Bonjour monde!");
 
     const { Story } = defineMeta({
         component: TranslationList,

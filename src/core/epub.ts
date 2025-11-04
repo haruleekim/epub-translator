@@ -32,13 +32,15 @@ export default class Epub {
         return Object.keys(this.resources);
     }
 
-    getResource(path: string) {
-        const resource = this.resources[path];
-        if (!resource) throw new Error(`Resource not found: ${path}`);
-        return resource;
+    getResource(path: string): Resource | null {
+        if (path in this.resources) {
+            return this.resources[path];
+        } else {
+            return null;
+        }
     }
 
-    getSpineItem(index: number): Resource {
+    getSpineItem(index: number): Resource | null {
         const path = this.spine[index];
         return this.getResource(path);
     }

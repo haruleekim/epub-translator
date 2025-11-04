@@ -1,23 +1,16 @@
 <script lang="ts">
-    import _ from "lodash";
-    import type { TranslationComposer } from "@/core/composer";
+    import type TranslationComposer from "@/core/composer";
 
-    type Props = {
-        composer: TranslationComposer;
-    };
-
+    type Props = { composer: TranslationComposer };
     const { composer }: Props = $props();
 
-    const selectionFlags = $state<Record<string, boolean>>(
-        _.mapValues(composer.translations, () => false),
-    );
+    const selectionFlags = $state<Record<string, boolean>>({});
     const selectedIds = $derived(
         Object.entries(selectionFlags)
             .filter(([, v]) => v)
             .map(([k]) => k),
     );
-    const isOverlapping = $derived(composer.hasOverlappingTranslations(selectedIds));
-
+    const isOverlapping = $derived(composer.checkOverlap(selectedIds));
     const previewContent = $derived(isOverlapping ? null : composer.render(selectedIds));
 </script>
 

@@ -1,121 +1,14 @@
 import _ from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import { type AnyNode, Document, Element, parseDocument } from "@/utils/virtual-dom";
+import { NodeId, Partition } from "./common";
 
-export class NodeId {
-    readonly path: readonly number[];
-
-    constructor(path: readonly number[]) {
-        this.path = [...path];
-    }
-
-    static parse(text: string): NodeId {
-        if (text === "") return new NodeId([]);
-        const parts = text.split("/");
-        return new NodeId(parts.map(Number));
-    }
-
-    toString(): string {
-        return this.path.join("/");
-    }
-
-    get length() {
-        return this.path.length;
-    }
-
-    leafOrder(): number {
-        return this.path[this.path.length - 1];
-    }
-
-    sibling(relativePosition: number): NodeId {
-        const path = _.initial(this.path);
-        if (this.path.length) path.push(this.path[this.path.length - 1] + relativePosition);
-        return new NodeId(path);
-    }
-
-    parent(): NodeId {
-        return new NodeId(_.initial(this.path));
-    }
-
-    firstChild(): NodeId {
-        return new NodeId([...this.path, 0]);
-    }
-
-    equals(other: NodeId): boolean {
-        return _.isEqual(this.path, other.path);
-    }
-
-    static commonAncestor(cid1: NodeId, cid2: NodeId): NodeId {
-        const path = [];
-        for (let i = 0; i < Math.min(cid1.path.length, cid2.path.length); i++) {
-            if (cid1.path[i] !== cid2.path[i]) break;
-            path.push(cid1.path[i]);
-        }
-        return new NodeId(path);
-    }
-
-    static compare(cid1: NodeId, cid2: NodeId): number {
-        for (let i = 0; i < Math.min(cid1.path.length, cid2.path.length); i++) {
-            if (cid1.path[i] !== cid2.path[i]) return cid1.path[i] - cid2.path[i];
-        }
-        if (cid1.path.length === cid2.path.length) return 0;
-        return NaN;
-    }
-
-    static totalOrderCompare(cid1: NodeId, cid2: NodeId): number {
-        for (let i = 0; i < Math.min(cid1.path.length, cid2.path.length); i++) {
-            if (cid1.path[i] !== cid2.path[i]) return cid1.path[i] - cid2.path[i];
-        }
-        return cid1.path.length - cid2.path.length;
-    }
-}
-
-export class Partition {
-    constructor(
-        private readonly offset: NodeId,
-        readonly size: number = 1,
-    ) {
-        if (size <= 0) throw new Error("Size must be positive");
-    }
-
-    toString(): string {
-        return `${this.offset.toString()}-${this.last.leafOrder()}`;
-    }
-
-    get first(): NodeId {
-        return this.offset;
-    }
-
-    get last(): NodeId {
-        return this.offset.sibling(this.size - 1);
-    }
-
-    contains(id: NodeId): boolean {
-        let s = NodeId.compare(this.first, id);
-        let e = NodeId.compare(this.last, id);
-        if (Number.isNaN(s)) s = this.first.path.length - id.path.length;
-        if (Number.isNaN(e)) e = id.path.length - this.last.path.length;
-        return s <= 0 && 0 <= e;
-    }
-
-    static compare(p1: Partition, p2: Partition): number {
-        if (_.isEqual(p1.offset, p2.offset) && p1.size === p2.size) return 0;
-        if (NodeId.compare(p1.last, p2.first) < 0) return -1;
-        if (NodeId.compare(p1.first, p2.last) > 0) return 1;
-        return NaN;
-    }
-
-    static totalOrderCompare(p1: Partition, p2: Partition): number {
-        return NodeId.totalOrderCompare(p1.offset, p2.offset) || p1.size - p2.size;
-    }
-}
-
-export interface Translation {
+interface Translation {
     partition: Partition;
     content: string;
 }
 
-export class TranslationComposer {
+export default class TranslationComposer {
     private readonly original: string;
     private readonly originalDom: Document;
     readonly translations: Record<string, Translation> = {};
@@ -165,38 +58,33 @@ export class TranslationComposer {
         return result;
     }
 
-    registerTranslation(partition: Partition, content: string): string {
+    addTranslation(partition: Partition, content: string): string {
         const translationId = uuidv4();
         const translation: Translation = { partition, content };
         this.translations[translationId] = translation;
         return translationId;
     }
 
-    hasOverlappingTranslations(translationIds?: string[]): boolean {
-        const translations = translationIds
-            ? translationIds.map((id) => this.translations[id])
-            : Object.values(this.translations);
-        translations.sort((a, b) => Partition.compare(a.partition, b.partition));
-        return this.#hasOverlappingTranslations(translations);
+    removeTranslation(translationId: string): void {
+        delete this.translations[translationId];
     }
 
-    #hasOverlappingTranslations(translations: Translation[]): boolean {
-        for (let i = 0; i < translations.length - 1; i++) {
-            const a = translations[i];
-            const b = translations[i + 1];
-            const result = Partition.compare(a.partition, b.partition);
-            if (Number.isNaN(result) || result >= 0) return true;
-        }
-        return false;
+    updateTranslation(translationId: string, content: string): void {
+        const translation = this.translations[translationId];
+        if (!translation) throw new Error(`Translation not found: ${translationId}`);
+        translation.content = content;
+    }
+
+    checkOverlap(translationIds: string[]): boolean {
+        const partitions = translationIds.map((id) => this.translations[id].partition);
+        return Partition.checkOverlap(partitions);
     }
 
     render(translationIds: string[]) {
-        const translations = translationIds
-            ? translationIds.map((id) => this.translations[id])
-            : Object.values(this.translations);
+        const translations = translationIds.map((id) => this.translations[id]);
         translations.sort((a, b) => Partition.compare(a.partition, b.partition));
 
-        if (this.#hasOverlappingTranslations(translations)) {
+        if (Partition.checkOverlap(translations.map((tr) => tr.partition))) {
             throw new Error("Overlapping translations");
         }
 
@@ -209,9 +97,9 @@ export class TranslationComposer {
         let index = 0;
 
         while (node.parentNode) {
-            if (nodeId.leafOrder() >= node.parentNode.childNodes.length) {
+            if (nodeId.leafOrder >= node.parentNode.childNodes.length) {
                 result += this.original.slice(node.endIndex! + 1, node.parentNode.endIndex! + 1);
-                nodeId = nodeId.parent().sibling(1);
+                nodeId = nodeId.parent.sibling(1);
                 node = node.parentNode.nextSibling ?? node.parentNode;
             } else if (translations.at(index)?.partition.contains(nodeId)) {
                 result += translations[index].content;
@@ -220,7 +108,7 @@ export class TranslationComposer {
                 while (node.nextSibling && size--) node = node.nextSibling;
             } else if (node instanceof Element && node.firstChild) {
                 result += this.original.slice(node.startIndex!, node.firstChild.startIndex!);
-                nodeId = nodeId.firstChild();
+                nodeId = nodeId.firstChild;
                 node = node.firstChild;
             } else {
                 result += this.original.slice(node.startIndex!, node.endIndex! + 1);

@@ -1,6 +1,6 @@
 <script lang="ts">
     import IconFileImage from "virtual:icons/mdi/file-image";
-    import { NodeId, Partition } from "@/core/composer";
+    import { NodeId, Partition } from "@/core/common";
     import * as vdom from "@/utils/virtual-dom";
 
     type NodeTree = NodeTreeContainer | NodeTreeLeaf;
@@ -36,10 +36,10 @@
                 return null;
             }
             if (node.childNodes.length === 1) {
-                return await buildNodeTree(node.firstChild!, id.firstChild());
+                return await buildNodeTree(node.firstChild!, id.firstChild);
             }
             const children: NodeTree[] = [];
-            let childId = id.firstChild();
+            let childId = id.firstChild;
             for (const child of node.childNodes) {
                 const childTree = await buildNodeTree(child, childId);
                 if (childTree) children.push(childTree);
@@ -77,8 +77,8 @@
         const ordering = NodeId.compare(start, end);
         if (ordering) {
             let [s, e] = ordering < 0 ? [start, end] : [end, start];
-            while (s.length > commonAncestor.length + 1) s = s.parent();
-            while (e.length > commonAncestor.length + 1) e = e.parent();
+            while (s.length > commonAncestor.length + 1) s = s.parent;
+            while (e.length > commonAncestor.length + 1) e = e.parent;
             let [offset, size] = [s, 1];
             while (NodeId.compare(s, e) && size++) s = s.sibling(1);
             return new Partition(offset, size);

@@ -1,18 +1,15 @@
 <script lang="ts">
     import IconChevronLeft from "virtual:icons/mdi/chevron-left";
     import IconChevronRight from "virtual:icons/mdi/chevron-right";
-    import { TranslationComposer } from "@/core/composer";
+    import ContentView from "@/components/ContentView.svelte";
+    import FileTree from "@/components/FileTree.svelte";
+    import PartitionSelector from "@/components/PartitionSelector.svelte";
+    import TranslationComposer from "@/core/composer";
     import type Epub from "@/core/epub";
-    import ResourceViewer from "@/core/viewer";
-    import FileTree from "./FileTree.svelte";
     import Navbar, { type Mode } from "./Navbar.svelte";
-    import PartitionSelector from "./PartitionSelector.svelte";
-    import ResourceView from "./ResourceView.svelte";
     import TranslationList from "./TranslationList.svelte";
 
     const { epub }: { epub: Epub } = $props();
-
-    const resourceViewManager = $derived(new ResourceViewer(epub));
 
     let mode = $state<Mode>("translate");
 
@@ -29,14 +26,10 @@
 
     let currentResourcePath = $state<string>();
 
-    const content = $derived(
-        currentResourcePath &&
-            (await epub
-                .getResource(currentResourcePath)
-                .getBlob()
-                .then((blob) => blob.text())),
+    const blob = $derived(
+        currentResourcePath ? await epub.getResource(currentResourcePath)?.getBlob() : undefined,
     );
-
+    const content = $derived(await blob?.text());
     const composer = $derived(content && new TranslationComposer(content));
 </script>
 
@@ -85,7 +78,15 @@
     <div class="col-start-2 row-start-2 overflow-auto">
         {#key currentResourcePath}
             {#if mode === "browse" && currentResourcePath}
-                <ResourceView path={currentResourcePath} resourceViewer={resourceViewManager} />
+                {#if blob}
+                    <ContentView
+                        {blob}
+                        transformUrl={async (url) => {
+                            const resourceUrl = await epub.getResource(url)?.getBlobUrl();
+                            return resourceUrl ?? url;
+                        }}
+                    />
+                {/if}
             {:else if mode === "translate" && content}
                 <PartitionSelector {content} />
             {:else if mode === "preview" && composer}

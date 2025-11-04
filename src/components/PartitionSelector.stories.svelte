@@ -5,7 +5,7 @@
     import PartitionSelector from "./PartitionSelector.svelte";
 
     const epub = await Epub.load(sample);
-    const blob = await epub.getSpineItem(2).getBlob();
+    const blob = await epub.getSpineItem(2)!.getBlob();
     const content = await blob.text();
 
     const { Story } = defineMeta({
