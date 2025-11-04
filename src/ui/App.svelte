@@ -6,10 +6,11 @@
     import PartitionSelector from "@/components/PartitionSelector.svelte";
     import TranslationComposer from "@/core/composer";
     import Epub from "@/core/epub";
+    import Translator from "@/core/translator";
     import Navbar, { type Mode } from "./Navbar.svelte";
     import TranslationList from "./TranslationList.svelte";
 
-    const { epub }: { epub: Epub } = $props();
+    const { translator }: { translator: Translator } = $props();
 
     let mode = $state<Mode>("translate");
 
@@ -18,16 +19,16 @@
     let showFileTree = $state<boolean>(true);
     let fileTreePaths = $derived.by(() => {
         if (showAllResources) {
-            return epub.getResourcePaths();
+            return translator.getResourcePaths();
         } else {
-            return epub.spine;
+            return translator.listSpinePaths();
         }
     });
 
     let currentResourcePath = $state<string>();
 
     const currentResource = $derived(
-        currentResourcePath ? epub.getResource(currentResourcePath) : null,
+        currentResourcePath ? translator.getResource(currentResourcePath) : null,
     );
     const blob = $derived(currentResource ? await currentResource.getBlob() : null);
     const content = $derived(await blob?.text());
@@ -35,7 +36,7 @@
 
     async function transformUrl(url: string) {
         const path = currentResource && Epub.resolvePath(url, currentResource.path);
-        const transformedUrl = path && (await epub.getResource(path)?.getUrl());
+        const transformedUrl = path && (await translator.getResource(path)?.getUrl());
         return transformedUrl ?? url;
     }
 </script>
@@ -91,7 +92,7 @@
             {:else if mode === "translate" && content}
                 <PartitionSelector {content} />
             {:else if mode === "preview" && composer}
-                <TranslationList {composer} />
+                <!-- <TranslationList {translator} /> -->
             {/if}
         {/key}
     </div>

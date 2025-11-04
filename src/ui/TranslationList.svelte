@@ -1,8 +1,8 @@
 <script lang="ts">
-    import type TranslationComposer from "@/core/composer";
+    import type Translator from "@/core/translator";
 
-    type Props = { composer: TranslationComposer };
-    const { composer }: Props = $props();
+    type Props = { translator: Translator; path: string };
+    const { translator, path }: Props = $props();
 
     const selectionFlags = $state<Record<string, boolean>>({});
     const selectedIds = $derived(
@@ -10,18 +10,20 @@
             .filter(([, v]) => v)
             .map(([k]) => k),
     );
-    const isOverlapping = $derived(composer.checkOverlap(selectedIds));
-    const previewContent = $derived(isOverlapping ? null : composer.render(selectedIds));
+    const isOverlapping = $derived(await translator.checkOverlaps(selectedIds));
+    const previewContent = $derived(
+        isOverlapping ? null : await translator.renderTranslatedContent(path, selectedIds),
+    );
 </script>
 
 <div class="list bg-base-200 text-xs">
-    {#each Object.entries(composer.translations) as [id, translation] (id)}
-        {@const original = composer.getOriginalContent(translation.partition)}
+    {#each await translator.listTranslations(path) as { id, partition, content } (id)}
+        {@const original = translator.getOriginalContent(path, partition)}
         <label class="list-row items-center">
             <input type="checkbox" class="checkbox" bind:checked={selectionFlags[id]} />
             <div class="flex flex-col gap-2">
                 <pre class="whitespace-pre-wrap text-base-content/50">{original}</pre>
-                <pre class="whitespace-pre-wrap">{translation.content}</pre>
+                <pre class="whitespace-pre-wrap">{content}</pre>
             </div>
         </label>
     {/each}

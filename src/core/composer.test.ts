@@ -39,12 +39,12 @@ test("register translation", async () => {
         new Partition(new NodeId([2, 1, 2])),
         `<p>C'est mon livre.</p>`,
     );
-    expect(composer.checkOverlap([tid0, tid1, tid2])).toBe(false);
+    expect(composer.checkOverlaps([tid0, tid1, tid2])).toBe(false);
 
     const tid3 = composer.addTranslation(new Partition(new NodeId([2, 1, 1, 0])), "Bonjour monde!");
-    expect(composer.checkOverlap([tid0, tid1, tid2, tid3])).toBe(true);
-    expect(composer.checkOverlap([tid0, tid1, tid2])).toBe(false);
-    expect(composer.checkOverlap([tid0, tid2, tid3])).toBe(false);
+    expect(composer.checkOverlaps([tid0, tid1, tid2, tid3])).toBe(true);
+    expect(composer.checkOverlaps([tid0, tid1, tid2])).toBe(false);
+    expect(composer.checkOverlaps([tid0, tid2, tid3])).toBe(false);
 
     expect(composer.render([])).toBe(sampleDoc);
     expect(composer.render([tid0, tid1, tid2])).toBe(

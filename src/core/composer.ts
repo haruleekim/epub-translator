@@ -1,17 +1,12 @@
 import _ from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import { type AnyNode, Document, Element, parseDocument } from "@/utils/virtual-dom";
-import { NodeId, Partition } from "./common";
-
-interface Translation {
-    partition: Partition;
-    content: string;
-}
+import { NodeId, Partition, type Translation } from "./common";
 
 export default class TranslationComposer {
     private readonly original: string;
     private readonly originalDom: Document;
-    readonly translations: Record<string, Translation> = {};
+    private readonly translations: Record<string, Translation> = {};
 
     constructor(original: string) {
         this.original = original;
@@ -22,8 +17,6 @@ export default class TranslationComposer {
         });
     }
 
-    getOriginalContent(nodeId: NodeId): string;
-    getOriginalContent(partition: Partition): string;
     getOriginalContent(arg: NodeId | Partition): string {
         if (arg instanceof NodeId) {
             const { startIndex, endIndex } = this.#getOriginalNode(arg);
@@ -59,10 +52,9 @@ export default class TranslationComposer {
     }
 
     addTranslation(partition: Partition, content: string): string {
-        const translationId = uuidv4();
-        const translation: Translation = { partition, content };
-        this.translations[translationId] = translation;
-        return translationId;
+        const id = uuidv4();
+        this.translations[id] = { id, partition, content };
+        return id;
     }
 
     removeTranslation(translationId: string): void {
@@ -75,7 +67,11 @@ export default class TranslationComposer {
         translation.content = content;
     }
 
-    checkOverlap(translationIds: string[]): boolean {
+    listTranslations(): Translation[] {
+        return Object.values(this.translations);
+    }
+
+    checkOverlaps(translationIds: string[]): boolean {
         const partitions = translationIds.map((id) => this.translations[id].partition);
         return Partition.checkOverlap(partitions);
     }

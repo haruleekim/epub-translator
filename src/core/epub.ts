@@ -21,7 +21,7 @@ export type Input =
 export default class Epub {
     private constructor(
         private resources: Map<string, Resource>,
-        readonly spine: readonly string[],
+        private readonly spine: readonly string[],
     ) {}
 
     get length() {
@@ -39,6 +39,10 @@ export default class Epub {
     getSpineItem(index: number): Resource | null {
         const path = this.spine[index];
         return this.getResource(path);
+    }
+
+    listSpinePaths(): string[] {
+        return [...this.spine];
     }
 
     static async load(input: Input): Promise<Epub> {

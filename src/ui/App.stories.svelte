@@ -1,10 +1,10 @@
 <script lang="ts" module>
     import { defineMeta } from "@storybook/addon-svelte-csf";
-    import Epub from "@/core/epub";
+    import Translator from "@/core/translator";
     import sample from "@/tests/sample.epub?url";
     import App from "./App.svelte";
 
-    const epub = await Epub.load(sample);
+    const translator = await Translator.load(sample);
 
     const { Story } = defineMeta({
         component: App,
@@ -12,4 +12,4 @@
     });
 </script>
 
-<Story name="Default" args={{ epub }} />
+<Story name="Default" args={{ translator }} />

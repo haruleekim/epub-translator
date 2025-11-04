@@ -118,3 +118,9 @@ export class Partition {
         return NodeId.totalOrderCompare(p1.offset, p2.offset) || p1.size - p2.size;
     }
 }
+
+export interface Translation {
+    id: string;
+    partition: Partition;
+    content: string;
+}
