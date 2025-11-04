@@ -20,7 +20,7 @@ export type Input =
 
 export default class Epub {
     private constructor(
-        private resources: Record<string, Resource>,
+        private resources: Map<string, Resource>,
         readonly spine: readonly string[],
     ) {}
 
@@ -33,11 +33,7 @@ export default class Epub {
     }
 
     getResource(path: string): Resource | null {
-        if (path in this.resources) {
-            return this.resources[path];
-        } else {
-            return null;
-        }
+        return this.resources.get(path) ?? null;
     }
 
     getSpineItem(index: number): Resource | null {
@@ -73,13 +69,13 @@ export default class Epub {
         }
         const packageDocument = parseDocument(await packageDocumentFile.async("text"), DOM_OPTIONS);
 
-        const resources: Record<string, Resource> = {};
+        const resources: Map<string, Resource> = new Map();
         const resourceMapById: Record<string, string> = {};
         const blobRegistry = new PromiseRegistry<string, Blob>(async (path) => {
             const blob = await container.file(path)?.async("blob");
-            const resource = resources[path];
+            const resource = resources.get(path);
             if (!blob || !resource) throw new Error(`Resource not found: ${path}`);
-            return new Blob([blob], { type: resources[path].mediaType });
+            return new Blob([blob], { type: resource.mediaType });
         });
         const urlRegistry = new PromiseRegistry<string, string>(
             async (path) => {
@@ -94,21 +90,15 @@ export default class Epub {
             DOM_OPTIONS,
         )) {
             const id = entry.attribs.id;
-            const mediaType = entry.attribs["media-type"];
             const path = Epub.resolvePath(entry.attribs.href, packageDocumentPath);
-
-            const file = container.file(path);
-            if (!file) throw new Error(`Resource not found: ${path}`);
-
-            resources[path] = {
+            resourceMapById[id] = path;
+            resources.set(path, {
                 id,
                 path,
-                mediaType,
+                mediaType: entry.attribs["media-type"],
                 getBlob: () => blobRegistry.get(path),
                 getUrl: () => urlRegistry.get(path),
-            };
-
-            resourceMapById[id] = path;
+            });
         }
 
         const spine: string[] = [];
