@@ -15,5 +15,5 @@ test("load sample epub", async () => {
     const resource = epub.getSpineItem(1)!;
     const content = await (await resource.getBlob()).text();
     expect(content).toContain("Alice's Adventures in Wonderland");
-    expect(await resource.getBlobUrl()).include("blob:http://localhost");
+    expect(await resource.getUrl()).include("blob:http://localhost");
 });

@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import PromiseRegistry from "@/utils/promise-registry";
 import { CSS, parseDocument, type Element, type Node } from "@/utils/virtual-dom";
 
 export interface Resource {
@@ -6,8 +7,7 @@ export interface Resource {
     readonly path: string;
     readonly mediaType: string;
     getBlob(): Promise<Blob>;
-    getBlobUrl(): Promise<string>;
-    [Symbol.asyncDispose](): void;
+    getUrl(): Promise<string>;
 }
 
 export type Input =
@@ -57,10 +57,8 @@ export default class Epub {
         }
 
         const container = await JSZip.loadAsync(file);
-
         const containerXmlFile = container.file("META-INF/container.xml");
         if (!containerXmlFile) throw new Error("Container file not found");
-
         const containerXml = parseDocument(await containerXmlFile.async("text"), DOM_OPTIONS);
 
         const packageDocumentPath = CSS.selectOne<Node, Element>(
@@ -69,15 +67,27 @@ export default class Epub {
             DOM_OPTIONS,
         )?.attribs["full-path"];
         if (!packageDocumentPath) throw new Error("Cannot resolve package document path");
-
         const packageDocumentFile = container.file(packageDocumentPath);
-        if (!packageDocumentFile)
+        if (!packageDocumentFile) {
             throw new Error(`Package document not found: ${packageDocumentPath}`);
-
+        }
         const packageDocument = parseDocument(await packageDocumentFile.async("text"), DOM_OPTIONS);
 
         const resources: Record<string, Resource> = {};
-        const resourceMap: Record<string, string> = {};
+        const resourceMapById: Record<string, string> = {};
+        const blobRegistry = new PromiseRegistry<string, Blob>(async (path) => {
+            const blob = await container.file(path)?.async("blob");
+            const resource = resources[path];
+            if (!blob || !resource) throw new Error(`Resource not found: ${path}`);
+            return new Blob([blob], { type: resources[path].mediaType });
+        });
+        const urlRegistry = new PromiseRegistry<string, string>(
+            async (path) => {
+                const blob = await blobRegistry.get(path);
+                return URL.createObjectURL(blob);
+            },
+            async (_path, url) => URL.revokeObjectURL(await url),
+        );
         for (const entry of CSS.selectAll<Node, Element>(
             "manifest > item[id][href][media-type]",
             packageDocument,
@@ -90,32 +100,15 @@ export default class Epub {
             const file = container.file(path);
             if (!file) throw new Error(`Resource not found: ${path}`);
 
-            let _blob: Promise<Blob> | null = null;
-            function getBlob() {
-                if (_blob) return _blob;
-                _blob = file!.async("blob").then((blob) => new Blob([blob], { type: mediaType }));
-                return _blob;
-            }
-
-            let _blobUrl: Promise<string> | null = null;
-            function getBlobUrl() {
-                if (_blobUrl) return _blobUrl;
-                _blobUrl = getBlob().then(URL.createObjectURL);
-                return _blobUrl;
-            }
-
             resources[path] = {
                 id,
                 path,
                 mediaType,
-                getBlob,
-                getBlobUrl,
-                async [Symbol.asyncDispose]() {
-                    if (_blobUrl) URL.revokeObjectURL(await _blobUrl);
-                },
+                getBlob: () => blobRegistry.get(path),
+                getUrl: () => urlRegistry.get(path),
             };
 
-            resourceMap[id] = path;
+            resourceMapById[id] = path;
         }
 
         const spine: string[] = [];
@@ -125,7 +118,7 @@ export default class Epub {
             DOM_OPTIONS,
         )) {
             const idref = entry.attribs.idref;
-            const resource = resourceMap[idref];
+            const resource = resourceMapById[idref];
             spine.push(resource);
         }
 

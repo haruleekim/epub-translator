@@ -35,7 +35,7 @@
 
     async function transformUrl(url: string) {
         const path = currentResource && Epub.resolvePath(url, currentResource.path);
-        const transformedUrl = path && (await epub.getResource(path)?.getBlobUrl());
+        const transformedUrl = path && (await epub.getResource(path)?.getUrl());
         return transformedUrl ?? url;
     }
 </script>

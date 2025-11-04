@@ -10,7 +10,7 @@
 
     async function transformUrl(url: string) {
         const path = Epub.resolvePath(url, resource.path);
-        const transformedUrl = await epub.getResource(path)?.getBlobUrl();
+        const transformedUrl = await epub.getResource(path)?.getUrl();
         return transformedUrl ?? url;
     }
 
