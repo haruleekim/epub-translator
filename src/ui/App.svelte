@@ -5,7 +5,7 @@
     import FileTree from "@/components/FileTree.svelte";
     import PartitionSelector from "@/components/PartitionSelector.svelte";
     import TranslationComposer from "@/core/composer";
-    import type Epub from "@/core/epub";
+    import Epub from "@/core/epub";
     import Navbar, { type Mode } from "./Navbar.svelte";
     import TranslationList from "./TranslationList.svelte";
 
@@ -26,11 +26,18 @@
 
     let currentResourcePath = $state<string>();
 
-    const blob = $derived(
-        currentResourcePath ? await epub.getResource(currentResourcePath)?.getBlob() : undefined,
+    const currentResource = $derived(
+        currentResourcePath ? epub.getResource(currentResourcePath) : null,
     );
+    const blob = $derived(currentResource ? await currentResource.getBlob() : null);
     const content = $derived(await blob?.text());
     const composer = $derived(content && new TranslationComposer(content));
+
+    async function transformUrl(url: string) {
+        const path = currentResource && Epub.resolvePath(url, currentResource.path);
+        const transformedUrl = path && (await epub.getResource(path)?.getBlobUrl());
+        return transformedUrl ?? url;
+    }
 </script>
 
 <div class="grid h-screen grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
@@ -79,13 +86,7 @@
         {#key currentResourcePath}
             {#if mode === "browse" && currentResourcePath}
                 {#if blob}
-                    <ContentView
-                        {blob}
-                        transformUrl={async (url) => {
-                            const resourceUrl = await epub.getResource(url)?.getBlobUrl();
-                            return resourceUrl ?? url;
-                        }}
-                    />
+                    <ContentView {blob} {transformUrl} />
                 {/if}
             {:else if mode === "translate" && content}
                 <PartitionSelector {content} />
