@@ -22,3 +22,11 @@
 </script>
 
 <Story name="Default" />
+
+<style lang="postcss">
+    @reference '../tailwind.css';
+
+    :global(#storybook-root) {
+        @apply h-screen;
+    }
+</style>
