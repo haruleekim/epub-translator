@@ -6,19 +6,19 @@
     interface Props {
         activePath?: string;
         paths?: readonly string[];
-        onselect?: (path: string) => void;
+        onSelect?: (path: string) => void;
     }
-    const { activePath, paths = [], onselect = () => {} }: Props = $props();
+    const { activePath, paths = [], onSelect: onselect = () => {} }: Props = $props();
 
-    interface Hierarchy {
+    interface Tree {
         path: string;
-        children: Record<string, Hierarchy> | null;
+        children: Record<string, Tree> | null;
     }
 
-    const hierarchy: Hierarchy = $derived.by(() => {
-        const hierarchy: Hierarchy = { path: "", children: {} };
+    const tree: Tree = $derived.by(() => {
+        const tree: Tree = { path: "", children: {} };
         for (const path of paths) {
-            let parent = hierarchy;
+            let parent = tree;
             for (const segment of path.split("/")) {
                 if (!parent.children) parent.children = {};
                 if (!(segment in parent.children)) {
@@ -30,48 +30,42 @@
                 parent = parent.children[segment];
             }
         }
-        return hierarchy;
+        return tree;
     });
 </script>
 
-{#snippet entry(name: string, hierarchy: Hierarchy)}
-    {#if hierarchy.children}
+<div class="min-h-full min-w-full overflow-auto">
+    <ul class="menu h-full w-full menu-xs">
+        {#each Object.entries(tree.children ?? {}) as [segment, subtree] (segment)}
+            <li>
+                {@render treeView(segment, subtree)}
+            </li>
+        {/each}
+    </ul>
+</div>
+
+{#snippet treeView(name: string, tree: Tree)}
+    {#if tree.children}
         <details>
             <summary>
                 <IconFolderOutline class="size-4" />
                 {name}
             </summary>
             <ul>
-                {#each Object.entries(hierarchy.children) as [segment, subhierarchy] (segment)}
+                {#each Object.entries(tree.children) as [segment, subtree] (segment)}
                     <li>
-                        {@render entry(segment, subhierarchy)}
+                        {@render treeView(segment, subtree)}
                     </li>
                 {/each}
             </ul>
         </details>
     {:else}
         <button
-            onclick={() => onselect(hierarchy.path)}
-            class={{ "menu-active": activePath === hierarchy.path }}
+            onclick={() => onselect(tree.path)}
+            class={{ "menu-active": activePath === tree.path }}
         >
             <IconFileOutline class="size-4" />
             {name}
         </button>
     {/if}
 {/snippet}
-
-<div class="h-full w-full">
-    {#if _.size(hierarchy.children)}
-        <ul class="menu w-full menu-xs">
-            {#each Object.entries(hierarchy.children!) as [segment, subhierarchy] (segment)}
-                <li>
-                    {@render entry(segment, subhierarchy)}
-                </li>
-            {/each}
-        </ul>
-    {:else}
-        <div class="hero h-full">
-            <div class="hero-content text-xl uppercase">Empty</div>
-        </div>
-    {/if}
-</div>

@@ -2,7 +2,12 @@
     import _ from "lodash";
     import type { TranslationComposer } from "@/core/composer";
 
-    const { composer }: { composer: TranslationComposer } = $props();
+    type Props = {
+        composer: TranslationComposer;
+    };
+
+    const { composer }: Props = $props();
+
     const selectionFlags = $state<Record<string, boolean>>(
         _.mapValues(composer.translations, () => false),
     );
@@ -11,7 +16,9 @@
             .filter(([, v]) => v)
             .map(([k]) => k),
     );
-    const overlapping = $derived(composer.hasOverlappingTranslations(selectedIds));
+    const isOverlapping = $derived(composer.hasOverlappingTranslations(selectedIds));
+
+    const previewContent = $derived(isOverlapping ? null : composer.render(selectedIds));
 </script>
 
 <div class="list bg-base-200 text-xs">
@@ -28,9 +35,9 @@
 </div>
 
 <div class="mt-4 bg-base-200 p-4">
-    {#if overlapping}
+    {#if isOverlapping}
         <div>Overlapping translations detected!</div>
     {:else}
-        <pre class="text-xs whitespace-pre-wrap">{composer.render(selectedIds)}</pre>
+        <pre class="text-xs whitespace-pre-wrap">{previewContent}</pre>
     {/if}
 </div>

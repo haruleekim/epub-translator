@@ -4,23 +4,19 @@
 
     const { Story } = defineMeta({
         component: FileTree,
+        args: {
+            paths: [
+                "resume.pdf",
+                "My Files/Project-final.psd",
+                "My Files/Project-final-2.psd",
+                "Images/Screenshot1.png",
+                "Images/Screenshot2.png",
+                "Images/Others/Screenshot3.png",
+                "reports-final-2.pdf",
+            ],
+            onSelect: (path) => console.log(path),
+        },
     });
 </script>
 
-<Story
-    name="Default"
-    args={{
-        paths: [
-            "resume.pdf",
-            "My Files/Project-final.psd",
-            "My Files/Project-final-2.psd",
-            "Images/Screenshot1.png",
-            "Images/Screenshot2.png",
-            "Images/Others/Screenshot3.png",
-            "reports-final-2.pdf",
-        ],
-        onselect: (path) => console.log(path),
-    }}
-/>
-
-<Story name="Empty" />
+<Story name="Default" />

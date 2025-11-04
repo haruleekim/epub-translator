@@ -1,21 +1,21 @@
 <script lang="ts" module>
     import { defineMeta } from "@storybook/addon-svelte-csf";
     import Epub from "@/core/epub";
-    import ResourceViewerManager from "@/core/resource-view-manager";
+    import ResourceViewer from "@/core/viewer";
     import sample from "@/tests/sample.epub?url";
-    import ResourceViewer from "./ResourceViewer.svelte";
+    import ResourceView from "./ResourceView.svelte";
 
     const epub = await Epub.load(sample);
     const path = epub.spine[2];
-    const resourceViewManager = new ResourceViewerManager(epub);
+    const resourceViewer = new ResourceViewer(epub);
 
     const { Story } = defineMeta({
-        component: ResourceViewer,
+        component: ResourceView,
         parameters: { layout: "fullscreen" },
     });
 </script>
 
-<Story name="Default" args={{ resourceViewManager, path }} />
+<Story name="Default" args={{ resourceViewer, path }} />
 
 <style>
     :global(#storybook-root) {

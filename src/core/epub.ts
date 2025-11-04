@@ -1,8 +1,6 @@
 import JSZip from "jszip";
 import { CSS, parseDocument, type Element, type Node } from "@/utils/virtual-dom";
 
-const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
-
 export interface Resource {
     readonly id: string;
     readonly path: string;
@@ -46,6 +44,8 @@ export default class Epub {
     }
 
     static async load(input: Input): Promise<Epub> {
+        const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
+
         input = await input;
         let file: ArrayBuffer | Blob | Uint8Array;
         if (input instanceof URL || typeof input === "string") {
@@ -59,10 +59,7 @@ export default class Epub {
         const containerXmlFile = container.file("META-INF/container.xml");
         if (!containerXmlFile) throw new Error("Container file not found");
 
-        const containerXml = parseDocument(await containerXmlFile.async("text"), {
-            xmlMode: true,
-            decodeEntities: false,
-        });
+        const containerXml = parseDocument(await containerXmlFile.async("text"), DOM_OPTIONS);
 
         const packageDocumentPath = CSS.selectOne<Node, Element>(
             "rootfile",

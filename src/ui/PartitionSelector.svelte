@@ -59,14 +59,20 @@
         return await buildNodeTree(doc, new NodeId([]));
     }
 
-    const { content }: { content: string } = $props();
+    type Props = {
+        content: string;
+        onPartitionChange?: (partition: Partition | null) => void;
+    };
+
+    const { content, onPartitionChange }: Props = $props();
+
     const nodeTree = $derived(await parseContentToNodeTree(content));
 
     let start = $state<NodeId | null>(null);
     let end = $state<NodeId | null>(null);
 
     const partition = $derived.by(() => {
-        if (!start || !end) return;
+        if (!start || !end) return null;
         const commonAncestor = NodeId.commonAncestor(start, end);
         const ordering = NodeId.compare(start, end);
         if (ordering) {
@@ -80,6 +86,8 @@
             return new Partition(commonAncestor);
         }
     });
+
+    $effect(() => void onPartitionChange?.(partition));
 
     let isMouseDown: boolean = false;
     let waitingUnselect: NodeId | null;
@@ -115,18 +123,10 @@
 
 <svelte:document onmouseup={() => (isMouseDown = false)} />
 
-<div class="flex h-full w-full flex-col">
-    <div class="flex-1 cursor-pointer overflow-auto p-1 select-none">
-        {#if nodeTree}
-            {@render nodeTreeView(nodeTree)}
-        {/if}
-    </div>
-
-    <div class="flex h-12 items-center bg-base-100 p-2">
-        {#if partition}
-            <code class="badge badge-md badge-primary">{partition}</code>
-        {/if}
-    </div>
+<div class="cursor-pointer overflow-auto p-1 select-none">
+    {#if nodeTree}
+        {@render nodeTreeView(nodeTree)}
+    {/if}
 </div>
 
 {#snippet nodeTreeView(node: NodeTree)}

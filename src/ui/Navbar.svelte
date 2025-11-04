@@ -8,17 +8,17 @@
 
     export type Mode = "browse" | "translate" | "preview";
 
-    export interface Props {
+    export type Props = {
         class?: ClassValue | undefined | null;
         mode?: Mode;
-        onupload?: () => void;
-        ondownload?: () => void;
-    }
+        onUpload?: () => void;
+        onDownload?: () => void;
+    };
 
     let {
         mode = $bindable("browse"),
-        ondownload = () => {},
-        onupload = () => {},
+        onUpload = () => {},
+        onDownload = () => {},
     }: Props = $props();
 </script>
 
@@ -52,13 +52,13 @@
 
     <ul class="menu menu-horizontal gap-1">
         <li>
-            <button onclick={() => ondownload()}>
+            <button onclick={() => onDownload()}>
                 <IconDownload class="size-4" />
                 Download
             </button>
         </li>
         <li>
-            <button onclick={() => onupload()}>
+            <button onclick={() => onUpload()}>
                 <IconUpload class="size-4" />
                 Upload
             </button>

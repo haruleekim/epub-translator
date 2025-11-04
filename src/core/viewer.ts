@@ -1,71 +1,94 @@
-import { NodeId } from "@/core/composer";
-import Epub from "@/core/epub";
+import PromiseRegistry from "@/utils/promise-registry";
 import * as vdom from "@/utils/virtual-dom";
+import { NodeId } from "./composer";
+import Epub from "./epub";
 
-const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
-const REFERENCING_ATTRIBUTES = ["src", "href", "xlink:href"];
+export default class ResourceViewer {
+    #blobMap = new PromiseRegistry<string, Blob>((path) => this.#getAugmentedContent(path));
+    #urlMap = new PromiseRegistry<string, string>(
+        (path) => this.#getAugmentedContentUrl(path),
+        async (_path, promise) => URL.revokeObjectURL(await promise),
+    );
 
-export type NodeView =
-    | {
-          type: "document";
-          id: NodeId;
-          children: NodeView[];
-      }
-    | {
-          type: "element";
-          id: NodeId;
-          tagName: string;
-          attributes: Record<string, string>;
-          children: NodeView[];
-      }
-    | {
-          type: "text";
-          id: NodeId;
-          text: string;
-      }
-    | {
-          type: "unknown";
-          id: NodeId;
-      };
+    constructor(private epub: Epub) {}
 
-export async function createNodeView(epub: Epub, spineIndex: number): Promise<NodeView> {
-    const resource = epub.getSpineItem(spineIndex);
-    const content = await resource.getBlob().then((blob) => blob.text());
-    const doc = vdom.parseDocument(content, DOM_OPTIONS);
-
-    async function makeNodeView(node: vdom.AnyNode, id: NodeId): Promise<NodeView> {
-        if (node instanceof vdom.Document) {
-            const children: NodeView[] = [];
-            let childId = id.firstChild();
-            for (const child of node.childNodes) {
-                children.push(await makeNodeView(child, childId));
-                childId = childId.sibling(1);
-            }
-            return { type: "document", id, children };
-        } else if (node instanceof vdom.Element) {
-            const children: NodeView[] = [];
-            let childId = id.firstChild();
-            for (const child of node.childNodes) {
-                children.push(await makeNodeView(child, childId));
-                childId = childId.sibling(1);
-            }
-            const tagName = node.tagName;
-            const attributes = node.attribs;
-            for (const attr of REFERENCING_ATTRIBUTES) {
-                const path = attributes[attr]
-                    ? Epub.resolvePath(node.attribs[attr], resource.path)
-                    : null;
-                if (!path) continue;
-                const referenced = epub.getResource(path);
-                if (referenced) attributes[attr] = await referenced.getBlobUrl();
-            }
-            return { type: "element", id, tagName, attributes, children };
-        } else if (node instanceof vdom.Text) {
-            return { type: "text", id, text: node.data };
-        } else {
-            return { type: "unknown", id };
-        }
+    async getAugmentedContentUrl(path: string): Promise<string> {
+        return this.#urlMap.get(path);
     }
 
-    return await makeNodeView(doc, new NodeId([]));
+    async #getAugmentedContentUrl(path: string): Promise<string> {
+        const blob = await this.getAugmentedContent(path);
+        return URL.createObjectURL(blob);
+    }
+
+    async getAugmentedContent(path: string): Promise<Blob> {
+        return this.#blobMap.get(path);
+    }
+
+    async #getAugmentedContent(path: string): Promise<Blob> {
+        const XML_LIKE_MIME_TYPES = [
+            "application/xhtml+xml",
+            "application/xml",
+            "text/xml",
+            "text/html",
+            "image/svg+xml",
+        ];
+
+        const resource = this.epub.getResource(path);
+        const blobPromise = resource.getBlob();
+
+        if (!XML_LIKE_MIME_TYPES.includes(resource.mediaType)) return blobPromise;
+
+        const blob = await blobPromise;
+        const content = await blob.text();
+        const augmentedContent = await this.#augmentXmlLikeContent(content, path);
+        return new Blob([augmentedContent], { type: blob.type });
+    }
+
+    async #augmentXmlLikeContent(content: string, resourcePath: string): Promise<string> {
+        const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
+        const REFERENCING_ATTRIBUTES = ["src", "href", "xlink:href"];
+        const NODE_ID_ATTRIBUTE = "data-node-id";
+
+        const doc = vdom.parseDocument(content, DOM_OPTIONS);
+        if (!doc.firstChild) return content;
+
+        let node: vdom.AnyNode = doc.firstChild;
+        let nodeId = new NodeId([0]);
+
+        const resourcePaths = this.epub.getResourcePaths();
+
+        while (node.parentNode) {
+            if (nodeId.leafOrder() >= node.parentNode.childNodes.length) {
+                nodeId = nodeId.parent().sibling(1);
+                node = node.parentNode.nextSibling ?? node.parentNode;
+                continue;
+            }
+
+            if (node instanceof vdom.Element) {
+                node.attribs[NODE_ID_ATTRIBUTE] = nodeId.toString();
+
+                for (const attr of REFERENCING_ATTRIBUTES) {
+                    const path = node.attribs[attr]
+                        ? Epub.resolvePath(node.attribs[attr], resourcePath)
+                        : null;
+                    if (!path) continue;
+                    if (resourcePaths.includes(path)) {
+                        node.attribs[attr] = await this.getAugmentedContentUrl(path);
+                    }
+                }
+
+                if (node.firstChild) {
+                    nodeId = nodeId.firstChild();
+                    node = node.firstChild;
+                    continue;
+                }
+            }
+
+            nodeId = nodeId.sibling(1);
+            node = node.nextSibling ?? node;
+        }
+
+        return vdom.render(doc, DOM_OPTIONS);
+    }
 }

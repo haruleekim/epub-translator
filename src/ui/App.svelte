@@ -1,74 +1,96 @@
 <script lang="ts">
-    import Epub from "@/core/epub";
-    import NodeViewer from "./NodeViewer.svelte";
-    import Preview from "./Preview.svelte";
+    import IconChevronLeft from "virtual:icons/mdi/chevron-left";
+    import IconChevronRight from "virtual:icons/mdi/chevron-right";
+    import { TranslationComposer } from "@/core/composer";
+    import type Epub from "@/core/epub";
+    import ResourceViewer from "@/core/viewer";
+    import FileTree from "./FileTree.svelte";
+    import Navbar, { type Mode } from "./Navbar.svelte";
+    import PartitionSelector from "./PartitionSelector.svelte";
+    import ResourceView from "./ResourceView.svelte";
+    import TranslationList from "./TranslationList.svelte";
 
-    let epub = $state<Promise<Epub>>();
-    let spineIndex = $state<number>(0);
-    let previewMode = $state(true);
+    const { epub }: { epub: Epub } = $props();
+
+    const resourceViewManager = $derived(new ResourceViewer(epub));
+
+    let mode = $state<Mode>("translate");
+
+    let showAllResources = $state<boolean>(false);
+
+    let showFileTree = $state<boolean>(true);
+    let fileTreePaths = $derived.by(() => {
+        if (showAllResources) {
+            return epub.getResourcePaths();
+        } else {
+            return epub.spine;
+        }
+    });
+
+    let currentResourcePath = $state<string>();
+
+    const content = $derived(
+        currentResourcePath &&
+            (await epub
+                .getResource(currentResourcePath)
+                .getBlob()
+                .then((blob) => blob.text())),
+    );
+
+    const composer = $derived(content && new TranslationComposer(content));
 </script>
 
-{#if $effect.pending()}
-    <progress class="progress absolute h-0.5 rounded-none progress-primary"></progress>
-{/if}
-
-<div class="grid h-screen grid-cols-[auto_5fr_2fr] grid-rows-[auto_1fr_auto]">
-    <div class="col-span-full row-start-1">
-        <div class="flex justify-center py-1">
-            <label class="label">
-                NodeViewer
-                <input type="checkbox" bind:checked={previewMode} class="toggle" />
-                Preview
-            </label>
-        </div>
+<div class="grid h-screen grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
+    <div class="z-200 col-span-full row-start-1 bg-base-200 shadow">
+        <Navbar bind:mode />
     </div>
 
-    <div class="col-start-1 row-start-2 overflow-y-auto bg-base-300">
-        <ul class="list m-2">
-            {#each (await epub)?.spine as path, index}
-                <li>
-                    <button
-                        type="button"
-                        class="w-full link p-0.5 text-justify link-hover aria-current:link-accent"
-                        aria-current={index === spineIndex}
-                        onclick={() => (spineIndex = index)}
-                    >
-                        {path}
-                    </button>
-                </li>
-            {/each}
-        </ul>
-    </div>
-
-    <div class="col-start-2 row-start-2 overflow-auto bg-base-100">
-        {#if previewMode}
-            <Preview {epub} {spineIndex} />
+    <div class="z-100 col-start-1 row-start-2 flex flex-col overflow-auto bg-base-200 shadow">
+        {#if showFileTree}
+            <div class="min-w-3xs flex-1 overflow-auto">
+                <FileTree
+                    paths={fileTreePaths}
+                    activePath={currentResourcePath}
+                    onSelect={(path) => (currentResourcePath = path)}
+                />
+            </div>
+            <div class="flex flex-none items-center bg-base-300 px-4 py-2 text-xs">
+                <label class="label flex-1">
+                    <input
+                        type="checkbox"
+                        bind:checked={showAllResources}
+                        class="checkbox checkbox-xs"
+                    />
+                    Show all resources
+                </label>
+                <button
+                    class="btn btn-circle btn-ghost btn-sm"
+                    onclick={() => (showFileTree = false)}
+                >
+                    <IconChevronLeft class="size-5" />
+                </button>
+            </div>
         {:else}
-            <NodeViewer {epub} {spineIndex} />
+            <label class="flex h-full items-center p-1.5 hover:cursor-pointer">
+                <button
+                    class="btn btn-circle btn-ghost btn-sm"
+                    onclick={() => (showFileTree = true)}
+                >
+                    <IconChevronRight class="size-6" />
+                </button>
+            </label>
         {/if}
     </div>
-    load
 
-    <div class="col-start-3 row-start-2 bg-base-200">
-        <div class="hero h-full">translation view</div>
-    </div>
-
-    <div class="col-span-full row-start-3">
-        <label class="btn w-full rounded-none btn-primary">
-            <input
-                type="file"
-                accept="application/epub+zip"
-                hidden
-                onchange={(event) => {
-                    const file = event.currentTarget.files?.[0];
-                    epub = file && Epub.load(file);
-                    epub?.then(() => (spineIndex = 0));
-                }}
-            />
-            {#await epub}
-                <span class="loading loading-spinner"></span>
-            {/await}
-            Upload EPUB File
-        </label>
+    <div class="col-start-2 row-start-2 overflow-auto">
+        {#key currentResourcePath}
+            {#if mode === "browse" && currentResourcePath}
+                <ResourceView path={currentResourcePath} resourceViewer={resourceViewManager} />
+            {:else if mode === "translate" && content}
+                <PartitionSelector {content} />
+            {:else if mode === "preview" && composer}
+                <TranslationList {composer} />
+            {/if}
+        {/key}
     </div>
 </div>
