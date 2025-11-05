@@ -8,7 +8,7 @@
         paths?: readonly string[];
         onSelect?: (path: string) => void;
     }
-    const { activePath, paths = [], onSelect: onselect = () => {} }: Props = $props();
+    const { activePath, paths = [], onSelect = () => {} }: Props = $props();
 
     interface Tree {
         path: string;
@@ -61,7 +61,7 @@
         </details>
     {:else}
         <button
-            onclick={() => onselect(tree.path)}
+            onclick={() => onSelect(tree.path)}
             class={{ "menu-active": activePath === tree.path }}
         >
             <IconFileOutline class="size-4" />
