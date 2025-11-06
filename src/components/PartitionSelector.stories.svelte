@@ -10,7 +10,7 @@
 
     const { Story } = defineMeta({
         component: PartitionSelector,
-        args: { content },
+        args: { content, onSelectionChange: (partition) => console.log(partition) },
     });
 </script>
 

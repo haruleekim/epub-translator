@@ -1,14 +1,17 @@
 <script lang="ts">
     import _ from "lodash";
+    import type { ClassValue } from "svelte/elements";
     import IconFileOutline from "virtual:icons/mdi/file-outline";
     import IconFolderOutline from "virtual:icons/mdi/folder-outline";
 
     interface Props {
-        activePath?: string;
+        activePath?: string | null | undefined;
         paths?: readonly string[];
         onSelect?: (path: string) => void;
+        defaultOpen?: boolean;
+        class?: ClassValue | null | undefined;
     }
-    const { activePath, paths = [], onSelect = () => {} }: Props = $props();
+    const { activePath, paths, onSelect, defaultOpen, class: classValue }: Props = $props();
 
     interface Tree {
         path: string;
@@ -17,7 +20,7 @@
 
     const tree: Tree = $derived.by(() => {
         const tree: Tree = { path: "", children: {} };
-        for (const path of paths) {
+        for (const path of paths ?? []) {
             let parent = tree;
             for (const segment of path.split("/")) {
                 if (!parent.children) parent.children = {};
@@ -34,20 +37,18 @@
     });
 </script>
 
-<div class="min-h-full min-w-full overflow-auto">
-    <ul class="menu h-full w-full menu-xs">
-        {#each Object.entries(tree.children ?? {}) as [segment, subtree] (segment)}
-            <li>
-                {@render treeView(segment, subtree)}
-            </li>
-        {/each}
-    </ul>
-</div>
+<ul class={["menu menu-xs", classValue]}>
+    {#each Object.entries(tree.children ?? {}) as [segment, subtree] (segment)}
+        <li>
+            {@render treeView(segment, subtree)}
+        </li>
+    {/each}
+</ul>
 
 {#snippet treeView(name: string, tree: Tree)}
     {#if tree.children}
-        <details>
-            <summary>
+        <details open={defaultOpen}>
+            <summary class="text-nowrap">
                 <IconFolderOutline class="size-4" />
                 {name}
             </summary>
@@ -61,8 +62,8 @@
         </details>
     {:else}
         <button
-            onclick={() => onSelect(tree.path)}
-            class={{ "menu-active": activePath === tree.path }}
+            onclick={() => onSelect?.(tree.path)}
+            class={["text-nowrap", { "menu-active": activePath === tree.path }]}
         >
             <IconFileOutline class="size-4" />
             {name}

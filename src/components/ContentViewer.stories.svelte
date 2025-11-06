@@ -3,7 +3,7 @@
     import Epub from "@/core/epub";
     import Translator from "@/core/translator";
     import sample from "@/tests/sample.epub?url";
-    import ContentView from "./ContentView.svelte";
+    import ContentViewer from "./ContentViewer.svelte";
 
     const translator = await Translator.load(sample);
     const resource = translator.getSpineItem(2)!;
@@ -16,8 +16,8 @@
     }
 
     const { Story } = defineMeta({
-        component: ContentView,
-        args: { blob, transformUrl },
+        component: ContentViewer,
+        args: { blob, transformUrl, class: "w-full h-full" },
         parameters: { layout: "fullscreen" },
     });
 </script>

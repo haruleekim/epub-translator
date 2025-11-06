@@ -8,6 +8,7 @@ export interface Resource {
     readonly mediaType: string;
     getBlob(): Promise<Blob>;
     getUrl(): Promise<string>;
+    resolveUrl(path: string): Promise<string | null>;
 }
 
 export type Input =
@@ -29,7 +30,7 @@ export default class Epub {
     }
 
     getResourcePaths(): string[] {
-        return Object.keys(this.resources);
+        return Array.from(this.resources.keys());
     }
 
     getResource(path: string): Resource | null {
@@ -102,6 +103,11 @@ export default class Epub {
                 mediaType: entry.attribs["media-type"],
                 getBlob: () => blobRegistry.get(path),
                 getUrl: () => urlRegistry.get(path),
+                resolveUrl: async (url) => {
+                    const resolvedPath = Epub.resolvePath(url, path);
+                    const transformed = await resources.get(resolvedPath)?.getUrl();
+                    return transformed ?? url;
+                },
             });
         }
 

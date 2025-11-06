@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { ClassValue } from "svelte/elements";
     import IconFileImage from "virtual:icons/mdi/file-image";
     import { NodeId, Partition } from "@/core/common";
     import * as vdom from "@/utils/virtual-dom";
@@ -61,60 +62,74 @@
 
     type Props = {
         content: string;
-        onPartitionChange?: (partition: Partition | null) => void;
+        onSelectionChange?: (partition: Partition | null) => void;
+        class?: ClassValue | null | undefined;
+        partition?: Partition;
     };
 
-    const { content, onPartitionChange }: Props = $props();
+    let {
+        content,
+        partition = $bindable(),
+        onSelectionChange,
+        class: classValue,
+    }: Props = $props();
 
     const nodeTree = $derived(await parseContentToNodeTree(content));
 
-    let start = $state<NodeId | null>(null);
-    let end = $state<NodeId | null>(null);
+    let start = $state<string | null>(partition?.first.toString() ?? null);
+    let end = $state<string | null>(partition?.last.toString() ?? null);
 
-    const partition = $derived.by(() => {
-        if (!start || !end) return null;
-        const commonAncestor = NodeId.commonAncestor(start, end);
-        const ordering = NodeId.compare(start, end);
+    let startId = $derived<NodeId | null>(start ? NodeId.parse(start) : null);
+    let endId = $derived<NodeId | null>(end ? NodeId.parse(end) : null);
+
+    function updatePartition() {
+        if (!startId || !endId) return (partition = void onSelectionChange?.(null));
+        const commonAncestor = NodeId.commonAncestor(startId, endId);
+        const ordering = NodeId.compare(startId, endId);
         if (ordering) {
-            let [s, e] = ordering < 0 ? [start, end] : [end, start];
+            let [s, e] = ordering < 0 ? [startId, endId] : [endId, startId];
             while (s.length > commonAncestor.length + 1) s = s.parent;
             while (e.length > commonAncestor.length + 1) e = e.parent;
             let [offset, size] = [s, 1];
             while (NodeId.compare(s, e) && size++) s = s.sibling(1);
-            return new Partition(offset, size);
+            partition = new Partition(offset, size);
         } else {
-            return new Partition(commonAncestor);
+            partition = new Partition(commonAncestor);
         }
+        onSelectionChange?.(partition);
+    }
+
+    $effect(() => {
+        [startId, endId, onSelectionChange];
+        queueMicrotask(updatePartition);
     });
 
-    $effect(() => void onPartitionChange?.(partition));
-
     let isMouseDown: boolean = false;
-    let waitingUnselect: NodeId | null;
+    let waitingUnselect: string | null;
 
-    const handleMouseDown = (evt: MouseEvent, nodeId: NodeId) => {
-        evt.stopPropagation();
+    const handleMouseDown = (event: MouseEvent, nodeId: string) => {
+        event.stopPropagation();
         isMouseDown = true;
         waitingUnselect = null;
-        if (evt.shiftKey && start) {
+        if (event.shiftKey && start) {
             end = nodeId;
-        } else if (start && start.equals(nodeId) && end && end.equals(nodeId)) {
+        } else if (start === nodeId && end === nodeId) {
             waitingUnselect = nodeId;
         } else {
             start = end = nodeId;
         }
     };
 
-    const handleMouseEnter = (evt: MouseEvent, nodeId: NodeId) => {
-        evt.stopPropagation();
+    const handleMouseEnter = (event: MouseEvent, nodeId: string) => {
+        event.stopPropagation();
         if (!isMouseDown) return;
         end = nodeId;
     };
 
-    const handleMouseUp = (_evt: MouseEvent, nodeId: NodeId) => {
-        const equalsStart = start?.equals(nodeId) ?? false;
-        const equalsEnd = end?.equals(nodeId) ?? false;
-        const isWaitingUnselect = waitingUnselect?.equals(nodeId) ?? false;
+    const handleMouseUp = (_event: MouseEvent, nodeId: string) => {
+        const equalsStart = start === nodeId;
+        const equalsEnd = end === nodeId;
+        const isWaitingUnselect = waitingUnselect === nodeId;
         if (equalsStart && equalsEnd && isWaitingUnselect) {
             start = end = waitingUnselect = null;
         }
@@ -123,21 +138,22 @@
 
 <svelte:document onmouseup={() => (isMouseDown = false)} />
 
-<div class="cursor-pointer overflow-auto p-1 select-none">
+<div class={["cursor-pointer p-1 select-none", classValue]}>
     {#if nodeTree}
         {@render nodeTreeView(nodeTree)}
     {/if}
 </div>
 
 {#snippet nodeTreeView(node: NodeTree)}
+    {@const nodeId = node.id.toString()}
     <span
-        data-node-id={node.id.toString()}
+        data-node-id={nodeId}
         data-node-selected={partition?.contains(node.id)}
         role="button"
         tabindex={-1}
-        onmousedown={(evt) => handleMouseDown(evt, node.id)}
-        onmouseup={(evt) => handleMouseUp(evt, node.id)}
-        onmouseenter={(evt) => handleMouseEnter(evt, node.id)}
+        onmousedown={(evt) => handleMouseDown(evt, nodeId)}
+        onmouseup={(evt) => handleMouseUp(evt, nodeId)}
+        onmouseenter={(evt) => handleMouseEnter(evt, nodeId)}
     >
         {#if node.type === "container"}
             {#each node.children as child}

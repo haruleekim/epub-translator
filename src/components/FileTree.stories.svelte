@@ -15,6 +15,7 @@
                 "reports-final-2.pdf",
             ],
             onSelect: (path) => console.log(path),
+            class: "w-xs",
         },
     });
 </script>

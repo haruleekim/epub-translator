@@ -73,6 +73,7 @@ export class Partition {
         private readonly offset: NodeId,
         readonly size: number = 1,
     ) {
+        if (offset.length === 0) throw new Error("Offset must be non-root");
         if (size <= 0) throw new Error("Size must be positive");
     }
 
@@ -94,6 +95,10 @@ export class Partition {
         if (Number.isNaN(s)) s = this.first.path.length - id.path.length;
         if (Number.isNaN(e)) e = id.path.length - this.last.path.length;
         return s <= 0 && 0 <= e;
+    }
+
+    equals(other: Partition): boolean {
+        return this.size === other.size && this.offset.equals(other.offset);
     }
 
     static checkOverlap(partitions: Partition[], skipSort: boolean = false): boolean {

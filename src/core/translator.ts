@@ -4,6 +4,8 @@ import TranslationComposer from "./composer";
 import Epub from "./epub";
 import type { Input, Resource } from "./epub";
 
+export type { Input };
+
 export default class Translator {
     private composers: Map<string, TranslationComposer> = new Map();
     private translationIdToPath: Map<string, string> = new Map();
@@ -32,9 +34,7 @@ export default class Translator {
     }
 
     getResource(path: string): Resource | null {
-        const resource = this.epub.getResource(path);
-        if (!resource) throw new Error(`Resource not found: ${path}`);
-        return resource;
+        return this.epub.getResource(path);
     }
 
     getSpineItem(index: number): Resource | null {
