@@ -151,9 +151,9 @@
         data-node-selected={partition?.contains(node.id)}
         role="button"
         tabindex={-1}
-        onmousedown={(evt) => handleMouseDown(evt, nodeId)}
-        onmouseup={(evt) => handleMouseUp(evt, nodeId)}
-        onmouseenter={(evt) => handleMouseEnter(evt, nodeId)}
+        onmousedown={(event) => handleMouseDown(event, nodeId)}
+        onmouseup={(event) => handleMouseUp(event, nodeId)}
+        onmouseenter={(event) => handleMouseEnter(event, nodeId)}
     >
         {#if node.type === "container"}
             {#each node.children as child}

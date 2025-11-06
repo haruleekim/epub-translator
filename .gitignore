@@ -16,3 +16,5 @@ __screenshots__
 
 *storybook.log
 storybook-static
+
+*.local

@@ -26,6 +26,9 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
+      openai:
+        specifier: ^6.8.1
+        version: 6.8.1(ws@8.18.3)
       uuid:
         specifier: ^13.0.0
         version: 13.0.0
@@ -1135,6 +1138,18 @@ packages:
 
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
+
+  openai@6.8.1:
+    resolution: {integrity: sha512-ACifslrVgf+maMz9vqwMP4+v9qvx5Yzssydizks8n+YUJ6YwUoxj51sKRQ8HYMfR6wgKLSIlaI108ZwCk+8yig==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
 
   package-manager-detector@1.5.0:
     resolution: {integrity: sha512-uBj69dVlYe/+wxj8JOpr97XfsxH/eumMt6HqjNTmJDf/6NO9s+0uxeOneIz3AsPt2m6y9PqzDzd3ATcU17MNfw==}
@@ -2511,6 +2526,10 @@ snapshots:
   nth-check@2.1.1:
     dependencies:
       boolbase: 1.0.0
+
+  openai@6.8.1(ws@8.18.3):
+    optionalDependencies:
+      ws: 8.18.3
 
   package-manager-detector@1.5.0: {}
 

@@ -14,6 +14,10 @@
 
     const { defaultInput, defaultPath }: { defaultInput?: Input; defaultPath?: string } = $props();
 
+    let mode = $state<"view" | "select" | "translate">("translate");
+    let navigationDrawerOpen = $state(false);
+    let showAllResources = $state(false);
+
     let input = $state<Input | undefined>(defaultInput);
     const translatorPromise = $derived.by(async () => {
         if (!input) return;
@@ -32,6 +36,8 @@
     function changeInput(newInput?: Input) {
         input = newInput;
         path = partition = undefined;
+        mode = "view";
+
         queueMicrotask(async () => {
             const translator = await translatorPromise;
             if (!path) path = translator?.getSpineItem(0)?.path;
@@ -42,10 +48,6 @@
         path = newPath;
         partition = undefined;
     }
-
-    let mode = $state<"view" | "select" | "translate">("translate");
-    let navigationDrawerOpen = $state(false);
-    let showAllResources = $state(false);
 </script>
 
 <div class="flex h-screen w-screen flex-col">
