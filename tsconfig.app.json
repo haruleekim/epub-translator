@@ -19,7 +19,9 @@
         "moduleDetection": "force",
 
         "baseUrl": ".",
-        "paths": { "@/*": ["./src/*"], "@/tests/*": ["./tests/*"] }
+        "paths": { "@/*": ["./src/*"], "@/tests/*": ["./tests/*"] },
+
+        "plugins": [{ "name": "typescript-svelte-plugin" }]
     },
     "include": [
         "src/**/*.ts",
