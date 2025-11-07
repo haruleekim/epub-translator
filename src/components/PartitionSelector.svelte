@@ -104,12 +104,12 @@
         queueMicrotask(updatePartition);
     });
 
-    let isMouseDown: boolean = false;
+    let isPointerDown: boolean = false;
     let waitingUnselect: string | null;
 
-    const handleMouseDown = (event: MouseEvent, nodeId: string) => {
+    const handleNodePointerDown = (event: PointerEvent, nodeId: string) => {
         event.stopPropagation();
-        isMouseDown = true;
+        isPointerDown = true;
         waitingUnselect = null;
         if (event.shiftKey && start) {
             end = nodeId;
@@ -120,23 +120,23 @@
         }
     };
 
-    const handleMouseEnter = (event: MouseEvent, nodeId: string) => {
+    const handleNodePointerEnter = (event: PointerEvent, nodeId: string) => {
         event.stopPropagation();
-        if (!isMouseDown) return;
+        if (!isPointerDown) return;
         end = nodeId;
     };
 
-    const handleMouseUp = (_event: MouseEvent, nodeId: string) => {
-        const equalsStart = start === nodeId;
-        const equalsEnd = end === nodeId;
-        const isWaitingUnselect = waitingUnselect === nodeId;
-        if (equalsStart && equalsEnd && isWaitingUnselect) {
+    const handleNodePointerUp = (event: PointerEvent, nodeId: string) => {
+        if ([start, end, waitingUnselect].every((id) => id === nodeId)) {
             start = end = waitingUnselect = null;
         }
     };
 </script>
 
-<svelte:document onmouseup={() => (isMouseDown = false)} />
+<svelte:document
+    onpointerup={() => (isPointerDown = false)}
+    onpointercancel={() => (isPointerDown = false)}
+/>
 
 <div class={["cursor-pointer p-1 select-none", classValue]}>
     {#if nodeTree}
@@ -151,9 +151,9 @@
         data-node-selected={partition?.contains(node.id)}
         role="button"
         tabindex={-1}
-        onmousedown={(event) => handleMouseDown(event, nodeId)}
-        onmouseup={(event) => handleMouseUp(event, nodeId)}
-        onmouseenter={(event) => handleMouseEnter(event, nodeId)}
+        onpointerdown={(event) => handleNodePointerDown(event, nodeId)}
+        onpointerup={(event) => handleNodePointerUp(event, nodeId)}
+        onpointerenter={(event) => handleNodePointerEnter(event, nodeId)}
     >
         {#if node.type === "container"}
             {#each node.children as child}
