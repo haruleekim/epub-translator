@@ -171,7 +171,7 @@
         {:else if node.type === "text"}
             {@html node.text}
         {:else if node.type === "image"}
-            <IconFileImage class="size-4" />
+            <IconFileImage class="pointer-events-none size-4" />
         {/if}
     </span>
 {/snippet}
