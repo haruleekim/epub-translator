@@ -130,8 +130,7 @@
         end = nodeId;
     }
 
-    function handleClick(event: MouseEvent) {
-        // if (!(event.buttons & 1)) return;
+    function handlePointerUp(event: MouseEvent) {
         const nodeId = getNodeIdFromTarget(event);
         if (!nodeId) return;
         if (
@@ -149,7 +148,7 @@
 <div
     role="application"
     onpointerdown={handlePointerDown}
-    onpointerup={handleClick}
+    onpointerup={handlePointerUp}
     class={classValue}
 >
     {#if nodeTree}
