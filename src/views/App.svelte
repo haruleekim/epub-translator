@@ -57,7 +57,7 @@
             {#await Promise.all([translatorPromise, resourcePromise]) then [translator, resource]}
                 {#if mode === "view" && resource}
                     <ContentViewer
-                        blob={await resource.getBlob()}
+                        data={await resource.getBlob()}
                         transformUrl={async (url) => (await resource.resolveUrl(url)) ?? url}
                         class="h-full w-full"
                     />

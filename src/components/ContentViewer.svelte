@@ -4,15 +4,17 @@
     import * as vdom from "@/utils/virtual-dom";
 
     type Props = {
-        blob: Blob;
+        data: Blob | string;
+        mediaType?: string;
         transformUrl?: (url: string) => Promise<string>;
         class?: ClassValue | null | undefined;
     };
 
-    let { blob, transformUrl, class: classValue }: Props = $props();
+    let { data, mediaType, transformUrl, class: classValue }: Props = $props();
+    if (!mediaType && data instanceof Blob) mediaType = data.type;
 
     const transformed = $derived.by(async () => {
-        [blob, transformUrl];
+        [data, mediaType, transformUrl];
 
         const XML_LIKE_MIME_TYPES = [
             "application/xhtml+xml",
@@ -25,11 +27,13 @@
         const REFERENCING_ATTRIBUTES = ["src", "href", "xlink:href"];
         const NODE_ID_ATTRIBUTE = "data-node-id";
 
-        if (!XML_LIKE_MIME_TYPES.includes(blob.type)) return blob;
+        if (!mediaType || !XML_LIKE_MIME_TYPES.includes(mediaType)) {
+            return new Blob([data], { type: mediaType });
+        }
 
-        const content = await blob.text();
+        const content = data instanceof Blob ? await data.text() : data;
         const doc = vdom.parseDocument(content, DOM_OPTIONS);
-        if (!doc.firstChild) return blob;
+        if (!doc.firstChild) return new Blob([data], { type: mediaType });
 
         let node: vdom.AnyNode = doc.firstChild;
         let nodeId = new NodeId([0]);
@@ -69,7 +73,7 @@
         }
         await Promise.all(promises);
 
-        return new Blob([vdom.render(doc, DOM_OPTIONS)], { type: blob.type });
+        return new Blob([vdom.render(doc, DOM_OPTIONS)], { type: mediaType });
     });
 
     // There is a bug where Svelte passes a Symbol instance for `transformed`.

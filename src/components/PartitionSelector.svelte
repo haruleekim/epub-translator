@@ -150,7 +150,7 @@
     role="application"
     onpointerdown={handlePointerDown}
     onpointerup={handleClick}
-    class={["cursor-pointer p-1 select-none", classValue]}
+    class={classValue}
 >
     {#if nodeTree}
         {@render nodeTreeView(nodeTree)}
@@ -180,7 +180,7 @@
     @reference "../tailwind.css";
 
     [data-node-id] {
-        @apply m-0.5 inline-block rounded border p-0.5 align-middle text-xs transition-colors;
+        @apply m-0.5 inline-block cursor-pointer rounded border p-0.5 align-middle text-xs transition-colors select-none;
         @apply border-base-content/25 text-base-content;
         &:hover {
             @apply border-base-content/75;

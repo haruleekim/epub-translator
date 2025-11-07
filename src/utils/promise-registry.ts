@@ -7,6 +7,9 @@ export default class PromiseRegistry<K, V> {
     ) {}
 
     async get(key: K): Promise<V> {
+        const cached = this.registry.get(key);
+        if (cached) return cached;
+
         const { port1: tx, port2: rx } = new MessageChannel();
 
         let result: V | unknown;

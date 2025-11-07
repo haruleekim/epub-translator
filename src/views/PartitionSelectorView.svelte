@@ -25,7 +25,8 @@
 
     <div class="flex h-40 gap-2 overflow-auto bg-base-200">
         <ContentViewer
-            blob={new Blob([(await partitionContent) ?? ""], { type: "text/html" })}
+            data={(await partitionContent) ?? ""}
+            mediaType="text/html"
             transformUrl={async (url) => {
                 return (await resource?.resolveUrl(url)) ?? url;
             }}

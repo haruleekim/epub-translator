@@ -17,7 +17,7 @@
 
     const { Story } = defineMeta({
         component: ContentViewer,
-        args: { blob, transformUrl, class: "w-full h-full" },
+        args: { data: blob, transformUrl, class: "w-full h-full" },
         parameters: { layout: "fullscreen" },
     });
 </script>
