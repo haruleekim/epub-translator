@@ -14,11 +14,10 @@
 
     const content = $derived(resource.getBlob().then((blob) => blob.text()));
 
-    const partitionContentPromise = $derived.by(() => {
+    const partitionContent = $derived.by(() => {
         if (!partition) return;
         return translator.getOriginalContent(resource.path, partition);
     });
-    const partitionContent = $derived(await partitionContentPromise);
 </script>
 
 <div class="flex h-full w-full flex-col overflow-auto">
@@ -26,14 +25,14 @@
 
     <div class="flex h-40 gap-2 overflow-auto bg-base-200">
         <ContentViewer
-            blob={new Blob([partitionContent ?? ""], { type: "text/html" })}
+            blob={new Blob([(await partitionContent) ?? ""], { type: "text/html" })}
             transformUrl={async (url) => {
                 return (await resource?.resolveUrl(url)) ?? url;
             }}
             class="flex-1 overflow-auto"
         />
         <div class="flex-1 overflow-auto text-xs">
-            <pre class="whitespace-pre-wrap">{partitionContent}</pre>
+            <pre class="whitespace-pre-wrap">{await partitionContent}</pre>
         </div>
     </div>
 </div>
