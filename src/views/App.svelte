@@ -8,7 +8,7 @@
     import ContentViewer from "@/components/ContentViewer.svelte";
     import FileTree from "@/components/FileTree.svelte";
     import type { Partition } from "@/core/common";
-    import Translator, { type Input } from "@/core/translator";
+    import Translator, { type Input } from "@/lib/translator";
     import PartitionSelectorView from "@/views/PartitionSelectorView.svelte";
     import TranslationView from "./TranslationView.svelte";
 

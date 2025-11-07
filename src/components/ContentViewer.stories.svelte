@@ -1,7 +1,7 @@
 <script lang="ts" module>
     import { defineMeta } from "@storybook/addon-svelte-csf";
     import Epub from "@/core/epub";
-    import Translator from "@/core/translator";
+    import Translator from "@/lib/translator";
     import sample from "@/tests/sample.epub?url";
     import ContentViewer from "./ContentViewer.svelte";
 

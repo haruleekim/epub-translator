@@ -2,8 +2,8 @@
     import ContentViewer from "@/components/ContentViewer.svelte";
     import PartitionSelector from "@/components/PartitionSelector.svelte";
     import type { Partition } from "@/core/common";
-    import type { Resource } from "@/core/epub";
-    import type Translator from "@/core/translator";
+    import type { Resource } from "@/lib/translator";
+    import type Translator from "@/lib/translator";
 
     type Props = {
         translator: Translator;

@@ -1,6 +1,6 @@
 <script lang="ts" module>
     import { defineMeta } from "@storybook/addon-svelte-csf";
-    import Translator from "@/core/translator";
+    import Translator from "@/lib/translator";
     import sample from "@/tests/sample.epub?url";
     import PartitionSelector from "./PartitionSelector.svelte";
 

@@ -1,16 +1,16 @@
 import _ from "lodash";
-import type { NodeId, Partition, Translation } from "./common";
-import TranslationComposer from "./composer";
-import Epub from "./epub";
-import type { Input, Resource } from "./epub";
+import type { NodeId, Partition, Translation } from "@/core/common";
+import TranslationComposer from "@/core/composer";
+import Epub from "@/core/epub";
+import type { Input, Resource } from "@/core/epub";
 
-export type { Input };
+export type { Input, Resource };
 
 export default class Translator {
     private composers: Map<string, TranslationComposer> = new Map();
     private translationIdToPath: Map<string, string> = new Map();
 
-    private constructor(public epub: Epub) {}
+    private constructor(private epub: Epub) {}
 
     static async load(input: Input): Promise<Translator> {
         const epub = await Epub.load(input);
@@ -47,7 +47,9 @@ export default class Translator {
 
     async addTranslation(path: string, partition: Partition, content: string): Promise<string> {
         let composer = await this.#getComposer(path);
-        return composer.addTranslation(partition, content);
+        const translationId = composer.addTranslation(partition, content);
+        this.translationIdToPath.set(translationId, path);
+        return translationId;
     }
 
     async removeTranslation(translationId: string): Promise<void> {
