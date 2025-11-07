@@ -104,41 +104,53 @@
         queueMicrotask(updatePartition);
     });
 
-    let isPointerDown: boolean = false;
-    let waitingUnselect: string | null;
+    let lastPointerDownWasOnAlreadySelectedUnitPartition = false;
 
-    const handleNodePointerDown = (event: PointerEvent, nodeId: string) => {
-        event.stopPropagation();
-        isPointerDown = true;
-        waitingUnselect = null;
+    function getNodeIdFromTarget(event: MouseEvent): string | undefined {
+        if (!(event.target instanceof HTMLElement)) return;
+        return event.target.dataset["node-id"];
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+        if (!(event.buttons & 1)) return;
+        const nodeId = getNodeIdFromTarget(event);
+        if (!nodeId) return;
+        lastPointerDownWasOnAlreadySelectedUnitPartition = start === nodeId && end === nodeId;
         if (event.shiftKey && start) {
             end = nodeId;
-        } else if (start === nodeId && end === nodeId) {
-            waitingUnselect = nodeId;
         } else {
             start = end = nodeId;
         }
-    };
+    }
 
-    const handleNodePointerEnter = (event: PointerEvent, nodeId: string) => {
-        event.stopPropagation();
-        if (!isPointerDown) return;
+    function handlePointerEnter(event: PointerEvent) {
+        if (!(event.buttons & 1)) return;
+        const nodeId = getNodeIdFromTarget(event);
+        if (!nodeId) return;
         end = nodeId;
-    };
+    }
 
-    const handleNodePointerUp = (event: PointerEvent, nodeId: string) => {
-        if ([start, end, waitingUnselect].every((id) => id === nodeId)) {
-            start = end = waitingUnselect = null;
+    function handleClick(event: MouseEvent) {
+        const nodeId = getNodeIdFromTarget(event);
+        if (!nodeId) return;
+        if (
+            start === nodeId &&
+            end === nodeId &&
+            lastPointerDownWasOnAlreadySelectedUnitPartition
+        ) {
+            start = end = null;
         }
-    };
+    }
 </script>
 
-<svelte:document
-    onpointerup={() => (isPointerDown = false)}
-    onpointercancel={() => (isPointerDown = false)}
-/>
-
-<div class={["cursor-pointer p-1 select-none", classValue]}>
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<div
+    role="application"
+    onpointerdown={handlePointerDown}
+    onclick={handleClick}
+    class={["cursor-pointer p-1 select-none", classValue]}
+>
     {#if nodeTree}
         {@render nodeTreeView(nodeTree)}
     {/if}
@@ -147,13 +159,9 @@
 {#snippet nodeTreeView(node: NodeTree)}
     {@const nodeId = node.id.toString()}
     <span
-        data-node-id={nodeId}
-        data-node-selected={partition?.contains(node.id)}
-        role="button"
-        tabindex={-1}
-        onpointerdown={(event) => handleNodePointerDown(event, nodeId)}
-        onpointerup={(event) => handleNodePointerUp(event, nodeId)}
-        onpointerenter={(event) => handleNodePointerEnter(event, nodeId)}
+        data-node-id={nodeId || undefined}
+        data-node-selected={partition?.contains(node.id) || undefined}
+        onpointerenter={handlePointerEnter}
     >
         {#if node.type === "container"}
             {#each node.children as child}
