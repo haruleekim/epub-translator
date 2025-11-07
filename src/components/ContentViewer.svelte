@@ -32,7 +32,7 @@
         }
 
         const content = data instanceof Blob ? await data.text() : data;
-        const doc = vdom.parseDocument(content, DOM_OPTIONS);
+        const doc = await vdom.parseDocumentAsync(content, DOM_OPTIONS);
         if (!doc.firstChild) return new Blob([data], { type: mediaType });
 
         let node: vdom.AnyNode = doc.firstChild;
