@@ -76,10 +76,10 @@
         return new Blob([vdom.render(doc, DOM_OPTIONS)], { type: mediaType });
     });
 
-    // There is a bug where Svelte passes a Symbol instance for `transformed`.
-    const url = $derived(transformed.then(URL.createObjectURL).catch(() => null));
+    const url = $derived(transformed.then(URL.createObjectURL));
     $effect(() => {
-        () => url.then((url) => url && URL.revokeObjectURL(url));
+        url;
+        () => url.then(URL.revokeObjectURL);
     });
 </script>
 

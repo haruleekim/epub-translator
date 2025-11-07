@@ -19,18 +19,12 @@
     let showAllResources = $state(false);
 
     let input = $state<Input | undefined>(defaultInput);
-    const translatorPromise = $derived.by(async () => {
+    const translator = $derived.by(async () => {
         if (!input) return;
         return Translator.load(input);
     });
 
     let path = $state<string | undefined>(defaultPath);
-    const resourcePromise = $derived.by(async () => {
-        [path, translatorPromise];
-        if (!path) return;
-        const translator = await translatorPromise;
-        return translator?.getResource(path);
-    });
 
     let partition = $state<Partition>();
 
@@ -38,7 +32,7 @@
         input = newInput;
         path = partition = undefined;
         mode = "view";
-        translatorPromise.then((translator) => {
+        translator.then((translator) => {
             path ??= translator?.getSpineItem(0)?.path;
         });
     }
@@ -53,7 +47,8 @@
     {@render navbar()}
     <div class="relative flex-1 overflow-auto">
         <div class="h-full w-full overflow-auto">
-            {#await Promise.all([translatorPromise, resourcePromise]) then [translator, resource]}
+            {#await translator then translator}
+                {@const resource = path ? translator?.getResource(path) : undefined}
                 {#if mode === "view" && resource}
                     <ContentViewer
                         data={await resource.getBlob()}
@@ -160,7 +155,7 @@
                     <IconClose class="size-4" />
                 </button>
                 <div class="w-fit flex-1 overflow-auto">
-                    {#await translatorPromise then translator}
+                    {#await translator then translator}
                         {#if translator}
                             <FileTree
                                 paths={showAllResources
