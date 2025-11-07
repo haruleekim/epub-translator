@@ -12,6 +12,8 @@
     let { blob, transformUrl, class: classValue }: Props = $props();
 
     const transformed = $derived.by(async () => {
+        [blob, transformUrl];
+
         const XML_LIKE_MIME_TYPES = [
             "application/xhtml+xml",
             "application/xml",
@@ -70,10 +72,10 @@
         return new Blob([vdom.render(doc, DOM_OPTIONS)], { type: blob.type });
     });
 
-    const url = $derived(transformed.then(URL.createObjectURL));
+    // There is a bug where Svelte passes a Symbol instance for `transformed`.
+    const url = $derived(transformed.then(URL.createObjectURL).catch(() => null));
     $effect(() => {
-        url;
-        () => url.then(URL.revokeObjectURL);
+        () => url.then((url) => url && URL.revokeObjectURL(url));
     });
 </script>
 

@@ -131,6 +131,7 @@
     }
 
     function handleClick(event: MouseEvent) {
+        // if (!(event.buttons & 1)) return;
         const nodeId = getNodeIdFromTarget(event);
         if (!nodeId) return;
         if (
@@ -148,7 +149,7 @@
 <div
     role="application"
     onpointerdown={handlePointerDown}
-    onclick={handleClick}
+    onpointerup={handleClick}
     class={["cursor-pointer p-1 select-none", classValue]}
 >
     {#if nodeTree}
@@ -178,16 +179,16 @@
 <style lang="postcss">
     @reference "../tailwind.css";
 
-    [data-node-id] > [data-node-id] {
-        @apply m-0.5 inline-block rounded border border-base-content/25 p-0.5 align-middle text-xs transition-colors;
-
-        &[data-node-selected="true"] {
-            @apply border-accent/25 text-accent;
+    [data-node-id] {
+        @apply m-0.5 inline-block rounded border p-0.5 align-middle text-xs transition-colors;
+        @apply border-base-content/25 text-base-content;
+        &:hover {
+            @apply border-base-content/75;
         }
 
-        &:hover:not(:has(> [data-node-id]:hover)) {
-            @apply border-base-content/75;
-            &[data-node-selected="true"] {
+        &[data-node-selected] {
+            @apply border-accent/25 text-accent;
+            &:hover {
                 @apply border-accent/75;
             }
         }
