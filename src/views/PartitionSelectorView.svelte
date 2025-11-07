@@ -14,8 +14,9 @@
 
     const content = $derived(resource.getBlob().then((blob) => blob.text()));
 
-    const partitionContent = $derived.by(() => {
-        if (!partition) return;
+    const partitionContent = $derived.by(async () => {
+        [translator, resource, partition];
+        if (!partition) return "";
         return translator.getOriginalContent(resource.path, partition);
     });
 </script>
@@ -25,7 +26,7 @@
 
     <div class="flex h-40 gap-2 overflow-auto bg-base-200">
         <ContentViewer
-            data={(await partitionContent) ?? ""}
+            data={await partitionContent}
             mediaType="text/html"
             transformUrl={async (url) => {
                 return (await resource?.resolveUrl(url)) ?? url;

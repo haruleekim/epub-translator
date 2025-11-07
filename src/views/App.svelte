@@ -26,6 +26,7 @@
 
     let path = $state<string | undefined>(defaultPath);
     const resourcePromise = $derived.by(async () => {
+        [path, translatorPromise];
         if (!path) return;
         const translator = await translatorPromise;
         return translator?.getResource(path);
@@ -37,10 +38,8 @@
         input = newInput;
         path = partition = undefined;
         mode = "view";
-
-        queueMicrotask(async () => {
-            const translator = await translatorPromise;
-            if (!path) path = translator?.getSpineItem(0)?.path;
+        translatorPromise.then((translator) => {
+            path ??= translator?.getSpineItem(0)?.path;
         });
     }
 

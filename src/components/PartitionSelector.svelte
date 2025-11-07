@@ -79,11 +79,9 @@
     let start = $state<string | null>(partition?.first.toString() ?? null);
     let end = $state<string | null>(partition?.last.toString() ?? null);
 
-    let startId = $derived<NodeId | null>(start ? NodeId.parse(start) : null);
-    let endId = $derived<NodeId | null>(end ? NodeId.parse(end) : null);
-
-    function updatePartition() {
-        if (!startId || !endId) return (partition = void onSelectionChange?.(null));
+    function updatePartition(): void {
+        if (!start || !end) return (partition = void onSelectionChange?.(null));
+        const [startId, endId] = [NodeId.parse(start), NodeId.parse(end)];
         const commonAncestor = NodeId.commonAncestor(startId, endId);
         const ordering = NodeId.compare(startId, endId);
         if (ordering) {
@@ -100,15 +98,15 @@
     }
 
     $effect(() => {
-        [startId, endId, onSelectionChange];
+        [start, end, onSelectionChange];
         queueMicrotask(updatePartition);
     });
 
     let lastPointerDownWasOnAlreadySelectedUnitPartition = false;
 
-    function getNodeIdFromTarget(event: MouseEvent): string | undefined {
+    function getNodeIdFromTarget(event: Event): string | undefined {
         if (!(event.target instanceof HTMLElement)) return;
-        return event.target.dataset["node-id"];
+        return event.target.dataset.nodeId;
     }
 
     function handlePointerDown(event: PointerEvent) {
@@ -130,7 +128,7 @@
         end = nodeId;
     }
 
-    function handlePointerUp(event: MouseEvent) {
+    function handlePointerUp(event: PointerEvent) {
         const nodeId = getNodeIdFromTarget(event);
         if (!nodeId) return;
         if (
