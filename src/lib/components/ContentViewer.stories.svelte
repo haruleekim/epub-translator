@@ -1,0 +1,33 @@
+<script lang="ts" module>
+	import { defineMeta } from "@storybook/addon-svelte-csf";
+	import ContentViewer from "$lib/components/ContentViewer.svelte";
+	import Epub from "$lib/core/epub";
+	import sample from "$lib/data/sample.epub?url";
+	import Translator from "$lib/translator";
+
+	const translator = await Translator.load(sample);
+	const resource = translator.getSpineItem(2)!;
+	const blob = await resource.getBlob();
+
+	async function transformUrl(url: string) {
+		const path = Epub.resolvePath(url, resource.path);
+		const transformedUrl = await translator.getResource(path)?.getUrl();
+		return transformedUrl ?? url;
+	}
+
+	const { Story } = defineMeta({
+		component: ContentViewer,
+		args: { data: blob, transformUrl, class: "w-full h-full" },
+		parameters: { layout: "fullscreen" },
+	});
+</script>
+
+<Story name="Default" />
+
+<style lang="postcss">
+	@reference '../../app.css';
+
+	:global(#storybook-root) {
+		@apply h-screen;
+	}
+</style>
