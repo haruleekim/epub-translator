@@ -1,15 +1,7 @@
 import JSZip from "jszip";
+import _ from "lodash";
 import PromiseRegistry from "$lib/utils/promise-registry";
-import { CSS, parseDocument, type Element, type Node } from "$lib/utils/virtual-dom";
-
-export interface Resource {
-	readonly id: string;
-	readonly path: string;
-	readonly mediaType: string;
-	getBlob(): Promise<Blob>;
-	getUrl(): Promise<string>;
-	resolveUrl(path: string): Promise<string | null>;
-}
+import { CSS, Element, parseDocument, type Node, type Document } from "$lib/utils/virtual-dom";
 
 export type Input =
 	| ArrayBuffer
@@ -19,11 +11,43 @@ export type Input =
 	| string
 	| Promise<Uint8Array | ArrayBuffer | Blob | URL | string>;
 
+interface PackageDocument {
+	path: string;
+	content: string;
+	dom: Document;
+}
+
+export interface Metadata {
+	title: string | null;
+	language: string | null;
+	creators: string[];
+}
+
+export interface Resource {
+	readonly id: string;
+	readonly path: string;
+	readonly mediaType: string;
+	readonly properties: string[];
+	getBlob(): Promise<Blob>;
+	getUrl(): Promise<string>;
+	resolveUrl(path: string): Promise<string>;
+}
+
 export default class Epub {
-	private constructor(
-		private resources: Map<string, Resource>,
-		private readonly spine: readonly string[],
-	) {}
+	private metadata: Metadata;
+	private resources: Map<string, Resource>;
+	private resourceIndexById: Map<string, string>;
+	private resourceIndexByProperty: Map<string, Set<string>>;
+	private spine: readonly string[];
+
+	private constructor(container: JSZip, packageDocument: PackageDocument) {
+		this.metadata = Epub.parseMetadata(packageDocument);
+		const manifest = Epub.parseManifest(container, packageDocument);
+		this.resources = manifest.resources;
+		this.resourceIndexById = manifest.resourceIndexById;
+		this.resourceIndexByProperty = manifest.resourceIndexByProperty;
+		this.spine = Epub.parseSpine(packageDocument, this.resourceIndexById);
+	}
 
 	get length() {
 		return this.spine.length;
@@ -46,9 +70,17 @@ export default class Epub {
 		return [...this.spine];
 	}
 
-	static async load(input: Input): Promise<Epub> {
-		const DOM_OPTIONS = { xmlMode: true, decodeEntities: false };
+	getCoverImage(): Resource | null {
+		const path = this.resourceIndexByProperty.get("cover-image")?.values().next().value;
+		if (!path) return null;
+		return this.getResource(path);
+	}
 
+	static resolvePath(path: string, base: string): string {
+		return new URL(path, `file:///${base}`).pathname.slice(1);
+	}
+
+	static async load(input: Input): Promise<Epub> {
 		input = await input;
 		let file: ArrayBuffer | Blob | Uint8Array;
 		if (input instanceof URL || typeof input === "string") {
@@ -60,46 +92,106 @@ export default class Epub {
 		const container = await JSZip.loadAsync(file);
 		const containerXmlFile = container.file("META-INF/container.xml");
 		if (!containerXmlFile) throw new Error("Container file not found");
-		const containerXml = parseDocument(await containerXmlFile.async("text"), DOM_OPTIONS);
+		const containerXml = parseDocument(await containerXmlFile.async("text"), { xmlMode: true });
 
-		const packageDocumentPath = CSS.selectOne<Node, Element>(
-			"rootfile",
-			containerXml,
-			DOM_OPTIONS,
-		)?.attribs["full-path"];
+		const packageDocumentPath = CSS.selectOne<Node, Element>("rootfile", containerXml, {
+			xmlMode: true,
+		})?.attribs["full-path"];
 		if (!packageDocumentPath) throw new Error("Cannot resolve package document path");
 		const packageDocumentFile = container.file(packageDocumentPath);
 		if (!packageDocumentFile) {
 			throw new Error(`Package document not found: ${packageDocumentPath}`);
 		}
-		const packageDocument = parseDocument(await packageDocumentFile.async("text"), DOM_OPTIONS);
+		const packageDocumentContent = await packageDocumentFile.async("text");
+		const packageDocumentDom = parseDocument(packageDocumentContent, {
+			xmlMode: true,
+			decodeEntities: true,
+			withStartIndices: true,
+			withEndIndices: true,
+		});
 
+		return new Epub(container, {
+			path: packageDocumentPath,
+			content: packageDocumentContent,
+			dom: packageDocumentDom,
+		});
+	}
+
+	private static parseMetadata(packageDocument: PackageDocument): Metadata {
+		const XMLNS_DC = "http://purl.org/dc/elements/1.1/";
+
+		const metadataTag = CSS.selectOne<Node, Element>("metadata", packageDocument.dom, {
+			xmlMode: true,
+		});
+
+		const prefix = metadataTag?.attributes
+			.find(({ name, value }) => name.startsWith("xmlns:") && value === XMLNS_DC)
+			?.name.slice(6);
+		if (!prefix) throw new Error("Invalid metadata");
+
+		const entries: { name: string; value: string }[] = [];
+
+		for (const child of metadataTag?.children ?? []) {
+			if (!(child instanceof Element)) continue;
+			if (!child.tagName.startsWith(`${prefix}:`)) continue;
+			if (!child.firstChild || !child.lastChild) continue;
+			const name = child.tagName.slice(prefix.length + 1);
+			const [start, end] = [child.firstChild.startIndex!, child.lastChild.endIndex! + 1];
+			const value = packageDocument.content.slice(start, end);
+			entries.push({ name, value });
+		}
+
+		const metadataMap = _.mapValues(
+			_.groupBy(entries, ({ name }) => name),
+			(list) => list.map(({ value }) => value),
+		);
+
+		return {
+			title: metadataMap.title?.[0] ?? null,
+			language: metadataMap.language?.[0] ?? null,
+			creators: metadataMap.creator ?? [],
+		};
+	}
+
+	private static parseManifest(container: JSZip, packageDocument: PackageDocument) {
 		const resources: Map<string, Resource> = new Map();
-		const resourceMapById: Record<string, string> = {};
+		const resourceIndexById: Map<string, string> = new Map();
+		const resourceIndexByProperty: Map<string, Set<string>> = new Map();
+
 		const blobRegistry = new PromiseRegistry<string, Blob>(async (path) => {
 			const blob = await container.file(path)?.async("blob");
 			const resource = resources.get(path);
 			if (!blob || !resource) throw new Error(`Resource not found: ${path}`);
 			return new Blob([blob], { type: resource.mediaType });
 		});
+
 		const urlRegistry = new PromiseRegistry<string, string>(
 			async (path) => {
 				const blob = await blobRegistry.get(path);
 				return URL.createObjectURL(blob);
 			},
-			async (_path, url) => URL.revokeObjectURL(await url),
+			async (_, url) => URL.revokeObjectURL(await url),
 		);
+
 		for (const entry of CSS.selectAll<Node, Element>(
 			"manifest > item[id][href][media-type]",
-			packageDocument,
-			DOM_OPTIONS,
+			packageDocument.dom,
+			{ xmlMode: true },
 		)) {
 			const id = entry.attribs.id;
-			const path = Epub.resolvePath(entry.attribs.href, packageDocumentPath);
-			resourceMapById[id] = path;
+			const path = Epub.resolvePath(entry.attribs.href, packageDocument.path);
+			resourceIndexById.set(id, path);
+
+			const properties = entry.attribs["properties"]?.split(" ");
+			for (const property of properties ?? []) {
+				const paths = resourceIndexByProperty.get(property) ?? new Set();
+				resourceIndexByProperty.set(property, paths.add(path));
+			}
+
 			resources.set(path, {
 				id,
 				path,
+				properties,
 				mediaType: entry.attribs["media-type"],
 				getBlob: () => blobRegistry.get(path),
 				getUrl: () => urlRegistry.get(path),
@@ -111,21 +203,23 @@ export default class Epub {
 			});
 		}
 
+		return { resources, resourceIndexById, resourceIndexByProperty };
+	}
+
+	private static parseSpine(
+		packageDocument: PackageDocument,
+		resourceIndexById: Map<string, string>,
+	): string[] {
 		const spine: string[] = [];
 		for (const entry of CSS.selectAll<Node, Element>(
 			"spine > itemref[idref]",
-			packageDocument,
-			DOM_OPTIONS,
+			packageDocument.dom,
+			{ xmlMode: true },
 		)) {
 			const idref = entry.attribs.idref;
-			const resource = resourceMapById[idref];
-			spine.push(resource);
+			const resource = resourceIndexById.get(idref);
+			if (resource) spine.push(resource);
 		}
-
-		return new Epub(resources, spine);
-	}
-
-	static resolvePath(path: string, base: string): string {
-		return new URL(path, `file:///${base}`).pathname.slice(1);
+		return spine;
 	}
 }
