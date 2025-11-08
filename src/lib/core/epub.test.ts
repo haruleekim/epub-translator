@@ -23,8 +23,8 @@ test("load metadata", async () => {
 	const file = await fs.readFile(new URL("../data/sample.epub", import.meta.url));
 	const epub = await Epub.load(file);
 	expect(epub.title).toBe("Alice's Adventures in Wonderland");
-	expect(epub.creators).toStrictEqual(["Lewis Carroll"]);
-	expect(epub.language).toBe("en");
+	expect(epub.author).toStrictEqual(["Lewis Carroll"]);
+	expect(epub.languageCode).toBe("en");
 });
 
 test("load cover image", async () => {

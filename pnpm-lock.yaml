@@ -20,9 +20,15 @@ importers:
       htmlparser2:
         specifier: ^10.0.0
         version: 10.0.0
+      idb:
+        specifier: ^8.0.3
+        version: 8.0.3
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
+      langs:
+        specifier: ^2.0.0
+        version: 2.0.0
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -33,6 +39,9 @@ importers:
         specifier: ^13.0.0
         version: 13.0.0
     devDependencies:
+      '@catppuccin/daisyui':
+        specifier: ^2.1.1
+        version: 2.1.1(tailwindcss@4.1.17)
       '@eslint/compat':
         specifier: ^1.4.1
         version: 1.4.1(eslint@9.39.1(jiti@2.6.1))
@@ -72,6 +81,9 @@ importers:
       '@trivago/prettier-plugin-sort-imports':
         specifier: ^6.0.0
         version: 6.0.0(prettier-plugin-svelte@3.4.0(prettier@3.6.2)(svelte@5.43.4))(prettier@3.6.2)(svelte@5.43.4)
+      '@types/langs':
+        specifier: ^2.0.5
+        version: 2.0.5
       '@types/lodash':
         specifier: ^4.17.20
         version: 4.17.20
@@ -196,6 +208,14 @@ packages:
   '@babel/types@7.28.5':
     resolution: {integrity: sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA==}
     engines: {node: '>=6.9.0'}
+
+  '@catppuccin/daisyui@2.1.1':
+    resolution: {integrity: sha512-PrZttjj8kwfDBJ34sR+DN25Xtjvxx4T5p8uu/iiGYZR8UOsNwzMlO/alYDBwwTOLzP1NKLNRax09kCT39+QM+A==}
+    peerDependencies:
+      tailwindcss: ^4.0.17
+
+  '@catppuccin/palette@1.7.1':
+    resolution: {integrity: sha512-aRc1tbzrevOTV7nFTT9SRdF26w/MIwT4Jwt4fDMc9itRZUDXCuEDBLyz4TQMlqO9ZP8mf5Hu4Jr6D03NLFc6Gw==}
 
   '@cloudflare/kv-asset-handler@0.4.0':
     resolution: {integrity: sha512-+tv3z+SPp+gqTIcImN9o0hqE9xyfQjI1XD9pL6NuKjua9B1y7mNYv0S9cP+QEbA4ppVgGZEmKOvHX5G5Ei1CVA==}
@@ -1156,6 +1176,9 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
+  '@types/langs@2.0.5':
+    resolution: {integrity: sha512-DIUKT4mkbTBxSrX6lmnQR888ObeFVVo1uNEqBH5/ddQHpnG4CA24DibpK7aO8QAcJEZUTcIx0F96TWuzVT9Z4g==}
+
   '@types/lodash@4.17.20':
     resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
 
@@ -1705,6 +1728,9 @@ packages:
   htmlparser2@10.0.0:
     resolution: {integrity: sha512-TwAZM+zE5Tq3lrEHvOlvwgj1XLWQCtaaibSN11Q+gGBAS7Y1uZSWwXXRe4iF6OXnaq1riyQAPFOBtYc77Mxq0g==}
 
+  idb@8.0.3:
+    resolution: {integrity: sha512-LtwtVyVYO5BqRvcsKuB2iUMnHwPVByPCXFXOpuU96IZPPoPN6xjOGxZQ74pgSVVLQWtUOYgyeL4GE98BY5D3wg==}
+
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
@@ -1801,6 +1827,9 @@ packages:
 
   kolorist@1.8.0:
     resolution: {integrity: sha512-Y+60/zizpJ3HRH8DCss+q95yr6145JXZo46OTpFvDZWLfRCE4qChOyk1b26nMaNpfHHgxagk9dXT5OP0Tfe+dQ==}
+
+  langs@2.0.0:
+    resolution: {integrity: sha512-v4pxOBEQVN1WBTfB1crhTtxzNLZU9HPWgadlwzWKISJtt6Ku/CnpBrwVy+jFv8StjxsPfwPFzO0CMwdZLJ0/BA==}
 
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
@@ -2712,6 +2741,13 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+  '@catppuccin/daisyui@2.1.1(tailwindcss@4.1.17)':
+    dependencies:
+      '@catppuccin/palette': 1.7.1
+      tailwindcss: 4.1.17
+
+  '@catppuccin/palette@1.7.1': {}
+
   '@cloudflare/kv-asset-handler@0.4.0':
     dependencies:
       mime: 3.0.0
@@ -3452,6 +3488,8 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@types/langs@2.0.5': {}
+
   '@types/lodash@4.17.20': {}
 
   '@types/node@22.19.0':
@@ -4066,6 +4104,8 @@ snapshots:
       domutils: 3.2.2
       entities: 6.0.1
 
+  idb@8.0.3: {}
+
   ignore@5.3.2: {}
 
   ignore@7.0.5: {}
@@ -4137,6 +4177,8 @@ snapshots:
   known-css-properties@0.37.0: {}
 
   kolorist@1.8.0: {}
+
+  langs@2.0.0: {}
 
   levn@0.4.1:
     dependencies:

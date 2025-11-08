@@ -18,6 +18,7 @@
 		"build-storybook": "storybook build"
 	},
 	"devDependencies": {
+		"@catppuccin/daisyui": "^2.1.1",
 		"@eslint/compat": "^1.4.1",
 		"@eslint/js": "^9.39.1",
 		"@fontsource/fira-mono": "^5.2.7",
@@ -31,6 +32,7 @@
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.17",
 		"@trivago/prettier-plugin-sort-imports": "^6.0.0",
+		"@types/langs": "^2.0.5",
 		"@types/lodash": "^4.17.20",
 		"@types/node": "^22.19.0",
 		"@vitest/browser": "^3.2.4",
@@ -61,7 +63,9 @@
 		"dom-serializer": "^2.0.0",
 		"domhandler": "^5.0.3",
 		"htmlparser2": "^10.0.0",
+		"idb": "^8.0.3",
 		"jszip": "^3.10.1",
+		"langs": "^2.0.0",
 		"lodash": "^4.17.21",
 		"openai": "^6.8.1",
 		"uuid": "^13.0.0"

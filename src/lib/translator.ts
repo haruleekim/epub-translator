@@ -10,7 +10,7 @@ export default class Translator {
 	private composers: Map<string, TranslationComposer> = new Map();
 	private translationIdToPath: Map<string, string> = new Map();
 
-	private constructor(private epub: Epub) {}
+	private constructor(public epub: Readonly<Epub>) {}
 
 	static async load(input: Input): Promise<Translator> {
 		const epub = await Epub.load(input);

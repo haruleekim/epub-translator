@@ -1,5 +1,6 @@
 import JSZip from "jszip";
 import _ from "lodash";
+import { getLanguage, type Language } from "$lib/utils/languages";
 import PromiseRegistry from "$lib/utils/promise-registry";
 import { CSS, Element, parseDocument, type Node, type Document } from "$lib/utils/virtual-dom";
 
@@ -34,7 +35,10 @@ export default class Epub {
 	private resourceIndexByProperty: Map<string, Set<string>>;
 	private spine: readonly string[];
 
-	private constructor(container: JSZip, packageDocument: PackageDocument) {
+	private constructor(
+		private readonly container: JSZip,
+		packageDocument: PackageDocument,
+	) {
 		this.metadata = Epub.parseMetadata(packageDocument);
 		const manifest = Epub.parseManifest(container, packageDocument);
 		this.resources = manifest.resources;
@@ -43,16 +47,21 @@ export default class Epub {
 		this.spine = Epub.parseSpine(packageDocument, this.resourceIndexById);
 	}
 
+	async dump(): Promise<ArrayBuffer> {
+		return await this.container.generateAsync({ type: "arraybuffer" });
+	}
+
 	get title(): string | null {
 		return this.metadata.get("title")?.at(0) ?? null;
 	}
 
-	get language(): string | null {
-		return this.metadata.get("language")?.at(0) ?? null;
+	get author(): string | null {
+		return this.metadata.get("creator")?.at(0) ?? null;
 	}
 
-	get creators(): string[] | null {
-		return this.metadata.get("creator") ?? null;
+	get language(): Language | null {
+		const code = this.metadata.get("language")?.at(0);
+		return code ? getLanguage(code) : null;
 	}
 
 	getCoverImage(): Resource | null {
