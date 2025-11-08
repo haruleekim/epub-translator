@@ -17,12 +17,6 @@ interface PackageDocument {
 	dom: Document;
 }
 
-export interface Metadata {
-	title: string | null;
-	language: string | null;
-	creators: string[];
-}
-
 export interface Resource {
 	readonly id: string;
 	readonly path: string;
@@ -34,7 +28,7 @@ export interface Resource {
 }
 
 export default class Epub {
-	private metadata: Metadata;
+	private metadata: Map<string, string[]>;
 	private resources: Map<string, Resource>;
 	private resourceIndexById: Map<string, string>;
 	private resourceIndexByProperty: Map<string, Set<string>>;
@@ -49,8 +43,27 @@ export default class Epub {
 		this.spine = Epub.parseSpine(packageDocument, this.resourceIndexById);
 	}
 
-	get length() {
-		return this.spine.length;
+	get title(): string | null {
+		return this.metadata.get("title")?.at(0) ?? null;
+	}
+
+	get language(): string | null {
+		return this.metadata.get("language")?.at(0) ?? null;
+	}
+
+	get creators(): string[] | null {
+		return this.metadata.get("creator") ?? null;
+	}
+
+	getCoverImage(): Resource | null {
+		let path = this.resourceIndexByProperty.get("cover-image")?.values().next().value;
+		if (path) return this.getResource(path);
+
+		const coverResourceId = this.metadata.get("cover")?.at(0);
+		path = coverResourceId && this.resourceIndexById.get(coverResourceId);
+		if (path) return this.getResource(path);
+
+		return null;
 	}
 
 	getResourcePaths(): string[] {
@@ -68,12 +81,6 @@ export default class Epub {
 
 	listSpinePaths(): string[] {
 		return [...this.spine];
-	}
-
-	getCoverImage(): Resource | null {
-		const path = this.resourceIndexByProperty.get("cover-image")?.values().next().value;
-		if (!path) return null;
-		return this.getResource(path);
 	}
 
 	static resolvePath(path: string, base: string): string {
@@ -117,40 +124,37 @@ export default class Epub {
 		});
 	}
 
-	private static parseMetadata(packageDocument: PackageDocument): Metadata {
+	private static parseMetadata(packageDocument: PackageDocument): Map<string, string[]> {
 		const XMLNS_DC = "http://purl.org/dc/elements/1.1/";
 
 		const metadataTag = CSS.selectOne<Node, Element>("metadata", packageDocument.dom, {
 			xmlMode: true,
 		});
 
-		const prefix = metadataTag?.attributes
-			.find(({ name, value }) => name.startsWith("xmlns:") && value === XMLNS_DC)
-			?.name.slice(6);
-		if (!prefix) throw new Error("Invalid metadata");
-
 		const entries: { name: string; value: string }[] = [];
 
+		const dcPrefix = metadataTag?.attributes
+			.find(({ name, value }) => name.startsWith("xmlns:") && value === XMLNS_DC)
+			?.name.slice(6);
 		for (const child of metadataTag?.children ?? []) {
 			if (!(child instanceof Element)) continue;
-			if (!child.tagName.startsWith(`${prefix}:`)) continue;
-			if (!child.firstChild || !child.lastChild) continue;
-			const name = child.tagName.slice(prefix.length + 1);
-			const [start, end] = [child.firstChild.startIndex!, child.lastChild.endIndex! + 1];
-			const value = packageDocument.content.slice(start, end);
-			entries.push({ name, value });
+			if (dcPrefix && child.tagName.startsWith(`${dcPrefix}:`) && child.firstChild) {
+				const name = child.tagName.slice(dcPrefix.length + 1);
+				const [start, end] = [child.firstChild.startIndex!, child.lastChild!.endIndex! + 1];
+				const value = packageDocument.content.slice(start, end);
+				entries.push({ name, value });
+			}
+			if (child.tagName === "meta" && child.attribs.name && child.attribs.content) {
+				const { name, content } = child.attribs;
+				entries.push({ name, value: content });
+			}
 		}
 
 		const metadataMap = _.mapValues(
 			_.groupBy(entries, ({ name }) => name),
 			(list) => list.map(({ value }) => value),
 		);
-
-		return {
-			title: metadataMap.title?.[0] ?? null,
-			language: metadataMap.language?.[0] ?? null,
-			creators: metadataMap.creator ?? [],
-		};
+		return new Map(Object.entries(metadataMap));
 	}
 
 	private static parseManifest(container: JSZip, packageDocument: PackageDocument) {
