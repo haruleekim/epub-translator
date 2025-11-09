@@ -12,8 +12,8 @@
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
 	import { Partition } from "$lib/core/common";
 	import TranslationComposer from "$lib/core/composer";
+	import Project from "$lib/core/project";
 	import { openDatabase } from "$lib/database";
-	import Project from "$lib/project";
 	import type { PageProps } from "./$types";
 
 	const { params }: PageProps = $props();

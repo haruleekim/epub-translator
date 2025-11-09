@@ -3,7 +3,7 @@
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
 	import type { Partition } from "$lib/core/common";
 	import type { Resource } from "$lib/core/epub";
-	import type Project from "$lib/project";
+	import type Project from "$lib/core/project";
 
 	type Props = {
 		project: Project;

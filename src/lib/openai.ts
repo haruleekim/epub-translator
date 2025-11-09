@@ -1,16 +1,16 @@
 import OpenAI, { type ClientOptions } from "openai";
 import type { Partition } from "$lib/core/common";
-import type Translator from "$lib/translator";
+import type Project from "$lib/core/project";
 
 /** @returns Translation ID */
 export async function translateByOpenAI(
-	translator: Translator,
+	project: Project,
 	path: string,
 	partition: Partition,
 	options: ClientOptions,
 ): Promise<string> {
 	const lang = "Korean";
-	const content = await translator.getOriginalContent(path, partition);
+	const content = await project.getOriginalContent(path, partition);
 
 	const client = new OpenAI(options);
 	const response = await client.responses.create({
@@ -26,5 +26,5 @@ export async function translateByOpenAI(
 			.join("\n"),
 	});
 
-	return await translator.addTranslation(path, partition, response.output_text);
+	return await project.addTranslation(path, partition, response.output_text);
 }

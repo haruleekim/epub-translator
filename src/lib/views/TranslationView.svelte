@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Partition } from "$lib//core/common";
+	import type Project from "$lib/core/project";
 	import { translateByOpenAI } from "$lib/openai";
-	import type Project from "$lib/project";
 
 	type Props = {
 		project: Project;

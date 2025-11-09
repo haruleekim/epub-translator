@@ -9,7 +9,7 @@
 	import FileTree from "$lib/components/FileTree.svelte";
 	import type { Partition } from "$lib/core/common";
 	import Epub from "$lib/core/epub";
-	import Project, { type Input } from "$lib/project";
+	import Project, { type Input } from "$lib/core/project";
 	import PartitionSelectorView from "$lib/views/PartitionSelectorView.svelte";
 	import TranslationView from "$lib/views/TranslationView.svelte";
 

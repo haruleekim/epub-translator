@@ -2,8 +2,8 @@
 	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
 	import IconArrowRightThin from "virtual:icons/mdi/arrow-right-thin";
 	import IconTrashCan from "virtual:icons/mdi/trash-can";
+	import Project from "$lib/core/project";
 	import { openDatabase } from "$lib/database";
-	import Project from "$lib/project";
 	import { getLanguage } from "$lib/utils/languages";
 	import ProjectCreationDialog from "./ProjectCreationDialog.svelte";
 
