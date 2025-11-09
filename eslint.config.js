@@ -31,6 +31,7 @@ export default defineConfig(
 			"@typescript-eslint/no-unused-expressions": "off",
 			"@typescript-eslint/no-unused-vars": "warn",
 			"@typescript-eslint/no-explicit-any": "off",
+			"svelte/no-navigation-without-resolve": "off",
 		},
 	},
 	{

@@ -24,7 +24,7 @@ test("load metadata", async () => {
 	const epub = await Epub.load(file);
 	expect(epub.title).toBe("Alice's Adventures in Wonderland");
 	expect(epub.author).toStrictEqual(["Lewis Carroll"]);
-	expect(epub.languageCode).toBe("en");
+	expect(epub.language?.code).toBe("en");
 });
 
 test("load cover image", async () => {

@@ -40,18 +40,19 @@
 		New Project
 	</button>
 
-	<ul class="list mt-4">
+	<div class="list mt-4">
 		{#each projects as project (project.id)}
 			{@render projectItem(project)}
 		{/each}
-	</ul>
+	</div>
 </div>
 
 {#snippet projectItem(project: Project)}
 	{@const epub = project.epub}
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<li class="list-row cursor-pointer transition-all hover:bg-base-200" onclick={() => {}}>
+	<a
+		class="list-row cursor-pointer transition-all hover:bg-base-200"
+		href={`/projects/${project.id}`}
+	>
 		<div>
 			<img
 				src={await epub.getCoverImage()?.getUrl()}
@@ -84,5 +85,5 @@
 				<IconTrashCan class="size-8" />
 			</button>
 		</div>
-	</li>
+	</a>
 {/snippet}
