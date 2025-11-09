@@ -118,25 +118,25 @@ test("check if partition contains node id", () => {
 	expect(partition.contains(new NodeId([1, 2, 3]))).toBe(true);
 });
 
+const sampleDoc: string = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head>
+    <title>My Book</title>
+    <meta charset="utf-8"/>
+</head>
+<body>
+    <h1>My Book</h1>
+    <p>Hello world!</p>
+    <p>This is my book.</p>
+</body>
+</html>`
+	.split("\n")
+	.map((line) => line.trim())
+	.join("");
+
 test("traverse nodes", () => {
-	const text: string = `
-		<?xml version="1.0" encoding="UTF-8"?>
-		<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-		<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
-		<head>
-		    <title>My Book</title>
-		    <meta charset="utf-8"/>
-		</head>
-		<body>
-		    <h1>My Book</h1>
-		    <p>Hello world!</p>
-		    <p>This is my book.</p>
-		</body>
-		</html>
-	`
-		.split("\n")
-		.map((line) => line.trim())
-		.join("");
+	const text = sampleDoc;
 	const dom = Dom.load(text);
 
 	const stack: string[] = [];
@@ -181,4 +181,51 @@ test("traverse empty document", () => {
 		close: true,
 	});
 	expect(iterator.next().done).toBeTruthy();
+});
+
+test("extract content", async () => {
+	const dom = Dom.load(sampleDoc);
+	const content = dom.extractContent(new NodeId([2, 1, 1]));
+	expect(content).toEqual("<p>Hello world!</p>");
+});
+
+test("substitute content", async () => {
+	const dom = Dom.load(sampleDoc);
+	const tr0 = {
+		partition: new Partition(new NodeId([2, 0])),
+		content: `<head><title>Mon livre</title><meta charset="utf-8"/></head>`,
+	};
+	const tr1 = {
+		partition: new Partition(new NodeId([2, 1, 0]), 2),
+		content: `<h1>Mon livre</h1><p>Bonjour monde!</p>`,
+	};
+	const tr2 = {
+		partition: new Partition(new NodeId([2, 1, 2])),
+		content: `<p>C'est mon livre.</p>`,
+	};
+	const tr3 = {
+		partition: new Partition(new NodeId([2, 1, 1, 0])),
+		content: "Bonjour monde!",
+	};
+
+	expect(dom.substituteAll([])).toBe(sampleDoc);
+	expect(dom.substituteAll([tr0, tr1, tr2])).toBe(
+		`<?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+        <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+        <head>
+            <title>Mon livre</title>
+            <meta charset="utf-8"/>
+        </head>
+        <body>
+            <h1>Mon livre</h1>
+            <p>Bonjour monde!</p>
+            <p>C'est mon livre.</p>
+        </body>
+        </html>`
+			.split("\n")
+			.map((line) => line.trim())
+			.join(""),
+	);
+	expect(() => dom.substituteAll([tr0, tr1, tr2, tr3])).toThrow();
 });
