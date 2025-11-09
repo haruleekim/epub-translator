@@ -2,22 +2,22 @@
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
 	import type { Partition } from "$lib/core/common";
-	import type { Resource } from "$lib/translator";
-	import type Translator from "$lib/translator";
+	import type { Resource } from "$lib/core/epub";
+	import type Project from "$lib/project";
 
 	type Props = {
-		translator: Translator;
+		project: Project;
 		resource: Resource;
 		partition?: Partition;
 	};
-	let { translator, resource, partition = $bindable() }: Props = $props();
+	let { project, resource, partition = $bindable() }: Props = $props();
 
 	const content = $derived(resource.getBlob().then((blob) => blob.text()));
 
 	const partitionContent = $derived.by(async () => {
-		[translator, resource, partition];
+		[project, resource, partition];
 		if (!partition) return "";
-		return translator.getOriginalContent(resource.path, partition);
+		return project.getOriginalContent(resource.path, partition);
 	});
 </script>
 

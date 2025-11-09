@@ -8,7 +8,8 @@
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import FileTree from "$lib/components/FileTree.svelte";
 	import type { Partition } from "$lib/core/common";
-	import Translator, { type Input } from "$lib/translator";
+	import Epub from "$lib/core/epub";
+	import Project, { type Input } from "$lib/project";
 	import PartitionSelectorView from "$lib/views/PartitionSelectorView.svelte";
 	import TranslationView from "$lib/views/TranslationView.svelte";
 
@@ -19,9 +20,9 @@
 	let showAllResources = $state(false);
 
 	let input = $state<Input | undefined>(defaultInput);
-	const translator = $derived.by(async () => {
+	const project = $derived.by(async () => {
 		if (!input) return;
-		return Translator.load(input);
+		return Project.create(await Epub.load(input), "eng", "kor");
 	});
 
 	let path = $state<string | undefined>(defaultPath);
@@ -32,8 +33,8 @@
 		input = newInput;
 		path = partition = undefined;
 		mode = "view";
-		translator.then((translator) => {
-			path ??= translator?.getSpineItem(0)?.path;
+		project.then((project) => {
+			path ??= project?.getSpineItem(0)?.path;
 		});
 	}
 
@@ -47,18 +48,18 @@
 	{@render navbar()}
 	<div class="relative flex-1 overflow-auto">
 		<div class="h-full w-full overflow-auto">
-			{#await translator then translator}
-				{@const resource = path ? translator?.getResource(path) : undefined}
+			{#await project then project}
+				{@const resource = path ? project?.getResource(path) : undefined}
 				{#if mode === "view" && resource}
 					<ContentViewer
 						data={await resource.getBlob()}
 						transformUrl={async (url) => (await resource.resolveUrl(url)) ?? url}
 						class="h-full w-full"
 					/>
-				{:else if mode === "select" && translator && resource}
-					<PartitionSelectorView {translator} {resource} bind:partition />
-				{:else if mode === "translate" && translator && path}
-					<TranslationView {translator} {path} {partition} />
+				{:else if mode === "select" && project && resource}
+					<PartitionSelectorView {project} {resource} bind:partition />
+				{:else if mode === "translate" && project && path}
+					<TranslationView {project} {path} {partition} />
 				{/if}
 			{/await}
 		</div>
@@ -155,12 +156,12 @@
 					<IconClose class="size-4" />
 				</button>
 				<div class="w-fit flex-1 overflow-auto">
-					{#await translator then translator}
-						{#if translator}
+					{#await project then project}
+						{#if project}
 							<FileTree
 								paths={showAllResources
-									? translator.getResourcePaths()
-									: translator.listSpinePaths()}
+									? project.getResourcePaths()
+									: project.listSpinePaths()}
 								activePath={path}
 								onSelect={(newPath) => {
 									changePath(newPath);

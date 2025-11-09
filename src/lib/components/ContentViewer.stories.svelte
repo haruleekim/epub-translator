@@ -3,15 +3,16 @@
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import Epub from "$lib/core/epub";
 	import sample from "$lib/data/sample.epub?url";
-	import Translator from "$lib/translator";
+	import Project from "$lib/project";
 
-	const translator = await Translator.load(sample);
-	const resource = translator.getSpineItem(2)!;
+	const epub = await Epub.load(sample);
+	const project = Project.create(epub, "eng", "kor");
+	const resource = project.getSpineItem(2)!;
 	const blob = await resource.getBlob();
 
 	async function transformUrl(url: string) {
 		const path = Epub.resolvePath(url, resource.path);
-		const transformedUrl = await translator.getResource(path)?.getUrl();
+		const transformedUrl = await project.getResource(path)?.getUrl();
 		return transformedUrl ?? url;
 	}
 
