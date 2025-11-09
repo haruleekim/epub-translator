@@ -81,6 +81,13 @@ export class Partition {
 		return `${this.offset.toString()}-${this.last.leafOrder}`;
 	}
 
+	static parse(str: string): Partition {
+		const [offsetStr, lastLeafOrderStr] = str.split("-");
+		const offset = NodeId.parse(offsetStr);
+		const lastLeafOrder = parseInt(lastLeafOrderStr);
+		return new Partition(offset, lastLeafOrder - offset.leafOrder + 1);
+	}
+
 	get first(): NodeId {
 		return this.offset;
 	}

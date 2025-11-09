@@ -178,14 +178,14 @@
 	[data-node-id] {
 		@apply m-0.5 inline-block cursor-pointer rounded border p-0.5 align-middle text-xs transition-colors select-none;
 		@apply border-base-content/25 text-base-content;
-		&:hover {
-			@apply border-base-content/75;
+		&:not(:has(> [data-node-id]:hover)):hover {
+			@apply border border-base-content/75;
 		}
 
 		&[data-node-selected] {
 			@apply border-accent/25 text-accent;
-			&:hover {
-				@apply border-accent/75;
+			&:not(:has(> [data-node-id]:hover)):hover {
+				@apply border border-accent/75;
 			}
 		}
 	}

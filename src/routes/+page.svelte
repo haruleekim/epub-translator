@@ -40,38 +40,37 @@
 		New Project
 	</button>
 
-	<div class="list mt-4">
+	<ul class="list mt-4">
 		{#each projects as project (project.id)}
 			{@render projectItem(project)}
 		{/each}
-	</div>
+	</ul>
 </div>
 
 {#snippet projectItem(project: Project)}
 	{@const epub = project.epub}
-	<a
-		class="list-row cursor-pointer transition-all hover:bg-base-200"
-		href={`/projects/${project.id}`}
-	>
-		<div>
-			<img
-				src={await epub.getCoverImage()?.getUrl()}
-				alt={epub.title}
-				class="size-16 object-contain"
-			/>
-		</div>
-		<div>
-			<div class="text-lg">{epub.title}</div>
-			<div class="text-xs font-semibold text-base-content/50">{epub.author}</div>
-			<div class="text-xs text-base-content/50">
-				{project.createdAt.toISOString()}
+	<li class="list-row transition-all hover:bg-base-200">
+		<a class="contents" href={`/projects/${project.id}`}>
+			<div>
+				<img
+					src={await epub.getCoverImage()?.getUrl()}
+					alt={epub.title}
+					class="size-16 object-contain"
+				/>
 			</div>
-		</div>
-		<div class="flex items-center gap-2 text-base-content/75">
-			<div>{getLanguage(project.sourceLanguage)?.name}</div>
-			<IconArrowRightThin class="size-8" />
-			<div>{getLanguage(project.targetLanguage)?.name}</div>
-		</div>
+			<div>
+				<div class="text-lg">{epub.title}</div>
+				<div class="text-xs font-semibold text-base-content/50">{epub.author}</div>
+				<div class="text-xs text-base-content/50">
+					{project.createdAt.toISOString()}
+				</div>
+			</div>
+			<div class="flex items-center gap-2 text-base-content/75">
+				<div>{getLanguage(project.sourceLanguage)?.name}</div>
+				<IconArrowRightThin class="size-8" />
+				<div>{getLanguage(project.targetLanguage)?.name}</div>
+			</div>
+		</a>
 		<div class="ml-4 flex items-center">
 			<button
 				class="btn btn-circle btn-soft btn-error"
@@ -85,5 +84,5 @@
 				<IconTrashCan class="size-8" />
 			</button>
 		</div>
-	</a>
+	</li>
 {/snippet}
