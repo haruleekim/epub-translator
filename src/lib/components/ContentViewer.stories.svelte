@@ -7,12 +7,12 @@
 
 	const epub = await Epub.load(sample);
 	const project = Project.create(epub, "eng", "kor");
-	const resource = project.getSpineItem(2)!;
+	const resource = project.epub.getSpineItem(2)!;
 	const blob = await resource.getBlob();
 
 	async function transformUrl(url: string) {
 		const path = Epub.resolvePath(url, resource.path);
-		const transformedUrl = await project.getResource(path)?.getUrl();
+		const transformedUrl = await project.epub.getResource(path)?.getUrl();
 		return transformedUrl ?? url;
 	}
 

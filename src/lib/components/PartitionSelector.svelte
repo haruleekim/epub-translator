@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ClassValue } from "svelte/elements";
 	import IconFileImage from "virtual:icons/mdi/file-image";
-	import { NodeId, Partition } from "$lib/core/common";
+	import { NodeId, Partition, Dom } from "$lib/core/dom";
 	import * as vdom from "$lib/utils/virtual-dom";
 
 	type NodeTree = NodeTreeContainer | NodeTreeLeaf;
@@ -44,7 +44,7 @@
 			for (const child of node.childNodes) {
 				const childTree = await buildNodeTree(child, childId);
 				if (childTree) children.push(childTree);
-				childId = childId.sibling(1);
+				childId = childId.sibling(1)!;
 			}
 			return { type: "container", id, children };
 		} else if (node instanceof vdom.Text) {
@@ -56,8 +56,8 @@
 	}
 
 	export async function parseContentToNodeTree(content: string): Promise<NodeTree | null> {
-		const doc = vdom.parseDocument(content, { xmlMode: true, decodeEntities: false });
-		return await buildNodeTree(doc, new NodeId([]));
+		const dom = await Dom.loadAsync(content);
+		return await buildNodeTree(dom.root, NodeId.root());
 	}
 
 	type Props = {
@@ -86,10 +86,10 @@
 		const ordering = NodeId.compare(startId, endId);
 		if (ordering) {
 			let [s, e] = ordering < 0 ? [startId, endId] : [endId, startId];
-			while (s.length > commonAncestor.length + 1) s = s.parent;
-			while (e.length > commonAncestor.length + 1) e = e.parent;
+			while (s.length > commonAncestor.length + 1) s = s.parent!;
+			while (e.length > commonAncestor.length + 1) e = e.parent!;
 			let [offset, size] = [s, 1];
-			while (NodeId.compare(s, e) && size++) s = s.sibling(1);
+			while (NodeId.compare(s, e) && size++) s = s.sibling(1)!;
 			partition = new Partition(offset, size);
 		} else {
 			partition = new Partition(commonAncestor);
@@ -176,7 +176,8 @@
 	@reference "../../app.css";
 
 	[data-node-id] {
-		@apply m-0.5 inline-block cursor-pointer rounded border p-0.5 align-middle text-xs transition-colors select-none;
+		/* Disabled transition due to performance issues in Safari */
+		@apply m-0.5 inline-block cursor-pointer rounded border p-0.5 align-middle text-xs select-none;
 		@apply border-base-content/25 text-base-content;
 		&:not(:has(> [data-node-id]:hover)):hover {
 			@apply border border-base-content/75;

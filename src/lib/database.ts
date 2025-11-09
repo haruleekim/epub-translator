@@ -1,15 +1,10 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
+import type { ProjectDump } from "$lib/core/project";
 
 export interface DatabaseSchema extends DBSchema {
 	projects: {
 		key: string;
-		value: {
-			id: string;
-			epub: ArrayBuffer;
-			sourceLanguage: string;
-			targetLanguage: string;
-			createdAt: Date;
-		};
+		value: ProjectDump;
 	};
 }
 

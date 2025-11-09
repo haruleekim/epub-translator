@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
-	import type { Partition } from "$lib/core/common";
+	import type { Partition } from "$lib/core/dom";
 	import type { Resource } from "$lib/core/epub";
 	import type Project from "$lib/core/project";
 

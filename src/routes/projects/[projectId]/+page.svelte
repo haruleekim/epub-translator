@@ -1,17 +1,12 @@
 <script lang="ts">
 	import queryString from "query-string";
 	import IconClose from "virtual:icons/mdi/close";
-	import IconEye from "virtual:icons/mdi/eye";
-	import IconFileUpload from "virtual:icons/mdi/file-upload";
 	import IconMenu from "virtual:icons/mdi/menu";
-	import IconSelectDrag from "virtual:icons/mdi/select-drag";
-	import IconTranslate from "virtual:icons/mdi/translate";
 	import { pushState } from "$app/navigation";
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import FileTree from "$lib/components/FileTree.svelte";
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
-	import { Partition } from "$lib/core/common";
-	import TranslationComposer from "$lib/core/composer";
+	import { Partition } from "$lib/core/dom";
 	import Project from "$lib/core/project";
 	import { openDatabase } from "$lib/database";
 	import type { PageProps } from "./$types";
@@ -53,23 +48,14 @@
 		const blob = await resource.getBlob();
 		return blob.text();
 	});
-	const composer = $derived(new TranslationComposer(await content));
+	const selectedContent = $derived.by(async () => {
+		[project, path, partition];
+		if (!project || !path || !partition) return "";
+		return project.getOriginalContent(path, partition);
+	});
 </script>
 
-{@render navbar()}
-
-<div class="flex gap-4">
-	<div class="flex-1">
-		<PartitionSelector bind:partition content={await content} />
-	</div>
-	<div class="flex-1">
-		{#if partition}
-			<ContentViewer data={composer.getOriginalContent(partition)} mediaType="text/html" />
-		{/if}
-	</div>
-</div>
-
-{#snippet navbar()}
+<div class="flex h-screen w-screen flex-col">
 	<div class="navbar justify-between gap-1">
 		<div>
 			{@render drawer()}
@@ -77,7 +63,16 @@
 
 		<ul class="menu menu-horizontal menu-xs"></ul>
 	</div>
-{/snippet}
+
+	<div class="flex flex-1 gap-4 overflow-auto">
+		<div class="flex-1 overflow-auto">
+			<PartitionSelector bind:partition content={await content} />
+		</div>
+		<div class="flex-1 overflow-auto">
+			<ContentViewer class="h-48 w-full" data={await selectedContent} mediaType="text/html" />
+		</div>
+	</div>
+</div>
 
 {#snippet drawer()}
 	<div class="drawer">

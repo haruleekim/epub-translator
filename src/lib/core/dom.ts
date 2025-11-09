@@ -15,13 +15,17 @@ export class NodeId {
 	}
 
 	static parse(text: string): NodeId {
-		if (text === "") return new NodeId([]);
+		if (text === "") return NodeId.root();
 		const parts = text.split("/");
 		return new NodeId(parts.map(Number));
 	}
 
 	toString(): string {
 		return this.path.join("/");
+	}
+
+	static root(): NodeId {
+		return new NodeId([]);
 	}
 
 	get length() {
@@ -227,15 +231,26 @@ export class Dom {
 		return result;
 	}
 
-	*iterate(): Generator<DomTraversal> {
-		yield { nodeId: new NodeId([]), node: this.root, open: true, close: false };
+	traverse(callback: (traversal: DomTraversal) => void): Document {
+		const iterator = this.iterate();
+		while (true) {
+			const { done, value } = iterator.next();
+			if (done) return value;
+			callback(value);
+		}
+	}
 
-		if (!this.root.firstChild) {
-			yield { nodeId: new NodeId([]), node: this.root, open: false, close: true };
-			return;
+	*iterate(): Generator<DomTraversal, Document> {
+		const root = this.root.cloneNode(true);
+
+		yield { nodeId: NodeId.root(), node: root, open: true, close: false };
+
+		if (!root.firstChild) {
+			yield { nodeId: NodeId.root(), node: root, open: false, close: true };
+			return root;
 		}
 
-		let node = this.root.firstChild;
+		let node = root.firstChild;
 		let nodeId: NodeId | null = new NodeId([0]);
 
 		while (nodeId && node.parent) {
@@ -257,6 +272,8 @@ export class Dom {
 				nodeId = nodeId.sibling(1);
 			}
 		}
+
+		return root;
 	}
 }
 

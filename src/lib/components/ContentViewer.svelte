@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ClassValue } from "svelte/elements";
-	import { NodeId } from "$lib/core/common";
+	import { Dom } from "$lib/core/dom";
 	import * as vdom from "$lib/utils/virtual-dom";
 
 	type Props = {
@@ -32,45 +32,24 @@
 		}
 
 		const content = data instanceof Blob ? await data.text() : data;
-		const doc = await vdom.parseDocumentAsync(content, DOM_OPTIONS);
-		if (!doc.firstChild) return new Blob([data], { type: mediaType });
+		const dom = await Dom.loadAsync(content);
 
-		let node: vdom.AnyNode = doc.firstChild;
-		let nodeId = new NodeId([0]);
-
-		const promises = [];
-		while (node.parentNode) {
-			if (nodeId.leafOrder >= node.parentNode.childNodes.length) {
-				nodeId = nodeId.parent.sibling(1);
-				node = node.parentNode.nextSibling ?? node.parentNode;
-				continue;
-			}
-
-			if (node instanceof vdom.Element) {
-				node.attribs[NODE_ID_ATTRIBUTE] = nodeId.toString();
-
-				if (transformUrl) {
-					for (const attr of REFERENCING_ATTRIBUTES) {
-						if (node.attribs[attr]) {
-							const thisNode = node;
-							const promise = transformUrl(node.attribs[attr]).then((transformed) => {
-								thisNode.attribs[attr] = transformed;
-							});
-							promises.push(promise);
-						}
+		const promises: Promise<void>[] = [];
+		const doc = dom.traverse(({ node, nodeId, close }) => {
+			if (close || !(node.type === "tag")) return;
+			node.attribs[NODE_ID_ATTRIBUTE] = nodeId.toString();
+			if (transformUrl) {
+				for (const attr of REFERENCING_ATTRIBUTES) {
+					if (node.attribs[attr]) {
+						const thisNode = node;
+						const promise = transformUrl(node.attribs[attr]).then((transformed) => {
+							thisNode.attribs[attr] = transformed;
+						});
+						promises.push(promise);
 					}
 				}
-
-				if (node.firstChild) {
-					nodeId = nodeId.firstChild;
-					node = node.firstChild;
-					continue;
-				}
 			}
-
-			nodeId = nodeId.sibling(1);
-			node = node.nextSibling ?? node;
-		}
+		});
 		await Promise.all(promises);
 
 		return new Blob([vdom.render(doc, DOM_OPTIONS)], { type: mediaType });

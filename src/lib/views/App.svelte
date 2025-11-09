@@ -7,11 +7,10 @@
 	import IconTranslate from "virtual:icons/mdi/translate";
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import FileTree from "$lib/components/FileTree.svelte";
-	import type { Partition } from "$lib/core/common";
+	import type { Partition } from "$lib/core/dom";
 	import Epub from "$lib/core/epub";
 	import Project, { type Input } from "$lib/core/project";
 	import PartitionSelectorView from "$lib/views/PartitionSelectorView.svelte";
-	import TranslationView from "$lib/views/TranslationView.svelte";
 
 	const { defaultInput, defaultPath }: { defaultInput?: Input; defaultPath?: string } = $props();
 
@@ -34,7 +33,7 @@
 		path = partition = undefined;
 		mode = "view";
 		project.then((project) => {
-			path ??= project?.getSpineItem(0)?.path;
+			path ??= project?.epub.getSpineItem(0)?.path;
 		});
 	}
 
@@ -49,7 +48,7 @@
 	<div class="relative flex-1 overflow-auto">
 		<div class="h-full w-full overflow-auto">
 			{#await project then project}
-				{@const resource = path ? project?.getResource(path) : undefined}
+				{@const resource = path ? project?.epub.getResource(path) : undefined}
 				{#if mode === "view" && resource}
 					<ContentViewer
 						data={await resource.getBlob()}
@@ -59,7 +58,7 @@
 				{:else if mode === "select" && project && resource}
 					<PartitionSelectorView {project} {resource} bind:partition />
 				{:else if mode === "translate" && project && path}
-					<TranslationView {project} {path} {partition} />
+					<!-- <TranslationView {project} {path} {partition} /> -->
 				{/if}
 			{/await}
 		</div>
@@ -160,8 +159,8 @@
 						{#if project}
 							<FileTree
 								paths={showAllResources
-									? project.getResourcePaths()
-									: project.listSpinePaths()}
+									? project.epub.getResourcePaths()
+									: project.epub.listSpinePaths()}
 								activePath={path}
 								onSelect={(newPath) => {
 									changePath(newPath);

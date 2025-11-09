@@ -7,7 +7,7 @@
 
 	const epub = await Epub.load(sample);
 	const project = Project.create(epub, "eng", "kor");
-	const blob = await project.getSpineItem(2)!.getBlob();
+	const blob = await project.epub.getSpineItem(2)!.getBlob();
 	const content = await blob.text();
 
 	const { Story } = defineMeta({
