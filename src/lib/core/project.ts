@@ -7,7 +7,7 @@ import type { Input, Resource } from "$lib/core/epub";
 export type Translation = {
 	id: string;
 	path: string;
-	partition: string;
+	partition: Partition;
 	content: string;
 };
 
@@ -17,7 +17,14 @@ export type ProjectDump = {
 	sourceLanguage: string;
 	targetLanguage: string;
 	createdAt: Date;
-	translations: Map<string, Translation>;
+	translations: TranslationDump[];
+};
+
+export type TranslationDump = {
+	id: string;
+	path: string;
+	partition: string;
+	content: string;
 };
 
 export default class Project {
@@ -44,7 +51,12 @@ export default class Project {
 			sourceLanguage: this.sourceLanguage,
 			targetLanguage: this.targetLanguage,
 			createdAt: this.createdAt,
-			translations: this.translations,
+			translations: Array.from(
+				this.translations.values().map(({ partition, ...tr }) => ({
+					partition: partition.toString(),
+					...tr,
+				})),
+			),
 		};
 	}
 
@@ -62,7 +74,7 @@ export default class Project {
 			typeof sourceLanguage === "string" &&
 			typeof targetLanguage === "string" &&
 			createdAt instanceof Date &&
-			translations instanceof Map
+			Array.isArray(translations)
 		) {
 			const project = new Project(
 				id,
@@ -70,7 +82,12 @@ export default class Project {
 				sourceLanguage,
 				targetLanguage,
 				createdAt,
-				translations,
+				new Map(
+					translations.map(({ id, partition, ...tr }) => [
+						id,
+						{ id, partition: Partition.parse(partition), ...tr },
+					]),
+				),
 			);
 			project.#recalculateIndices();
 			return project;
@@ -109,7 +126,7 @@ export default class Project {
 			const partitions = ids.map((id) => {
 				const translation = this.translations.get(id);
 				if (!translation) throw new Error(`Translation not found: ${id}`);
-				return Partition.parse(translation.partition);
+				return translation.partition;
 			});
 			return Partition.checkOverlap(partitions);
 		});
@@ -120,10 +137,11 @@ export default class Project {
 	async renderTranslatedContent(path: string, translationIds: string[]): Promise<string> {
 		const dom = await this.#getDom(path);
 		translationIds = translationIds.filter((id) => this.translationIdToPath.get(id) === path);
-		const translations = translationIds
-			.map((id) => this.translations.get(id))
-			.filter((tr) => !!tr)
-			.map(({ partition, content }) => ({ partition: Partition.parse(partition), content }));
+		const translations = translationIds.map((id) => {
+			const translation = this.translations.get(id);
+			if (!translation) throw new Error(`Translation not found: ${id}`);
+			return translation;
+		});
 		return dom.substituteAll(translations);
 	}
 }
