@@ -2,7 +2,7 @@
 	import queryString from "query-string";
 	import IconClose from "virtual:icons/mdi/close";
 	import IconMenu from "virtual:icons/mdi/menu";
-	import { pushState } from "$app/navigation";
+	import { replaceState } from "$app/navigation";
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import FileTree from "$lib/components/FileTree.svelte";
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
@@ -31,8 +31,7 @@
 	$effect(() => {
 		const parts: string[] = [];
 		if (path) parts.push(`path=${encodeURIComponent(path)}`);
-		if (partition) parts.push(`partition=${encodeURIComponent(partition.toString())}`);
-		pushState(`?${parts.join("&")}`, {});
+		replaceState(`?${parts.join("&")}`, {});
 	});
 
 	const db = await openDatabase();
@@ -69,7 +68,12 @@
 			<PartitionSelector bind:partition content={await content} />
 		</div>
 		<div class="flex-1 overflow-auto">
-			<ContentViewer class="h-48 w-full" data={await selectedContent} mediaType="text/html" />
+			<ContentViewer
+				class="h-48 w-full"
+				data={await selectedContent}
+				mediaType="text/html"
+				transformUrl={resource?.resolveUrl}
+			/>
 		</div>
 	</div>
 </div>
