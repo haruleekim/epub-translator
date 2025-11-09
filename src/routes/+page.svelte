@@ -7,12 +7,12 @@
 	import { getLanguage } from "$lib/utils/languages";
 	import ProjectCreationDialog from "./ProjectCreationDialog.svelte";
 
+	let dialogOpen = $state(false);
+
 	const db = await openDatabase();
 	const projects = $state<Project[]>(
 		await db.getAll("projects").then((projects) => Promise.all(projects.map(Project.load))),
 	);
-
-	let dialogOpen = $state(false);
 </script>
 
 <svelte:head>
