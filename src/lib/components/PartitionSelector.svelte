@@ -55,9 +55,11 @@
 		}
 	}
 
-	export async function parseContentToNodeTree(content: string): Promise<NodeTree | null> {
+	export async function parseContentToNodeTree(
+		content: string,
+	): Promise<NodeTreeContainer | null> {
 		const dom = await Dom.loadAsync(content);
-		return await buildNodeTree(dom.root, NodeId.root());
+		return (await buildNodeTree(dom.root, NodeId.root())) as NodeTreeContainer;
 	}
 
 	type Props = {
@@ -74,7 +76,7 @@
 		class: classValue,
 	}: Props = $props();
 
-	const nodeTree = $derived(await parseContentToNodeTree(content));
+	const nodeTreeRoot = $derived(await parseContentToNodeTree(content));
 
 	let start = $state<string | null>(partition?.first.toString() ?? null);
 	let end = $state<string | null>(partition?.last.toString() ?? null);
@@ -147,15 +149,17 @@
 	onpointerup={handlePointerUp}
 	class={classValue}
 >
-	{#if nodeTree}
-		{@render nodeTreeView(nodeTree)}
+	{#if nodeTreeRoot}
+		{#each nodeTreeRoot.children as child (child.id)}
+			{@render nodeTreeView(child)}
+		{/each}
 	{/if}
 </div>
 
 {#snippet nodeTreeView(node: NodeTree)}
 	{@const nodeId = node.id.toString()}
 	<span
-		data-node-id={nodeId || undefined}
+		data-node-id={nodeId}
 		data-node-selected={partition?.contains(node.id) || undefined}
 		onpointerenter={handlePointerEnter}
 	>
