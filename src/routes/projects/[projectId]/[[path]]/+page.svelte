@@ -15,7 +15,7 @@
 	const { params }: PageProps = $props();
 
 	const projectId = $derived(params.projectId);
-	let path = $derived(params.path);
+	let path = $derived(decodeURIComponent(params.path ?? ""));
 
 	let drawerOpen = $state(false);
 	let showAllResources = $state(false);
@@ -27,7 +27,12 @@
 	async function changePath(newPath: string) {
 		path = newPath;
 		partition = undefined;
-		await goto(resolve("/projects/[projectId]/[[path]]", { projectId, path: newPath }));
+		await goto(
+			resolve("/projects/[projectId]/[[path]]", {
+				projectId,
+				path: encodeURIComponent(newPath),
+			}),
+		);
 	}
 
 	const db = await openDatabase();
