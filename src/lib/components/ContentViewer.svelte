@@ -62,4 +62,9 @@
 	});
 </script>
 
-<iframe src={await url} title="content-viewer" sandbox="allow-scripts" class={classValue}></iframe>
+<iframe
+	src={await url}
+	title="content-viewer"
+	sandbox="allow-scripts allow-same-origin"
+	class={classValue}
+></iframe>
