@@ -1,5 +1,5 @@
 import OpenAI, { type ClientOptions } from "openai";
-import type { Partition } from "$lib/core/common";
+import type { Partition } from "$lib/core/dom";
 import type Project from "$lib/core/project";
 
 /** @returns Translation ID */
@@ -26,5 +26,6 @@ export async function translateByOpenAI(
 			.join("\n"),
 	});
 
-	return await project.addTranslation(path, partition, response.output_text);
+	// return await project.addTranslation(path, partition, response.output_text);
+	return "stub-translation-id";
 }

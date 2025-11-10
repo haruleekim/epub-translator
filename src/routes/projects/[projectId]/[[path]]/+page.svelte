@@ -1,8 +1,9 @@
 <script lang="ts">
-	import queryString from "query-string";
+	import { onMount } from "svelte";
 	import IconClose from "virtual:icons/mdi/close";
 	import IconMenu from "virtual:icons/mdi/menu";
-	import { replaceState } from "$app/navigation";
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import FileTree from "$lib/components/FileTree.svelte";
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
@@ -12,27 +13,22 @@
 	import type { PageProps } from "./$types";
 
 	const { params }: PageProps = $props();
-	const { projectId } = params;
 
-	const query = queryString.parse(location.search) as Record<string, string>;
+	const projectId = $derived(params.projectId);
+	let path = $derived(params.path);
 
 	let drawerOpen = $state(false);
 	let showAllResources = $state(false);
-	let path = $state<string | undefined>(query.path);
-	let partition = $state<Partition | undefined>(
-		query.partition ? Partition.parse(query.partition) : undefined,
-	);
+	let partition = $derived.by<Partition | undefined>(() => {
+		[projectId, path];
+		return undefined;
+	});
 
-	function changePath(newPath: string) {
+	async function changePath(newPath: string) {
 		path = newPath;
 		partition = undefined;
+		await goto(resolve("/projects/[projectId]/[[path]]", { projectId, path: newPath }));
 	}
-
-	$effect(() => {
-		const parts: string[] = [];
-		if (path) parts.push(`path=${encodeURIComponent(path)}`);
-		replaceState(`?${parts.join("&")}`, {});
-	});
 
 	const db = await openDatabase();
 	const projectData = $derived(await db.get("projects", projectId));
@@ -52,6 +48,13 @@
 		if (!project || !path || !partition) return "";
 		return project.getOriginalContent(path, partition);
 	});
+
+	onMount(async () => {
+		const firstSpineItem = project?.epub.getSpineItem(0);
+		if (!path && firstSpineItem) {
+			changePath(firstSpineItem.path);
+		}
+	});
 </script>
 
 <div class="flex h-screen w-screen flex-col">
@@ -68,12 +71,14 @@
 			<PartitionSelector bind:partition content={await content} />
 		</div>
 		<div class="flex-1 overflow-auto">
-			<ContentViewer
-				class="h-48 w-full"
-				data={await selectedContent}
-				mediaType="text/html"
-				transformUrl={resource?.resolveUrl}
-			/>
+			{#key selectedContent}
+				<ContentViewer
+					class="h-48 w-full"
+					data={await selectedContent}
+					mediaType="text/html"
+					transformUrl={resource?.resolveUrl}
+				/>
+			{/key}
 		</div>
 	</div>
 </div>
