@@ -119,8 +119,8 @@
 								? project.epub.getResourcePaths()
 								: project.epub.listSpinePaths()}
 							activePath={path}
-							onSelect={(newPath) => {
-								changePath(newPath);
+							onSelect={async (newPath) => {
+								await changePath(newPath);
 								drawerOpen = false;
 							}}
 							defaultOpen={!showAllResources}
