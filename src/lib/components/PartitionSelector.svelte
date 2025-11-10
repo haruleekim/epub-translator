@@ -64,9 +64,9 @@
 
 	type Props = {
 		content: string;
+		partition?: Partition;
 		onSelectionChange?: (partition: Partition | null) => void;
 		class?: ClassValue | null | undefined;
-		partition?: Partition;
 	};
 
 	let {
