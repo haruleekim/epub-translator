@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { v4 as uuid } from "uuid";
+import { nanoid } from "nanoid";
 import { Dom, Partition, type NodeId } from "$lib/core/dom";
 import Epub from "$lib/core/epub";
 import type { Input, Resource } from "$lib/core/epub";
@@ -41,7 +41,7 @@ export default class Project {
 	) {}
 
 	static create(epub: Epub, sourceLanguage: string, targetLanguage: string) {
-		return new Project(uuid(), epub, sourceLanguage, targetLanguage, new Date(), new Map());
+		return new Project(nanoid(), epub, sourceLanguage, targetLanguage, new Date(), new Map());
 	}
 
 	async dump(): Promise<ProjectDump> {

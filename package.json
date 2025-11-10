@@ -67,9 +67,9 @@
 		"jszip": "^3.10.1",
 		"langs": "^2.0.0",
 		"lodash": "^4.17.21",
+		"nanoid": "^5.1.6",
 		"openai": "^6.8.1",
-		"query-string": "^9.3.1",
-		"uuid": "^13.0.0"
+		"query-string": "^9.3.1"
 	},
 	"packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd"
 }
