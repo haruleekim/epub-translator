@@ -55,19 +55,20 @@
 		<ul class="menu menu-horizontal menu-xs"></ul>
 	</div>
 
-	<div class="flex flex-1 gap-4 overflow-auto">
+	<div class="flex flex-1 gap-2 overflow-auto">
 		<div class="flex-1 overflow-auto">
 			<PartitionSelector bind:partition content={await content} />
 		</div>
-		<div class="flex-1 overflow-auto">
-			{#key await selectedContent}
-				<ContentViewer
-					class="h-48 w-full"
-					data={await selectedContent}
-					mediaType="text/html"
-					transformUrl={resource?.resolveUrl}
-				/>
-			{/key}
+		<div class="flex flex-1 flex-col gap-2 overflow-auto">
+			<ContentViewer
+				class="w-full flex-1 overflow-auto rounded bg-base-200"
+				data={await selectedContent}
+				mediaType="text/html"
+				transformUrl={resource?.resolveUrl}
+			/>
+			<code class="flex-1 overflow-auto rounded bg-base-200 text-xs whitespace-pre-wrap">
+				{await selectedContent}
+			</code>
 		</div>
 	</div>
 </div>
