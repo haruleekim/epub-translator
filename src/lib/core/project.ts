@@ -8,7 +8,18 @@ export type Translation = {
 	id: string;
 	path: string;
 	partition: Partition;
-	content: string;
+	original: string;
+	translated: string;
+	createdAt: Date;
+};
+
+export type TranslationDump = {
+	id: string;
+	path: string;
+	partition: string;
+	original: string;
+	translated: string;
+	createdAt: Date;
 };
 
 export type ProjectDump = {
@@ -18,13 +29,6 @@ export type ProjectDump = {
 	targetLanguage: string;
 	createdAt: Date;
 	translations: TranslationDump[];
-};
-
-export type TranslationDump = {
-	id: string;
-	path: string;
-	partition: string;
-	content: string;
 };
 
 export default class Project {
@@ -142,7 +146,9 @@ export default class Project {
 			if (!translation) throw new Error(`Translation not found: ${id}`);
 			return translation;
 		});
-		return dom.substituteAll(translations);
+		return dom.substituteAll(
+			translations.map((tr) => ({ partition: tr.partition, content: tr.translated })),
+		);
 	}
 }
 

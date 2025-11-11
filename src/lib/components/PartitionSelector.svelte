@@ -64,7 +64,7 @@
 
 	type Props = {
 		content: string;
-		partition?: Partition;
+		partition?: Partition | null | undefined;
 		onSelectionChange?: (partition: Partition | null) => void;
 		class?: ClassValue | null | undefined;
 	};

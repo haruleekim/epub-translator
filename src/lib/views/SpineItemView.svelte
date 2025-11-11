@@ -1,64 +1,48 @@
 <script lang="ts">
-	import { onMount } from "svelte";
 	import IconClose from "virtual:icons/mdi/close";
 	import IconMenu from "virtual:icons/mdi/menu";
-	import { goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import FileTree from "$lib/components/FileTree.svelte";
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
 	import { Partition } from "$lib/core/dom";
 	import Project from "$lib/core/project";
-	import { openDatabase } from "$lib/database";
-	import type { PageProps } from "./$types";
 
-	const { params }: PageProps = $props();
+	type Props = {
+		project: Project;
+		path?: string;
+		partition?: Partition;
+		onPathChange?: (newPath: string | null) => void;
+		onPartitionChange?: (newPartition: Partition | null) => void;
+	};
 
-	const projectId = $derived(params.projectId);
-	let path = $derived(decodeURIComponent(params.path ?? ""));
+	let { project, ...props }: Props = $props();
 
-	let drawerOpen = $state(false);
-	let showAllResources = $state(false);
-	let partition = $derived.by<Partition | undefined>(() => {
-		[projectId, path];
-		return undefined;
-	});
+	let path = $derived(props.path ?? project.epub.getSpineItem(0)?.path);
+	$effect(() => void props.onPathChange?.(path ?? null));
 
-	async function changePath(newPath: string) {
-		path = newPath;
-		partition = undefined;
-		await goto(
-			resolve("/projects/[projectId]/[[path]]", {
-				projectId,
-				path: encodeURIComponent(newPath),
-			}),
-		);
-	}
-
-	const db = await openDatabase();
-	const projectData = $derived(await db.get("projects", projectId));
-	const project = $derived(await (projectData && Project.load(projectData)));
-	const resource = $derived.by(() => {
+	let partition = $derived.by<Partition | null>(() => {
 		[project, path];
+		return null;
+	});
+	$effect(() => void props.onPartitionChange?.(partition));
+
+	let drawerOpen = $derived<boolean>(path != null && false);
+	let showAllResources = $state(false);
+
+	const resource = $derived.by(() => {
 		if (!project || !path) return;
 		return project.epub.getResource(path);
 	});
+
 	const content = $derived.by(async () => {
 		if (!resource) return "";
 		const blob = await resource.getBlob();
 		return blob.text();
 	});
+
 	const selectedContent = $derived.by(async () => {
-		[project, path, partition];
 		if (!project || !path || !partition) return "";
 		return project.getOriginalContent(path, partition);
-	});
-
-	onMount(async () => {
-		const firstSpineItem = project?.epub.getSpineItem(0);
-		if (!path && firstSpineItem) {
-			changePath(firstSpineItem.path);
-		}
 	});
 </script>
 
@@ -76,7 +60,7 @@
 			<PartitionSelector bind:partition content={await content} />
 		</div>
 		<div class="flex-1 overflow-auto">
-			{#key selectedContent}
+			{#key await selectedContent}
 				<ContentViewer
 					class="h-48 w-full"
 					data={await selectedContent}
@@ -119,10 +103,7 @@
 								? project.epub.getResourcePaths()
 								: project.epub.listSpinePaths()}
 							activePath={path}
-							onSelect={async (newPath) => {
-								await changePath(newPath);
-								drawerOpen = false;
-							}}
+							onSelect={(newPath) => (path = newPath)}
 							defaultOpen={!showAllResources}
 						/>
 					{/if}
