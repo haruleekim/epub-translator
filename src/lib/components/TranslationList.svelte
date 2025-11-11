@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from "svelte";
 	import type { ClassValue } from "svelte/elements";
 	import IconChevronDown from "virtual:icons/mdi/chevron-down";
 	import IconChevronRight from "virtual:icons/mdi/chevron-right";
@@ -9,6 +10,7 @@
 	type Props = {
 		translations: Translation[];
 		onSelectionChange?: (translations: Translation[]) => void;
+		itemSnippet?: Snippet<[Translation]>;
 		class?: ClassValue | null;
 	};
 	const props: Props = $props();
@@ -29,7 +31,8 @@
 </script>
 
 <ul class={["list", props.class]}>
-	{#each translations as { id, path, partition, original, translated, createdAt } (id)}
+	{#each translations as translation (translation.id)}
+		{@const { id, path, partition, original, translated, createdAt } = translation}
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<li
@@ -51,8 +54,11 @@
 				<div class="text-sm text-base-content/75">{path} · {partition}</div>
 				<div class="text-sm text-base-content/75">{createdAt.toLocaleString()}</div>
 			</div>
-			<div class="list-col-wrap rounded bg-base-200 p-2" hidden={!folds[id]}>
+			<div class="col-span-2 list-col-wrap rounded bg-base-200 p-2" hidden={!folds[id]}>
 				<TranslationDiff class="w-full" {original} {translated} />
+			</div>
+			<div>
+				{@render props.itemSnippet?.(translation)}
 			</div>
 			<input
 				class="checkbox"

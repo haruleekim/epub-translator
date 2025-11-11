@@ -17,8 +17,23 @@
 	}));
 	const { Story } = defineMeta({
 		component: TranslationList,
-		args: { translations, onSelectionChange: (trs) => console.log(trs) },
+		args: {
+			translations,
+			onSelectionChange: (trs) => console.log(trs),
+		},
 	});
 </script>
 
-<Story name="Default" />
+<Story name="Default" args={{ itemSnippet }} />
+
+{#snippet itemSnippet({ partition }: Translation)}
+	{@const index = ((partition.first.leafOrder! - 1) * 7) % 10}
+	<span
+		class={[
+			"badge badge-sm",
+			["badge-primary", "badge-secondary", "badge-success", "badge-warning", "badge-error"][
+				index % 5
+			],
+		]}>Part {index}</span
+	>
+{/snippet}
