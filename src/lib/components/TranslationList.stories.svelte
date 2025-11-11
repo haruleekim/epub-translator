@@ -15,16 +15,11 @@
 		translated,
 		createdAt: new Date(Date.now() + i * 1000),
 	}));
-	const { Story } = defineMeta({
-		component: TranslationList,
-		args: {
-			translations,
-			onSelectionChange: (trs) => console.log(trs),
-		},
-	});
-</script>
 
-<Story name="Default" args={{ itemSnippet }} />
+	const selectedIds = $state([translations[0].id, translations[2].id]);
+
+	const { Story } = defineMeta({ component: TranslationList });
+</script>
 
 {#snippet itemSnippet({ partition }: Translation)}
 	{@const index = ((partition.first.leafOrder! - 1) * 7) % 10}
@@ -37,3 +32,13 @@
 		]}>Part {index}</span
 	>
 {/snippet}
+
+<Story
+	name="Default"
+	args={{
+		translations,
+		onSelectionChange: console.log,
+		selectedIds,
+		itemSnippet,
+	}}
+/>
