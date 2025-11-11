@@ -5,12 +5,17 @@
 	import NavigationDrawer from "$lib/views/NavigationDrawer.svelte";
 
 	const epub = await Epub.load(sample);
-	const path = epub.getSpineItem(0)!.path;
+	let path = $derived<string | null>(epub.getSpineItem(0)!.path);
 
-	const { Story } = defineMeta({
-		component: NavigationDrawer,
-		args: { epub, path, onPathChange: (path) => console.log(path), opened: true },
-	});
+	const { Story } = defineMeta({ component: NavigationDrawer });
 </script>
 
-<Story name="Default" />
+<Story
+	name="Default"
+	args={{
+		epub,
+		path,
+		onPathChange: (newPath) => (path = newPath), // FIXME: not working
+		opened: true,
+	}}
+/>

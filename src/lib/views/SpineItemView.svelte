@@ -1,11 +1,9 @@
 <script lang="ts">
-	import IconClose from "virtual:icons/mdi/close";
-	import IconMenu from "virtual:icons/mdi/menu";
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
-	import FileTree from "$lib/components/FileTree.svelte";
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
 	import { Partition } from "$lib/core/dom";
 	import Project from "$lib/core/project";
+	import NavigationDrawer from "./NavigationDrawer.svelte";
 
 	type Props = {
 		project: Project;
@@ -25,9 +23,6 @@
 		return null;
 	});
 	$effect(() => void props.onPartitionChange?.(partition));
-
-	let drawerOpen = $derived<boolean>(path != null && false);
-	let showAllResources = $state(false);
 
 	const resource = $derived.by(() => {
 		if (!project || !path) return;
@@ -49,7 +44,11 @@
 <div class="flex h-screen w-screen flex-col">
 	<div class="navbar justify-between gap-1">
 		<div>
-			{@render drawer()}
+			<NavigationDrawer
+				epub={project.epub}
+				{path}
+				onPathChange={(newPath) => (path = newPath ?? undefined)}
+			/>
 		</div>
 
 		<ul class="menu menu-horizontal menu-xs"></ul>
@@ -72,52 +71,3 @@
 		</div>
 	</div>
 </div>
-
-{#snippet drawer()}
-	<div class="drawer">
-		<input id="navigation-drawer" type="checkbox" class="drawer-toggle" checked={drawerOpen} />
-		<div class="drawer-content">
-			<button
-				class="btn btn-circle border-none font-normal btn-ghost"
-				onclick={() => (drawerOpen = true)}
-			>
-				<IconMenu class="size-4" />
-			</button>
-		</div>
-		<div class="drawer-side">
-			<button
-				aria-label="close sidebar"
-				class="drawer-overlay"
-				onclick={() => (drawerOpen = false)}
-			></button>
-			<div class="flex h-full w-fit flex-col overflow-auto bg-base-200 select-none">
-				<button
-					class="btn mx-2 mt-3 mb-1 btn-circle border-none font-normal btn-ghost"
-					onclick={() => (drawerOpen = false)}
-				>
-					<IconClose class="size-4" />
-				</button>
-				<div class="w-fit flex-1 overflow-auto">
-					{#if project}
-						<FileTree
-							paths={showAllResources
-								? project.epub.getResourcePaths()
-								: project.epub.listSpinePaths()}
-							activePath={path}
-							onSelect={(newPath) => (path = newPath)}
-							defaultOpen={!showAllResources}
-						/>
-					{/if}
-				</div>
-				<label class="label p-4 text-xs">
-					<input
-						type="checkbox"
-						bind:checked={showAllResources}
-						class="checkbox checkbox-xs"
-					/>
-					Show all resources
-				</label>
-			</div>
-		</div>
-	</div>
-{/snippet}

@@ -6,7 +6,7 @@
 	import Epub from "$lib/core/epub";
 
 	type Props = {
-		epub: Epub;
+		epub: Readonly<Epub>;
 		path?: string | null;
 		onPathChange?: (newPath: string | null) => void;
 		opened?: boolean;
@@ -37,7 +37,14 @@
 				<IconClose class="size-4" />
 			</button>
 			<div class="w-fit flex-1 overflow-auto">
-				<FileTree paths={epub.listSpinePaths()} activePath={path} onSelect={onPathChange} />
+				<FileTree
+					paths={epub.listSpinePaths()}
+					activePath={path}
+					onSelect={(path) => {
+						opened = false;
+						onPathChange?.(path ?? null);
+					}}
+				/>
 			</div>
 			<div class="p-2">
 				<button
