@@ -52,7 +52,7 @@
 					onclick={() => onBackToProjectLists?.()}
 				>
 					<IconBack class="size-4" />
-					Project Lists
+					Project List
 				</button>
 			</div>
 		</div>

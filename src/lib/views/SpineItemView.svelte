@@ -24,6 +24,14 @@
 	});
 	$effect(() => void props.onPartitionChange?.(partition));
 
+	type Mode = "select-partition" | "add-translation" | "compose-translations";
+	let mode = $state<Mode>("select-partition");
+	$effect(() => {
+		if (mode === "add-translation" && !partition) {
+			mode = "select-partition";
+		}
+	});
+
 	const resource = $derived.by(() => {
 		if (!project || !path) return;
 		return project.epub.getResource(path);
@@ -51,12 +59,46 @@
 			/>
 		</div>
 
-		<ul class="menu menu-horizontal menu-xs"></ul>
+		<ul class="menu menu-horizontal menu-sm">
+			<li>
+				<button
+					class={[mode === "select-partition" && "menu-active"]}
+					onclick={() => (mode = "select-partition")}
+				>
+					Select partition
+				</button>
+			</li>
+			<li class={{ "menu-disabled": !partition }}>
+				<button
+					class={[mode === "add-translation" && "menu-active"]}
+					onclick={() => (mode = "add-translation")}
+					disabled={!partition}
+				>
+					Add translation
+				</button>
+			</li>
+			<li>
+				<button
+					class={[mode === "compose-translations" && "menu-active"]}
+					onclick={() => (mode = "compose-translations")}
+				>
+					Compose translations
+				</button>
+			</li>
+		</ul>
 	</div>
 
-	<div class="flex flex-1 gap-2 overflow-auto">
-		<div class="flex-1 overflow-auto">
-			<PartitionSelector bind:partition content={await content} />
+	<div class="flex flex-1 gap-2 overflow-auto px-2 pb-2">
+		<div class="flex-1 overflow-auto rounded bg-base-200 p-1 [scrollbar-width:none]">
+			{#if path}
+				{#if mode === "select-partition"}
+					<PartitionSelector bind:partition content={await content} />
+				{:else if mode === "add-translation" && partition}
+					<p class="p-4">Add a new translation for the selected partition.</p>
+				{:else if mode === "compose-translations"}
+					<p class="p-4">Compose translations for the selected spine item.</p>
+				{/if}
+			{/if}
 		</div>
 		<div class="flex flex-1 flex-col gap-2 overflow-auto">
 			<ContentViewer
@@ -65,7 +107,7 @@
 				mediaType="text/html"
 				transformUrl={resource?.resolveUrl}
 			/>
-			<code class="flex-1 overflow-auto rounded bg-base-200 text-xs whitespace-pre-wrap">
+			<code class="flex-1 overflow-auto rounded bg-base-200 p-2 text-xs whitespace-pre-wrap">
 				{await selectedContent}
 			</code>
 		</div>
