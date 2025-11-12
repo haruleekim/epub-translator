@@ -22,13 +22,28 @@ export type TranslationDump = {
 	createdAt: Date;
 };
 
+export function dumpTranslation(translation: Translation): TranslationDump {
+	return {
+		...translation,
+		partition: translation.partition.toString(),
+	};
+}
+
+export function loadTranslation(dump: TranslationDump): Translation {
+	return {
+		...dump,
+		partition: Partition.parse(dump.partition),
+	};
+}
+
 export type ProjectDump = {
 	id: string;
 	epub: ArrayBuffer;
 	sourceLanguage: string;
 	targetLanguage: string;
 	createdAt: Date;
-	translations: TranslationDump[];
+	translations: Map<string, TranslationDump>;
+	activeTranslationIds: Set<string>;
 };
 
 export default class Project {
@@ -42,62 +57,50 @@ export default class Project {
 		public readonly targetLanguage: string,
 		public readonly createdAt: Readonly<Date>,
 		public readonly translations: Readonly<Map<string, Translation>>,
+		public readonly activeTranslationIds: Readonly<Set<string>>,
 	) {}
 
 	static create(epub: Epub, sourceLanguage: string, targetLanguage: string) {
-		return new Project(nanoid(), epub, sourceLanguage, targetLanguage, new Date(), new Map());
+		return new Project(
+			nanoid(),
+			epub,
+			sourceLanguage,
+			targetLanguage,
+			new Date(),
+			new Map(),
+			new Set(),
+		);
 	}
 
 	async dump(): Promise<ProjectDump> {
 		return {
-			id: this.id,
+			...this,
 			epub: await this.epub.dump(),
-			sourceLanguage: this.sourceLanguage,
-			targetLanguage: this.targetLanguage,
-			createdAt: this.createdAt,
-			translations: Array.from(
-				this.translations.values().map(({ partition, ...tr }) => ({
-					partition: partition.toString(),
-					...tr,
-				})),
+			translations: new Map(
+				this.translations.entries().map(([id, tr]) => [id, dumpTranslation(tr)]),
 			),
 		};
 	}
 
-	static async load({
-		id,
-		epub,
-		sourceLanguage,
-		targetLanguage,
-		createdAt,
-		translations,
-	}: ProjectDump): Promise<Project> {
-		if (
-			typeof id === "string" &&
-			epub instanceof ArrayBuffer &&
-			typeof sourceLanguage === "string" &&
-			typeof targetLanguage === "string" &&
-			createdAt instanceof Date &&
-			Array.isArray(translations)
-		) {
-			const project = new Project(
-				id,
-				await Epub.load(epub),
-				sourceLanguage,
-				targetLanguage,
-				createdAt,
-				new Map(
-					translations.map(({ id, partition, ...tr }) => [
-						id,
-						{ id, partition: Partition.parse(partition), ...tr },
-					]),
-				),
-			);
-			project.#recalculateIndices();
-			return project;
-		} else {
-			throw new Error(`Cannot load project ${id}`);
-		}
+	static async load(dump: ProjectDump): Promise<Project> {
+		const hydrated = {
+			...dump,
+			epub: await Epub.load(dump.epub),
+			translations: new Map(
+				dump.translations.entries().map(([id, tr]) => [id, loadTranslation(tr)]),
+			),
+		};
+		const project = new Project(
+			hydrated.id,
+			hydrated.epub,
+			hydrated.sourceLanguage,
+			hydrated.targetLanguage,
+			hydrated.createdAt,
+			hydrated.translations,
+			hydrated.activeTranslationIds,
+		);
+		project.#recalculateIndices();
+		return project;
 	}
 
 	addTranslation(
@@ -115,6 +118,7 @@ export default class Project {
 			translated,
 			createdAt: new Date(),
 		});
+		this.translationIdToPath.set(id, path);
 		return id;
 	}
 
