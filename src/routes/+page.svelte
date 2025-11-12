@@ -9,10 +9,13 @@
 
 	let dialogOpen = $state(false);
 
-	const db = await openDatabase();
-	const projects = $state<Project[]>(
-		await db.getAll("projects").then((projects) => Promise.all(projects.map(Project.load))),
-	);
+	const projects = $state(await loadAllProjects());
+
+	async function loadAllProjects(): Promise<Project[]> {
+		const db = await openDatabase();
+		const ids = (await db.getAllKeys("projects")) as string[];
+		return Promise.all(ids.map(Project.load));
+	}
 </script>
 
 <svelte:head>
@@ -23,7 +26,7 @@
 	<ProjectCreationDialog
 		bind:open={dialogOpen}
 		onCreate={async (project) => {
-			await db.put("projects", await project.dump());
+			await project.save();
 			projects.push(project);
 			dialogOpen = false;
 		}}
@@ -76,6 +79,7 @@
 				class="btn btn-circle btn-soft btn-error"
 				onclick={async () => {
 					if (confirm("Are you sure you want to delete this project?")) {
+						const db = await openDatabase();
 						await db.delete("projects", project.id);
 						projects.splice(projects.indexOf(project), 1);
 					}

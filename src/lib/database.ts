@@ -1,14 +1,6 @@
-import { openDB, type DBSchema, type IDBPDatabase } from "idb";
-import type { ProjectDump } from "$lib/project";
+import { openDB, type IDBPDatabase } from "idb";
 
-export interface DatabaseSchema extends DBSchema {
-	projects: {
-		key: string;
-		value: ProjectDump;
-	};
-}
-
-export async function openDatabase(): Promise<IDBPDatabase<DatabaseSchema>> {
+export async function openDatabase(): Promise<IDBPDatabase> {
 	return await openDB("epub-translator", 1, {
 		upgrade(db, oldVersion) {
 			if (oldVersion < 1) {
