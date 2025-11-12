@@ -6,12 +6,9 @@ declare global {
 	namespace App {
 		// interface Error {}
 		// interface Locals {}
+		// interface PageState {}
 		// interface PageData {}
 		// interface Platform {}
-		interface PageState {
-			path?: string;
-			partition?: Partition;
-		}
 	}
 }
 

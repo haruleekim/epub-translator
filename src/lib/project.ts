@@ -2,8 +2,6 @@ import _ from "lodash";
 import { nanoid } from "nanoid";
 import { Dom, Partition, type NodeId } from "$lib/core/dom";
 import Epub from "$lib/core/epub";
-import type { Input, Resource } from "$lib/core/epub";
-import { openDatabase } from "$lib/database";
 
 export type Translation = {
 	id: string;
@@ -84,15 +82,7 @@ export default class Project {
 		};
 	}
 
-	async save(): Promise<void> {
-		const db = await openDatabase();
-		const dump = await this.dump();
-		await db.put("projects", dump);
-	}
-
-	static async load(id: string): Promise<Project> {
-		const db = await openDatabase();
-		const dump = (await db.get("projects", id)) as ProjectDump;
+	static async load(dump: ProjectDump): Promise<Project> {
 		const hydrated = {
 			...dump,
 			epub: await Epub.load(dump.epub),
@@ -183,5 +173,3 @@ export default class Project {
 		);
 	}
 }
-
-export type { Input, Resource };

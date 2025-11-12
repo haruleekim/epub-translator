@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
 	import TranslationList from "$lib/components/TranslationList.svelte";
+	import { getContext } from "$lib/context.svelte";
 	import { Partition } from "$lib/core/dom";
 	import Project from "$lib/project";
 	import NavigationDrawer from "./NavigationDrawer.svelte";
@@ -15,6 +18,8 @@
 		onPathChange?: (newPath: string | null) => void;
 		onPartitionChange?: (newPartition: Partition | null) => void;
 	};
+
+	const cx = getContext();
 
 	let { project, ...props }: Props = $props();
 
@@ -61,6 +66,7 @@
 		project.addTranslation(path, partition, await selectedContent, translationText);
 		translationText = "";
 		mode = "compose-translations";
+		await cx.saveProject(project.id);
 	}
 </script>
 
@@ -71,6 +77,7 @@
 				epub={project.epub}
 				{path}
 				onPathChange={(newPath) => (path = newPath ?? undefined)}
+				onBackToProjectLists={() => goto(resolve("/"))}
 			/>
 		</div>
 
