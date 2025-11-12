@@ -2,6 +2,7 @@
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
+	import TranslationList from "$lib/components/TranslationList.svelte";
 	import { Partition } from "$lib/core/dom";
 	import Project from "$lib/core/project";
 	import NavigationDrawer from "./NavigationDrawer.svelte";
@@ -59,6 +60,7 @@
 		if (!translationText || !partition || !path) return;
 		project.addTranslation(path, partition, await selectedContent, translationText);
 		translationText = "";
+		mode = "compose-translations";
 	}
 </script>
 
@@ -114,7 +116,10 @@
 						onTranslationAdd={handleAddTranslation}
 					/>
 				{:else if mode === "compose-translations"}
-					<p class="p-4">Compose translations for the selected spine item.</p>
+					<TranslationList
+						selectedIds={[]}
+						translations={Array.from(project.translations.values())}
+					/>
 				{/if}
 			{/if}
 		</div>
@@ -126,11 +131,12 @@
 				transformUrl={resource?.resolveUrl}
 			/>
 			{#if mode === "add-translation" && translationText}
-				<TranslationDiff
-					class="flex-1 overflow-auto rounded bg-base-200 p-2"
-					original={await selectedContent}
-					translated={translationText}
-				/>
+				<div class="flex-1 overflow-auto rounded bg-base-200 p-2">
+					<TranslationDiff
+						original={await selectedContent}
+						translated={translationText}
+					/>
+				</div>
 			{:else}
 				<code
 					class="flex-1 overflow-auto rounded bg-base-200 p-2 text-xs whitespace-pre-wrap"

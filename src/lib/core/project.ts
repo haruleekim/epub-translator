@@ -105,9 +105,17 @@ export default class Project {
 		partition: Partition,
 		original: string,
 		translated: string,
-	): Translation {
+	): string {
 		const id = nanoid();
-		return { id, path, partition, original, translated, createdAt: new Date() };
+		this.translations.set(id, {
+			id,
+			path,
+			partition,
+			original,
+			translated,
+			createdAt: new Date(),
+		});
+		return id;
 	}
 
 	#recalculateIndices() {

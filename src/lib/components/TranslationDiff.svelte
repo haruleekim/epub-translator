@@ -1,7 +1,6 @@
 <script lang="ts">
 	import * as Diff from "diff";
 	import type { ClassValue } from "svelte/elements";
-	import { fade } from "svelte/transition";
 	import { Dom } from "$lib/core/dom";
 
 	type Props = { original: string; translated: string; class?: ClassValue | null };
@@ -42,25 +41,15 @@
 	});
 </script>
 
-<div class={["relative", props.class]}>
-	<code class="absolute top-0 left-0 flex-1 text-xs leading-normal whitespace-pre-wrap">
-		{#each await diffs as diff (diff)}
-			{@const text = diff.value.join("")}
-			{#if diff.added}
-				<span class="bg-success text-success-content">{text}</span>
-			{:else if diff.removed}
-				<span class="bg-error text-error-content">{text}</span>
-			{:else}
-				<span class="text-base-content">{text}</span>
-			{/if}
-		{/each}
-	</code>
-	{#await diffs}
-		<div
-			class="sticky top-0 left-0 flex h-full w-full items-center justify-center p-4"
-			transition:fade
-		>
-			<div class="loading loading-lg loading-spinner"></div>
-		</div>
-	{/await}
-</div>
+<code class={["text-xs leading-normal whitespace-pre-wrap", props.class]}>
+	{#each await diffs as diff (diff)}
+		{@const text = diff.value.join("")}
+		{#if diff.added}
+			<span class="bg-success text-success-content">{text}</span>
+		{:else if diff.removed}
+			<span class="bg-error text-error-content">{text}</span>
+		{:else}
+			<span class="text-base-content">{text}</span>
+		{/if}
+	{/each}
+</code>
