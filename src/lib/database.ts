@@ -1,5 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
-import type { ProjectDump } from "$lib/core/project";
+import type { ProjectDump } from "$lib/project";
 
 export interface DatabaseSchema extends DBSchema {
 	projects: {

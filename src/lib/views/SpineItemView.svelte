@@ -4,7 +4,7 @@
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
 	import TranslationList from "$lib/components/TranslationList.svelte";
 	import { Partition } from "$lib/core/dom";
-	import Project from "$lib/core/project";
+	import Project from "$lib/project";
 	import NavigationDrawer from "./NavigationDrawer.svelte";
 	import TranslationCreationView from "./TranslationCreationView.svelte";
 

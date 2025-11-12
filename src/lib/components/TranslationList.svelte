@@ -4,7 +4,7 @@
 	import IconChevronDown from "virtual:icons/mdi/chevron-down";
 	import IconChevronRight from "virtual:icons/mdi/chevron-right";
 	import { Partition } from "$lib/core/dom";
-	import type { Translation } from "$lib/core/project";
+	import type { Translation } from "$lib/project";
 	import TranslationDiff from "./TranslationDiff.svelte";
 
 	type Props = {

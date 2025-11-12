@@ -3,9 +3,9 @@
 	import { nanoid } from "nanoid";
 	import TranslationList from "$lib/components/TranslationList.svelte";
 	import { Partition } from "$lib/core/dom";
-	import type { Translation } from "$lib/core/project";
 	import original from "$lib/data/sample.original.xhtml?raw";
 	import translated from "$lib/data/sample.translated.xhtml?raw";
+	import type { Translation } from "$lib/project";
 
 	const translations: Translation[] = Array.from({ length: 10 }).map((_, i) => ({
 		id: nanoid(),
