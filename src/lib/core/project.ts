@@ -100,6 +100,16 @@ export default class Project {
 		}
 	}
 
+	addTranslation(
+		path: string,
+		partition: Partition,
+		original: string,
+		translated: string,
+	): Translation {
+		const id = nanoid();
+		return { id, path, partition, original, translated, createdAt: new Date() };
+	}
+
 	#recalculateIndices() {
 		this.translationIdToPath.clear();
 		for (const [id, { path }] of this.translations) {

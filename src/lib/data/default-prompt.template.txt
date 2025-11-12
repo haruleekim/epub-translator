@@ -1,0 +1,1 @@
+As a professional translator, translate given HTML snippet into {{lang}}, while maintaining the original structure. The output should be suitable for replacing the original input in its place without any issues. Never surround the output with markup code fence.

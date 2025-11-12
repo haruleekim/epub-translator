@@ -1,9 +1,11 @@
 <script lang="ts">
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
+	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
 	import { Partition } from "$lib/core/dom";
 	import Project from "$lib/core/project";
 	import NavigationDrawer from "./NavigationDrawer.svelte";
+	import TranslationCreationView from "./TranslationCreationView.svelte";
 
 	type Props = {
 		project: Project;
@@ -47,6 +49,17 @@
 		if (!project || !path || !partition) return "";
 		return project.getOriginalContent(path, partition);
 	});
+
+	let translationText = $derived.by<string | undefined>(() => {
+		if (!project || !path || !partition) return;
+		return "";
+	});
+
+	async function handleAddTranslation() {
+		if (!translationText || !partition || !path) return;
+		project.addTranslation(path, partition, await selectedContent, translationText);
+		translationText = "";
+	}
 </script>
 
 <div class="flex h-screen w-screen flex-col">
@@ -94,7 +107,12 @@
 				{#if mode === "select-partition"}
 					<PartitionSelector bind:partition content={await content} />
 				{:else if mode === "add-translation" && partition}
-					<p class="p-4">Add a new translation for the selected partition.</p>
+					<TranslationCreationView
+						original={selectedContent}
+						bind:translated={translationText}
+						targetLanguage={project.targetLanguage}
+						onTranslationAdd={handleAddTranslation}
+					/>
 				{:else if mode === "compose-translations"}
 					<p class="p-4">Compose translations for the selected spine item.</p>
 				{/if}
@@ -107,9 +125,19 @@
 				mediaType="text/html"
 				transformUrl={resource?.resolveUrl}
 			/>
-			<code class="flex-1 overflow-auto rounded bg-base-200 p-2 text-xs whitespace-pre-wrap">
-				{await selectedContent}
-			</code>
+			{#if mode === "add-translation" && translationText}
+				<TranslationDiff
+					class="flex-1 overflow-auto rounded bg-base-200 p-2"
+					original={await selectedContent}
+					translated={translationText}
+				/>
+			{:else}
+				<code
+					class="flex-1 overflow-auto rounded bg-base-200 p-2 text-xs whitespace-pre-wrap"
+				>
+					{await selectedContent}
+				</code>
+			{/if}
 		</div>
 	</div>
 </div>
