@@ -149,11 +149,9 @@
 	onpointerup={handlePointerUp}
 	class={classValue}
 >
-	{#if nodeTreeRoot}
-		{#each nodeTreeRoot.children as child (child.id)}
-			{@render nodeTreeView(child)}
-		{/each}
-	{/if}
+	{#each nodeTreeRoot?.children ?? [] as child (child.id)}
+		{@render nodeTreeView(child)}
+	{/each}
 </div>
 
 {#snippet nodeTreeView(node: NodeTree)}
