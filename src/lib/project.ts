@@ -80,6 +80,7 @@ export default class Project {
 			translations: new Map(
 				this.translations.entries().map(([id, tr]) => [id, dumpTranslation(tr)]),
 			),
+			doms: undefined,
 		};
 	}
 
