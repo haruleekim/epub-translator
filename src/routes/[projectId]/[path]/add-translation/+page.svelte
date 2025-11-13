@@ -51,7 +51,7 @@
 	<div class="flex flex-1 flex-col gap-2 overflow-auto">
 		<ContentViewer
 			class="w-full flex-1 overflow-auto rounded bg-base-200"
-			data={await selectedContent}
+			data={translationText}
 			mediaType="text/html"
 			transformUrl={resource?.resolveUrl}
 		/>
