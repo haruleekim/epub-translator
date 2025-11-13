@@ -129,6 +129,36 @@ export default class Project {
 		}
 	}
 
+	activateTranslation(id: string) {
+		if (!this.translations.has(id)) throw new Error(`Translation not found: ${id}`);
+		this.activeTranslationIds.add(id);
+	}
+
+	deactivateTranslation(id: string) {
+		this.activeTranslationIds.delete(id);
+	}
+
+	listTranslationsForPath(path: string): Translation[] {
+		return Array.from(this.translations.values().filter((tr) => tr.path === path));
+	}
+
+	getActivatedTranslationIdsForPath(path: string): string[] {
+		return Array.from(this.translations.values())
+			.filter((tr) => tr.path === path && this.activeTranslationIds.has(tr.id))
+			.map((tr) => tr.id);
+	}
+
+	setActivatedTranslationsForPath(path: string, ids: string[]) {
+		const translations = this.listTranslationsForPath(path);
+		for (const tr of translations) {
+			if (ids.includes(tr.id)) {
+				this.activateTranslation(tr.id);
+			} else {
+				this.deactivateTranslation(tr.id);
+			}
+		}
+	}
+
 	async #getDom(path: string): Promise<Dom> {
 		let dom = this.doms.get(path);
 		if (!dom) {

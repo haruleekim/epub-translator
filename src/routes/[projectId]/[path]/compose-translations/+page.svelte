@@ -2,6 +2,7 @@
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
 	import TranslationList from "$lib/components/TranslationList.svelte";
+	import { saveProject } from "$lib/database";
 	import type { PageProps } from "./$types";
 
 	const props: PageProps = $props();
@@ -9,7 +10,8 @@
 	const project = $derived(props.data.project);
 	const resource = $derived(props.data.resource);
 
-	let selectedIds = $state<string[]>([]);
+	const translations = $derived(project.listTranslationsForPath(path));
+	let selectedIds = $derived(project.getActivatedTranslationIdsForPath(path));
 
 	const original = $derived.by(async () => {
 		const blob = await resource.getBlob();
@@ -22,8 +24,13 @@
 <div class="flex flex-1 gap-2 overflow-auto px-2 pb-2">
 	<div class="flex-1 overflow-auto rounded bg-base-200 p-1 [scrollbar-width:none]">
 		<TranslationList
-			bind:selectedIds
-			translations={Array.from(project.translations.values())}
+			{translations}
+			{selectedIds}
+			onSelectionChange={async (ids) => {
+				selectedIds = ids;
+				project.setActivatedTranslationsForPath(path, ids);
+				await saveProject(project);
+			}}
 		/>
 	</div>
 	<div class="flex flex-1 flex-col gap-2 overflow-auto">

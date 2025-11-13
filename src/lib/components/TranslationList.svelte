@@ -10,25 +10,24 @@
 	type Props = {
 		translations: Translation[];
 		selectedIds: string[];
-		onSelectionChange?: (translations: Translation[]) => void;
+		onSelectionChange?: (translationIds: string[]) => void;
 		itemSnippet?: Snippet<[Translation]>;
 		class?: ClassValue | null;
 	};
-	let { selectedIds = $bindable([]), ...props }: Props = $props();
+	const props: Props = $props();
 
-	const translations = $derived(
-		props.translations.toSorted((a, b) =>
-			Partition.totalOrderCompare(a.partition, b.partition),
-		),
+	const items = $derived(
+		props.translations
+			.toSorted((a, b) => Partition.totalOrderCompare(a.partition, b.partition))
+			.map((tr) => [tr, props.selectedIds.includes(tr.id)] as const),
 	);
 
 	const folds = $state<Record<string, boolean>>({});
 </script>
 
 <ul class={["list", props.class]}>
-	{#each translations as translation (translation.id)}
+	{#each items as [translation, selected] (translation.id)}
 		{@const { id, path, partition, original, translated, createdAt } = translation}
-		{@const selected = selectedIds.includes(id)}
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<li
@@ -59,17 +58,15 @@
 			<input
 				class="checkbox"
 				type="checkbox"
-				value={selected}
-				onchange={() => {
-					if (selected) {
-						selectedIds = selectedIds.filter((sid) => sid !== id);
+				checked={selected}
+				onchange={(event) => {
+					let selectedIds: string[];
+					if (event.currentTarget.checked) {
+						selectedIds = [...props.selectedIds, id];
 					} else {
-						selectedIds = [...selectedIds, id];
+						selectedIds = props.selectedIds.filter((sid) => sid !== id);
 					}
-					const selectedTranslations = translations.filter((t) =>
-						selectedIds.includes(t.id),
-					);
-					props.onSelectionChange?.(selectedTranslations);
+					props.onSelectionChange?.(selectedIds);
 				}}
 			/>
 		</li>
