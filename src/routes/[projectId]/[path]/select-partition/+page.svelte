@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SvelteSet } from "svelte/reactivity";
 	import ContentViewer from "$lib/components/ContentViewer.svelte";
 	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
 	import { getContext } from "../context.svelte";
@@ -20,11 +21,24 @@
 		if (!resource || !cx.partition) return "";
 		return project.getOriginalContent(path, cx.partition);
 	});
+
+	const activeTranslationPartitions = $derived.by(() => {
+		const ids = project.getActivatedTranslationIdsForPath(path);
+		const translations = project
+			.listTranslationsForPath(path)
+			.filter((t) => ids.includes(t.id));
+		const partitions = translations.map((t) => t.partition);
+		return new SvelteSet(partitions);
+	});
 </script>
 
 <div class="flex flex-1 gap-2 overflow-auto px-2 pb-2">
 	<div class="flex-1 overflow-auto rounded bg-base-200 p-1">
-		<PartitionSelector bind:partition={cx.partition} content={await content} />
+		<PartitionSelector
+			bind:partition={cx.partition}
+			content={await content}
+			highlightedPartitions={activeTranslationPartitions}
+		/>
 	</div>
 	<div class="flex flex-1 flex-col gap-2 overflow-auto">
 		<ContentViewer

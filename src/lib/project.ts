@@ -122,6 +122,12 @@ export default class Project {
 		return id;
 	}
 
+	removeTranslation(id: string) {
+		this.translations.delete(id);
+		this.activeTranslationIds.delete(id);
+		this.translationIdToPath.delete(id);
+	}
+
 	#recalculateIndices() {
 		this.translationIdToPath.clear();
 		for (const [id, { path }] of this.translations) {

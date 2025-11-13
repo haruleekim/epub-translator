@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ClassValue } from "svelte/elements";
+	import { SvelteSet } from "svelte/reactivity";
 	import IconFileImage from "virtual:icons/mdi/file-image";
 	import { NodeId, Partition, Dom } from "$lib/core/dom";
 	import * as vdom from "$lib/utils/virtual-dom";
@@ -66,6 +67,7 @@
 		content: string;
 		partition?: Partition | null | undefined;
 		onSelectionChange?: (partition: Partition | null) => void;
+		highlightedPartitions?: SvelteSet<Partition>;
 		class?: ClassValue | null | undefined;
 	};
 
@@ -73,6 +75,7 @@
 		content,
 		partition = $bindable(),
 		onSelectionChange,
+		highlightedPartitions = new SvelteSet(),
 		class: classValue,
 	}: Props = $props();
 
@@ -156,9 +159,13 @@
 
 {#snippet nodeTreeView(node: NodeTree)}
 	{@const nodeId = node.id.toString()}
+	{@const highlightCount = Array.from(
+		highlightedPartitions.values().filter((p) => p.contains(node.id)),
+	).length}
 	<span
 		data-node-id={nodeId}
 		data-node-selected={partition?.contains(node.id) || undefined}
+		data-node-highlight={highlightCount || undefined}
 		onpointerenter={handlePointerEnter}
 	>
 		{#if node.type === "container"}
@@ -182,6 +189,14 @@
 		@apply border-base-content/25 text-base-content;
 		&:not(:has(> [data-node-id]:hover)):hover {
 			@apply border border-base-content/75;
+		}
+
+		&[data-node-highlight] {
+			@apply bg-error text-error-content;
+		}
+
+		&[data-node-highlight="1"] {
+			@apply bg-secondary text-secondary-content;
 		}
 
 		&[data-node-selected] {

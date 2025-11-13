@@ -28,23 +28,21 @@
 <ul class={["list", props.class]}>
 	{#each items as [translation, selected] (translation.id)}
 		{@const { id, path, partition, original, translated, createdAt } = translation}
-		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<li
-			class="list-row items-center hover:cursor-pointer hover:bg-base-300"
-			onclick={(evt) => {
-				if (evt.target instanceof HTMLInputElement) return;
-				folds[id] = !folds[id];
-			}}
-		>
-			<div>
+		<li class="list-row items-center hover:bg-base-300">
+			<button
+				class="h-full hover:cursor-pointer"
+				onclick={() => (folds[id] = !folds[id])}
+				aria-label="Toggle details"
+			>
 				{#if folds[id]}
 					<IconChevronDown class="size-6" />
 				{:else}
 					<IconChevronRight class="size-6" />
 				{/if}
-			</div>
-			<div>
+			</button>
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div onclick={() => (folds[id] = !folds[id])}>
 				<div>{id}</div>
 				<div class="text-sm text-base-content/75">{path} · {partition}</div>
 				<div class="text-sm text-base-content/75">{createdAt.toLocaleString()}</div>
