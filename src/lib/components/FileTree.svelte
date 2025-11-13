@@ -34,10 +34,27 @@
 		}
 		return tree;
 	});
+
+	function flattenTree(name: string, tree: Tree): [string, Tree] {
+		if (!tree.children) return [name, tree];
+		const children: Record<string, Tree> = {};
+		for (const [name, child] of Object.entries(tree.children)) {
+			const [flattenName, flattenChild] = flattenTree(name, child);
+			children[flattenName] = flattenChild;
+		}
+		if (Object.keys(children).length === 1) {
+			const [onlyChildName, onlyChild] = Object.entries(children)[0];
+			return [`${name}/${onlyChildName}`, onlyChild];
+		} else {
+			return [name, { ...tree, children }];
+		}
+	}
+
+	const flattenedTree: Tree = $derived(flattenTree("", tree)[1]);
 </script>
 
 <ul class={["menu menu-xs", classValue]}>
-	{#each Object.entries(tree.children ?? {}) as [segment, subtree] (segment)}
+	{#each Object.entries(flattenedTree.children ?? {}) as [segment, subtree] (segment)}
 		<li>
 			{@render treeView(segment, subtree)}
 		</li>
