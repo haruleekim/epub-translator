@@ -45,11 +45,17 @@
 
 		translationInput.disabled = true;
 		translated = "";
+		let chunk = "";
 		for await (const event of stream) {
 			if (event.type === "response.output_text.delta") {
-				translated += event.delta;
+				chunk += event.delta;
+				if (chunk.length > 10) {
+					translated += chunk;
+					chunk = "";
+				}
 			}
 		}
+		translated += chunk;
 		translationInput.disabled = false;
 	}
 
