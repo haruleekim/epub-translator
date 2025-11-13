@@ -5,6 +5,7 @@
 	import type { PageProps } from "./$types";
 
 	const props: PageProps = $props();
+	const path = $derived(props.params.path);
 	const project = $derived(props.data.project);
 	const resource = $derived(props.data.resource);
 	let cx = getContext();
@@ -17,7 +18,7 @@
 
 	const selectedContent = $derived.by(async () => {
 		if (!resource || !cx.partition) return "";
-		return project.getOriginalContent(resource.path, cx.partition);
+		return project.getOriginalContent(path, cx.partition);
 	});
 </script>
 
