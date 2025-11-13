@@ -122,7 +122,7 @@ export class Partition {
 	}
 
 	static checkOverlap(partitions: Partition[], skipSort: boolean = false): boolean {
-		if (!skipSort) partitions = [...partitions].sort();
+		if (!skipSort) partitions = [...partitions].sort(Partition.totalOrderCompare);
 		for (let i = 0; i < partitions.length - 1; i++) {
 			const a = partitions[i];
 			const b = partitions[i + 1];
@@ -193,9 +193,10 @@ export class Dom {
 
 	substituteAll(substitutions: { partition: Partition; content: string }[]): string {
 		substitutions = [...substitutions];
-		substitutions.sort((a, b) => Partition.compare(a.partition, b.partition));
+		substitutions.sort((a, b) => Partition.totalOrderCompare(a.partition, b.partition));
 
-		if (Partition.checkOverlap(substitutions.map((tr) => tr.partition))) {
+		const partitions = substitutions.map((tr) => tr.partition);
+		if (Partition.checkOverlap(partitions, true)) {
 			throw new Error("Overlapping partitions");
 		}
 
