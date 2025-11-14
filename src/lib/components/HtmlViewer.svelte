@@ -5,10 +5,10 @@
 	import type { AnyNode, Element, NodeWithChildren, Text } from "$lib/utils/virtual-dom";
 	import DynamicElement from "./DynamicElement.svelte";
 
-	let {
+	const {
 		html,
 		translations = [],
-		partition = $bindable(),
+		partition,
 		onSelectionChange,
 		transformUrl,
 		class: classValue,
@@ -27,6 +27,7 @@
 	let end = $state<string | null>(partition?.last.toString() ?? null);
 
 	function updatePartition(): void {
+		let partition: Partition | undefined;
 		if (!start || !end) return (partition = void onSelectionChange?.(null));
 		const [startId, endId] = [NodeId.parse(start), NodeId.parse(end)];
 		const commonAncestor = NodeId.commonAncestor(startId, endId);
