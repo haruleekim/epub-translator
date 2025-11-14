@@ -52,6 +52,11 @@ export class NodeId {
 		return new NodeId([...this.path, 0]);
 	}
 
+	nthChild(n: number): NodeId {
+		if (n < 0) throw new Error("n must be non-negative");
+		return new NodeId([...this.path, n]);
+	}
+
 	equals(other: NodeId): boolean {
 		return _.isEqual(this.path, other.path);
 	}
