@@ -1,17 +1,20 @@
 <script lang="ts">
 	import type { ClassValue } from "svelte/elements";
 	import { Dom, NodeId, Partition } from "$lib/core/dom";
-	import type { AnyNode, Element, NodeWithChildren } from "$lib/utils/virtual-dom";
+	import type { Translation } from "$lib/project";
+	import type { AnyNode, Element, NodeWithChildren, Text } from "$lib/utils/virtual-dom";
 	import DynamicElement from "./DynamicElement.svelte";
 
 	let {
 		html,
+		translations = [],
 		partition = $bindable(),
 		onSelectionChange,
 		transformUrl,
 		class: classValue,
 	}: {
 		html: string;
+		translations?: Translation[];
 		partition?: Partition | null;
 		onSelectionChange?: (partition: Partition | null) => void;
 		transformUrl?: (url: string) => string | Promise<string>;
@@ -94,7 +97,10 @@
 </div>
 
 {#snippet tree(node: AnyNode, nodeId: NodeId)}
-	{@const selected = partition?.contains(nodeId) ? "" : undefined}
+	{@const selected = partition?.contains(nodeId) ?? false}
+	{@const translationCount = translations
+		.map((t) => t.partition)
+		.filter((p) => p.contains(nodeId)).length}
 
 	{#if node.type === "root"}
 		{@render childTrees(node, nodeId)}
@@ -106,21 +112,10 @@
 		{:else if node.tagName === "head" || node.tagName === "style" || node.tagName === "script"}
 			<!-- Ignore -->
 		{:else}
-			{@render tag(node, nodeId)}
+			{@render tagNode(node, nodeId, selected, translationCount)}
 		{/if}
 	{:else if node.type === "text"}
-		{@const content = node.data.trim()}
-		{#if content}
-			<span
-				data-node-id={nodeId}
-				data-node-type="text"
-				data-selected={selected}
-				onpointerenter={handlePointerEnter}
-				class="p-0.5 hover:text-accent data-selected:bg-accent data-selected:text-accent-content"
-			>
-				{node.data}
-			</span>
-		{/if}
+		{@render textNode(node, nodeId, selected, translationCount)}
 	{/if}
 {/snippet}
 
@@ -130,8 +125,27 @@
 	{/each}
 {/snippet}
 
-{#snippet tag(node: Element, nodeId: NodeId)}
-	{@const selected = partition?.contains(nodeId) ? "" : undefined}
+{#snippet textNode(node: Text, nodeId: NodeId, selected: boolean, translationCount: number)}
+	{@const content = node.data.trim()}
+	{#if content}
+		<span
+			data-node-id={nodeId}
+			data-node-type="text"
+			data-selected={selected || undefined}
+			onpointerenter={handlePointerEnter}
+			class={[
+				"p-0.5 data-selected:bg-accent data-selected:text-accent-content",
+				translationCount === 0 && "hover:text-accent",
+				translationCount === 1 && "bg-primary text-primary-content",
+				translationCount > 1 && "bg-error text-error-content",
+			]}
+		>
+			{node.data}
+		</span>
+	{/if}
+{/snippet}
+
+{#snippet tagNode(node: Element, nodeId: NodeId, selected: boolean, translationCount: number)}
 	{@const isDisplayLeaf =
 		["br", "hr", "img", "video", "audio", "embed", "picture"].includes(node.tagName) &&
 		node.children.length === 0}
@@ -143,12 +157,16 @@
 		{...attrs}
 		data-node-id={nodeId}
 		data-node-type="tag"
-		data-selected={isDisplayLeaf ? selected : undefined}
+		data-selected={isDisplayLeaf ? selected || undefined : undefined}
 		onpointerenter={isDisplayLeaf ? handlePointerEnter : undefined}
 		draggable={isDisplayLeaf ? false : undefined}
-		class={isDisplayLeaf
-			? "border border-transparent p-0.5 hover:border-accent data-selected:border-accent data-selected:bg-accent"
-			: undefined}
+		class={(isDisplayLeaf && [
+			"border p-0.5 data-selected:border-accent data-selected:bg-accent data-selected:text-accent-content",
+			translationCount === 0 && "border-transparent hover:border-accent",
+			translationCount === 1 && "border-primary bg-primary text-primary-content",
+			translationCount > 1 && "border-error bg-error text-error-content",
+		]) ||
+			undefined}
 	>
 		{@render childTrees(node, nodeId)}
 	</DynamicElement>
