@@ -6,32 +6,12 @@
 	type Props = { original: string; translated: string; class?: ClassValue | null };
 	const props: Props = $props();
 
-	function tokenize(dom: Dom, text: string): string[] {
-		const tokens: string[] = [];
-		for (const { node, open } of dom.iterate()) {
-			let start: number, end: number;
-			if ("children" in node && node.children.length > 0) {
-				if (open) {
-					start = node.startIndex!;
-					end = node.firstChild!.startIndex!;
-				} else {
-					start = node.lastChild!.endIndex! + 1;
-					end = node.endIndex! + 1;
-				}
-				tokens.push(text.slice(start, end));
-			} else if (open) {
-				tokens.push(text.slice(node.startIndex!, node.endIndex! + 1));
-			}
-		}
-		return tokens;
+	function tokenize(dom: Dom): string[] {
+		return dom.tokenize().map(({ content }) => content);
 	}
 
-	const originalPromise = $derived(
-		Dom.loadAsync(props.original).then((dom) => tokenize(dom, props.original)),
-	);
-	const translatedPromise = $derived(
-		Dom.loadAsync(props.translated).then((dom) => tokenize(dom, props.translated)),
-	);
+	const originalPromise = $derived(Dom.loadAsync(props.original).then(tokenize));
+	const translatedPromise = $derived(Dom.loadAsync(props.translated).then(tokenize));
 
 	const diffs = $derived.by(async () => {
 		const [original, translated] = await Promise.all([originalPromise, translatedPromise]);

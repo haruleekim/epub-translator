@@ -233,7 +233,7 @@ export class Dom {
 	}
 
 	traverse(callback: (traversal: DomTraversal) => void): Document {
-		const iterator = this.iterate();
+		const iterator = this[Symbol.iterator]();
 		while (true) {
 			const { done, value } = iterator.next();
 			if (done) return value;
@@ -241,7 +241,7 @@ export class Dom {
 		}
 	}
 
-	*iterate(): Generator<DomTraversal, Document> {
+	*[Symbol.iterator](): Generator<DomTraversal, Document> {
 		const root = this.root.cloneNode(true);
 
 		yield { nodeId: NodeId.root(), node: root, open: true, close: false };
@@ -276,9 +276,35 @@ export class Dom {
 
 		return root;
 	}
+
+	tokenize(): Token[] {
+		const tokens: Token[] = [];
+		for (const entry of this) {
+			const { node, open } = entry;
+			let start: number, end: number;
+			if ("children" in node && node.children.length > 0) {
+				if (open) {
+					start = node.startIndex!;
+					end = node.firstChild!.startIndex!;
+				} else {
+					start = node.lastChild!.endIndex! + 1;
+					end = node.endIndex! + 1;
+				}
+			} else if (open) {
+				start = node.startIndex!;
+				end = node.endIndex! + 1;
+			} else {
+				continue;
+			}
+			tokens.push({ ...entry, content: this.text.slice(start, end) });
+		}
+		return tokens;
+	}
 }
 
 export type DomTraversal = { nodeId: NodeId; node: AnyNode } & (
 	| { open: true; close: false }
 	| { open: false; close: true }
 );
+
+export type Token = DomTraversal & { content: string };

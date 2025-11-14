@@ -141,7 +141,7 @@ test("traverse nodes", () => {
 
 	const stack: string[] = [];
 	let content = "";
-	for (const { open, nodeId, node } of dom.iterate()) {
+	for (const { open, nodeId, node } of dom) {
 		if (open) {
 			stack.push(nodeId.toString());
 		} else {
@@ -167,7 +167,7 @@ test("traverse nodes", () => {
 
 test("traverse empty document", () => {
 	const dom = Dom.load("");
-	const iterator = dom.iterate();
+	const iterator = dom[Symbol.iterator]();
 	expect(iterator.next().value).toEqual({
 		node: dom.root,
 		nodeId: new NodeId([]),
