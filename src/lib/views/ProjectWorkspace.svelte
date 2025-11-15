@@ -3,7 +3,9 @@
 	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
 	import IconDifferenceLeft from "virtual:icons/mdi/difference-left";
 	import IconFormatListNumbered from "virtual:icons/mdi/format-list-numbered";
+	import IconHome from "virtual:icons/mdi/home";
 	import IconSettings from "virtual:icons/mdi/settings";
+	import { resolve } from "$app/paths";
 	import HtmlViewer from "$lib/components/HtmlViewer.svelte";
 	import { setWorkspaceContext, WorkspaceContext } from "$lib/context.svelte";
 	import Project from "$lib/project.svelte";
@@ -54,6 +56,12 @@
 >
 	<div id="panel" class="col-start-1 flex flex-col overflow-auto bg-base-200">
 		<ul class="menu menu-horizontal mx-auto flex menu-xs">
+			<li class:menu-disabled={cx.locked}>
+				<!-- svelte-ignore a11y_no_redundant_roles -->
+				<a role="link" aria-disabled={cx.locked} href={resolve("/")}>
+					<IconHome class="size-4" />
+				</a>
+			</li>
 			<li class:menu-disabled={cx.locked}>
 				<button
 					onclick={() => (cx.mode = "navigate-resources")}
