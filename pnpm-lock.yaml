@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      better-sse:
+        specifier: ^0.15.1
+        version: 0.15.1
       css-select:
         specifier: ^6.0.0
         version: 6.0.0
@@ -40,10 +43,16 @@ importers:
         version: 5.1.6
       openai:
         specifier: ^6.8.1
-        version: 6.8.1(ws@8.18.3)
+        version: 6.8.1(ws@8.18.3)(zod@4.1.12)
       query-string:
         specifier: ^9.3.1
         version: 9.3.1
+      sse.js:
+        specifier: ^2.7.2
+        version: 2.7.2
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
     devDependencies:
       '@catppuccin/daisyui':
         specifier: ^2.1.1
@@ -1353,6 +1362,10 @@ packages:
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
+  better-sse@0.15.1:
+    resolution: {integrity: sha512-E8YmmIs7P2T5nHM8VG5Pmtp8CgDsIhT+6CYhg+8Gmke5kJb11ohN1jtEXn/2taSr7WkcU3yNTgoqNYvZ/GQ4sw==}
+    engines: {node: '>=20', pnpm: '>=9'}
+
   blake3-wasm@2.1.5:
     resolution: {integrity: sha512-F1+K8EbfOZE49dtoPtmxUQrpXaBIl3ICvasLh+nJta0xkz+9kF/7uet9fLnwKqhDrmj6g+6K3Tw9yQPUg2ka5g==}
 
@@ -2336,6 +2349,9 @@ packages:
     resolution: {integrity: sha512-qxQJTx2ryR0Dw0ITYyekNQWpz6f8dGd7vffGNflQQ3Iqj9NJ6qiZ7ELpZsJ/QBhIVAiDfXdag3+Gp8RvWa62AA==}
     engines: {node: '>=12'}
 
+  sse.js@2.7.2:
+    resolution: {integrity: sha512-EDu2kt+A+HIagwUOCrDbKfsUrKxNWdoeKQVKfpruRSO34yL2xwS142Ad3AYhjCY81oWySeCsPs0wSu+c2QG14g==}
+
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
 
@@ -2707,6 +2723,9 @@ packages:
 
   zod@3.22.3:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
+
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
 
 snapshots:
 
@@ -3720,6 +3739,8 @@ snapshots:
 
   balanced-match@1.0.2: {}
 
+  better-sse@0.15.1: {}
+
   blake3-wasm@2.1.5: {}
 
   boolbase@1.0.0: {}
@@ -4359,9 +4380,10 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  openai@6.8.1(ws@8.18.3):
+  openai@6.8.1(ws@8.18.3)(zod@4.1.12):
     optionalDependencies:
       ws: 8.18.3
+      zod: 4.1.12
 
   optionator@0.9.4:
     dependencies:
@@ -4634,6 +4656,8 @@ snapshots:
   source-map@0.6.1: {}
 
   split-on-first@3.0.0: {}
+
+  sse.js@2.7.2: {}
 
   stackback@0.0.2: {}
 
@@ -4993,3 +5017,5 @@ snapshots:
   zimmerframe@1.1.4: {}
 
   zod@3.22.3: {}
+
+  zod@4.1.12: {}

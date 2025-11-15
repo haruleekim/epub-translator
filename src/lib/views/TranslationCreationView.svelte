@@ -1,6 +1,7 @@
 <script lang="ts">
-	import OpenAI from "openai";
+	import { SSE } from "sse.js";
 	import type { ClassValue } from "svelte/elements";
+	import { resolve } from "$app/paths";
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
 	import defaultPromptTemplate from "$lib/data/default-prompt.template.txt?raw";
 	import { getLanguage } from "$lib/utils/languages";
@@ -38,29 +39,29 @@
 			if (typeof instructions !== "string") throw new Error("Invalid prompt");
 			if (!(await props.original)) throw new Error("Original text is empty");
 
-			const openai = new OpenAI({
-				apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-				dangerouslyAllowBrowser: true,
-			});
-			const stream = await openai.responses.create({
-				model: "gpt-4o",
-				instructions,
-				input: await props.original,
-				stream: true,
+			const sse = new SSE(resolve("/api/llm"), {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				payload: JSON.stringify({
+					instructions,
+					input: await props.original,
+				}),
 			});
 
-			translated = "";
-			let chunk = "";
-			for await (const event of stream) {
-				if (event.type === "response.output_text.delta") {
-					chunk += event.delta;
-					if (chunk.length > 10) {
-						translated += chunk;
-						chunk = "";
-					}
-				}
-			}
-			translated += chunk;
+			await new Promise((resolve, reject) => {
+				sse.addEventListener("open", () => {
+					translated = "";
+				});
+				sse.addEventListener("done", () => {
+					resolve(void 0);
+				});
+				sse.addEventListener("message", (event: { data: string }) => {
+					translated += JSON.parse(event.data);
+				});
+				sse.addEventListener("error", reject);
+			});
 		} finally {
 			generating = false;
 			props.onPartitionLockChange?.(false);
