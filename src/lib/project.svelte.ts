@@ -28,13 +28,13 @@ export default class Project {
 	readonly epub: Epub;
 	sourceLanguage: string;
 	targetLanguage: string;
-	createdAt: Date;
-	translations: Map<string, Translation>;
-	activeTranslationIds: Set<string>;
+	createdAt: SvelteDate;
+	translations: SvelteMap<string, Translation>;
+	activeTranslationIds: SvelteSet<string>;
 	defaultPrompt?: string;
 
-	#doms: Map<string, Dom> = new Map();
-	#translationIdToPath: Map<string, string> = new Map();
+	#doms: SvelteMap<string, Dom> = new SvelteMap();
+	#translationIdToPath: SvelteMap<string, string> = new SvelteMap();
 
 	private constructor(
 		id: string,
@@ -114,7 +114,7 @@ export default class Project {
 			container.file(path, translated);
 		});
 		await Promise.all(promises);
-		return await container.generateAsync({ type: "blob" });
+		return await container.generateAsync({ type: "blob", mimeType: "application/epub+zip" });
 	}
 
 	addTranslation(
