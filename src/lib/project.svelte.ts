@@ -19,7 +19,7 @@ export type ProjectDump = {
 	createdAt: Date;
 	translations: Map<string, TranslationDump>;
 	activeTranslationIds: Set<string>;
-	defaultPrompt: string | undefined;
+	defaultPrompt: string;
 };
 
 export default class Project {
@@ -28,7 +28,7 @@ export default class Project {
 	createdAt: SvelteDate;
 	private translations: SvelteMap<string, Translation>;
 	activeTranslationIds: SvelteSet<string>;
-	defaultPrompt?: string;
+	defaultPrompt: string;
 
 	#doms: SvelteMap<string, Dom> = new SvelteMap();
 	#translationIdToPath: SvelteMap<string, string> = new SvelteMap();
@@ -40,7 +40,7 @@ export default class Project {
 		createdAt: Date,
 		translations: Map<string, Translation>,
 		activeTranslationIds: Set<string>,
-		defaultPrompt?: string,
+		defaultPrompt: string,
 	) {
 		this.id = $state(id);
 		this.epub = $state(epub);

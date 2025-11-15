@@ -18,9 +18,12 @@
 			cx.locked = true;
 
 			const form = new FormData(this);
-			const instructions = form.get("prompt");
-			if (typeof instructions !== "string") throw new Error("Invalid prompt");
+			const additionalPrompt = form.get("prompt");
+			if (typeof additionalPrompt !== "string") throw new Error("Invalid prompt");
 			if (!original) throw new Error("Original text is empty");
+
+			let instructions = cx.project.defaultPrompt;
+			if (additionalPrompt.trim() !== "") instructions += `\n\n${additionalPrompt}`;
 
 			const sse = new SSE(resolve("/api/llm"), {
 				method: "POST",
@@ -83,10 +86,8 @@
 			<textarea
 				class="textarea field-sizing-content w-full resize-none textarea-xs"
 				name="prompt"
-				placeholder="Prompt"
+				placeholder="Additional prompt (optional)"
 				spellcheck={false}
-				required
-				defaultValue={cx.project.defaultPrompt}
 			></textarea>
 			<button type="submit" class="btn ml-auto flex btn-xs" disabled={cx.locked || !original}>
 				Generate
