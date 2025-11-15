@@ -5,7 +5,7 @@
 	import { Partition } from "$lib/core/dom";
 	import original from "$lib/data/sample.original.xhtml?raw";
 	import translated from "$lib/data/sample.translated.xhtml?raw";
-	import type { Translation } from "$lib/project";
+	import type { Translation } from "$lib/translation";
 
 	const translations: Translation[] = Array.from({ length: 10 }).map((_, i) => ({
 		id: nanoid(),

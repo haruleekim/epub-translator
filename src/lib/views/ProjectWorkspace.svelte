@@ -10,7 +10,8 @@
 	import TranslationList from "$lib/components/TranslationList.svelte";
 	import type { Partition } from "$lib/core/dom";
 	import { saveProject } from "$lib/database";
-	import Project, { type Translation } from "$lib/project";
+	import Project from "$lib/project";
+	import type { Translation } from "$lib/translation";
 	import TranslationCreationView from "./TranslationCreationView.svelte";
 
 	const props: { project: Project; path: string } = $props();

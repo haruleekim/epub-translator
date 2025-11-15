@@ -3,38 +3,12 @@ import _ from "lodash";
 import { nanoid } from "nanoid";
 import { Dom, Partition, type NodeId } from "$lib/core/dom";
 import Epub from "$lib/core/epub";
-
-export type Translation = {
-	id: string;
-	path: string;
-	partition: Partition;
-	original: string;
-	translated: string;
-	createdAt: Date;
-};
-
-export type TranslationDump = {
-	id: string;
-	path: string;
-	partition: string;
-	original: string;
-	translated: string;
-	createdAt: Date;
-};
-
-export function dumpTranslation(translation: Translation): TranslationDump {
-	return {
-		...translation,
-		partition: translation.partition.toString(),
-	};
-}
-
-export function loadTranslation(dump: TranslationDump): Translation {
-	return {
-		...dump,
-		partition: Partition.parse(dump.partition),
-	};
-}
+import {
+	dumpTranslation,
+	loadTranslation,
+	type Translation,
+	type TranslationDump,
+} from "$lib/translation";
 
 export type ProjectDump = {
 	id: string;
@@ -74,17 +48,6 @@ export default class Project {
 		);
 	}
 
-	async dump(): Promise<ProjectDump> {
-		return {
-			...this,
-			epub: await this.epub.dump(),
-			translations: new Map(
-				this.translations.entries().map(([id, tr]) => [id, dumpTranslation(tr)]),
-			),
-			doms: undefined,
-		};
-	}
-
 	static async load(dump: ProjectDump): Promise<Project> {
 		const hydrated = {
 			...dump,
@@ -105,6 +68,17 @@ export default class Project {
 		);
 		project.#recalculateIndices();
 		return project;
+	}
+
+	async dump(): Promise<ProjectDump> {
+		return {
+			...this,
+			epub: await this.epub.dump(),
+			translations: new Map(
+				this.translations.entries().map(([id, tr]) => [id, dumpTranslation(tr)]),
+			),
+			doms: undefined,
+		};
 	}
 
 	async exportEpub(): Promise<Blob> {

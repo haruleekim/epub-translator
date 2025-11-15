@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ClassValue } from "svelte/elements";
 	import { Dom, NodeId, Partition } from "$lib/core/dom";
-	import type { Translation } from "$lib/project";
+	import type { Translation } from "$lib/translation";
 	import type { AnyNode, Element, NodeWithChildren, Text } from "$lib/utils/virtual-dom";
 	import DynamicElement from "./DynamicElement.svelte";
 
