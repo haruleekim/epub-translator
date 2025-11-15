@@ -21,8 +21,6 @@
 	const blob = $derived(resource ? resource.getBlob() : Promise.resolve(new Blob()));
 	const text = $derived(blob.then((blob) => blob.text()));
 
-	let activeTranslations = $derived(cx.project.activeTranslationsForPath(cx.path));
-
 	let viewer = $state<HTMLElement>();
 	$effect(() => {
 		let cancelled = false;
@@ -117,7 +115,7 @@
 		<HtmlViewer
 			class="h-full w-full"
 			html={await text}
-			translations={activeTranslations}
+			translations={cx.project.activeTranslationsForPath(cx.path)}
 			transformUrl={resource?.resolveUrl}
 			partition={cx.partition}
 			onSelectionChange={(newPartition) => {
