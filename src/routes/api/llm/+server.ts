@@ -29,10 +29,10 @@ export async function POST({ request }) {
 		const writer = writable.getWriter();
 		for await (const event of stream) {
 			if (event.type !== "response.output_text.delta") continue;
-			await writer.write(`event: message\ndata: ${JSON.stringify(event.delta)}\n\n`);
+			writer.write(`event: message\ndata: ${JSON.stringify(event.delta)}\n\n`);
 		}
-		await writer.write(`event: done\ndata: null\n\n`);
-		writer.releaseLock();
+		writer.write(`event: done\ndata: null\n\n`);
+		writer.close();
 	});
 
 	return new Response(readable, {
