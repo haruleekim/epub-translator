@@ -1,7 +1,6 @@
 import { createContext } from "svelte";
 import type { Partition } from "$lib/core/dom";
 import type Project from "$lib/project.svelte";
-import type { Translation } from "$lib/translation";
 
 export type WorkspaceMode =
 	| "navigate-resources"
@@ -15,8 +14,6 @@ export class WorkspaceContext {
 	partition: Partition | null;
 	mode: WorkspaceMode;
 	locked: boolean;
-	translations: Translation[];
-	activeTranslationIds: string[];
 
 	constructor(project: Project, path: string) {
 		this.project = $state(project);
@@ -24,8 +21,6 @@ export class WorkspaceContext {
 		this.partition = $state(null);
 		this.mode = $state("navigate-resources");
 		this.locked = $state(false);
-		this.translations = $derived(this.project.translationsForPath(this.path));
-		this.activeTranslationIds = $derived(this.project.activeTranslationIdsForPath(this.path));
 	}
 }
 

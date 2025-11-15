@@ -21,11 +21,7 @@
 	const blob = $derived(resource ? resource.getBlob() : Promise.resolve(new Blob()));
 	const text = $derived(blob.then((blob) => blob.text()));
 
-	let activeTranslations = $derived(
-		cx.activeTranslationIds
-			.map((id) => cx.translations.find((t) => t.id === id)!)
-			.filter(Boolean),
-	);
+	let activeTranslations = $derived(cx.project.activeTranslationsForPath(cx.path));
 
 	let viewer = $state<HTMLElement>();
 	$effect(() => {

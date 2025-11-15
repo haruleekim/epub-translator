@@ -12,7 +12,9 @@
 	const cx = getWorkspaceContext();
 
 	const translations = $derived(
-		cx.translations.toSorted((a, b) => Partition.totalOrderCompare(a.partition, b.partition)),
+		cx.project
+			.translationsForPath(cx.path)
+			.toSorted((a, b) => Partition.totalOrderCompare(a.partition, b.partition)),
 	);
 
 	const folds = $state<Record<string, boolean>>({});
@@ -51,12 +53,6 @@
 					onclick={async () => {
 						if (confirm("Are you sure you want to delete this translation?")) {
 							cx.project.removeTranslation(translation.id);
-							cx.translations = cx.translations.filter(
-								(t) => t.id !== translation.id,
-							);
-							cx.activeTranslationIds = cx.activeTranslationIds.filter(
-								(id) => id !== translation.id,
-							);
 							await saveProject(cx.project);
 						}
 					}}

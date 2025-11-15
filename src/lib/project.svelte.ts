@@ -153,10 +153,10 @@ export default class Project {
 		return Array.from(this.translations.values().filter((tr) => tr.path === path));
 	}
 
-	activeTranslationIdsForPath(path: string): string[] {
-		return Array.from(this.translations.values())
-			.filter((tr) => tr.path === path && this.activeTranslationIds.has(tr.id))
-			.map((tr) => tr.id);
+	activeTranslationsForPath(path: string): Translation[] {
+		return Array.from(this.translations.values()).filter(
+			(tr) => tr.path === path && this.activeTranslationIds.has(tr.id),
+		);
 	}
 
 	async checkOverlaps(translationIds: string[]): Promise<boolean> {
