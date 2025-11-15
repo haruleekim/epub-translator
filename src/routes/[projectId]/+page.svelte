@@ -7,4 +7,8 @@
 	const path = $derived(props.data.path);
 </script>
 
+<svelte:head>
+	<title>{project.epub.title} - EPUB Translator</title>
+</svelte:head>
+
 <ProjectWorkspace {project} {path} />
