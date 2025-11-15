@@ -1,3 +1,4 @@
+import JSZip from "jszip";
 import _ from "lodash";
 import { nanoid } from "nanoid";
 import { Dom, Partition, type NodeId } from "$lib/core/dom";
@@ -104,6 +105,18 @@ export default class Project {
 		);
 		project.#recalculateIndices();
 		return project;
+	}
+
+	async exportEpub(): Promise<Blob> {
+		const container = await JSZip.loadAsync(this.epub.dump());
+		const groups = _.groupBy(Array.from(this.translations.values()), (tr) => tr.path);
+		const promises = Object.entries(groups).map(async ([path, translations]) => {
+			const translationIds = translations.map((t) => t.id);
+			const translated = await this.renderTranslatedContent(path, translationIds);
+			container.file(path, translated);
+		});
+		await Promise.all(promises);
+		return await container.generateAsync({ type: "blob" });
 	}
 
 	addTranslation(

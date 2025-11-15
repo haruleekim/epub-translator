@@ -3,6 +3,7 @@
 	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
 	import IconDifferenceLeft from "virtual:icons/mdi/difference-left";
 	import IconFormatListNumbered from "virtual:icons/mdi/format-list-numbered";
+	import IconSettings from "virtual:icons/mdi/settings";
 	import IconTrashCan from "virtual:icons/mdi/trash-can";
 	import FileTree from "$lib/components/FileTree.svelte";
 	import HtmlViewer from "$lib/components/HtmlViewer.svelte";
@@ -20,9 +21,9 @@
 	const blob = $derived(resource ? resource.getBlob() : Promise.resolve(new Blob()));
 	const text = $derived(blob.then((blob) => blob.text()));
 
-	let mode = $state<"navigate-resources" | "add-translation" | "list-translations">(
-		"navigate-resources",
-	);
+	let mode = $state<
+		"navigate-resources" | "add-translation" | "list-translations" | "project-settings"
+	>("navigate-resources");
 
 	let partition = $state<Partition | null>(null);
 	const selectedText = $derived(
@@ -96,6 +97,14 @@
 					<IconDifferenceLeft class="size-4" />
 				</button>
 			</li>
+			<li>
+				<button
+					onclick={() => (mode = "project-settings")}
+					class:menu-active={mode === "project-settings"}
+				>
+					<IconSettings class="size-4" />
+				</button>
+			</li>
 		</ul>
 		<div class="overflow-auto">
 			{#if mode === "navigate-resources"}
@@ -142,6 +151,23 @@
 					}}
 					itemSnippet={translationItemSnippet}
 				/>
+			{:else if mode === "project-settings"}
+				<div class="p-2">
+					<button
+						class="btn w-full btn-primary"
+						onclick={async () => {
+							const blob = await project.exportEpub();
+							const url = URL.createObjectURL(blob);
+							const a = document.createElement("a");
+							a.href = url;
+							a.download = `${project.id}.epub`;
+							a.click();
+							URL.revokeObjectURL(url);
+						}}
+					>
+						Export translated EPUB
+					</button>
+				</div>
 			{/if}
 		</div>
 	</div>
