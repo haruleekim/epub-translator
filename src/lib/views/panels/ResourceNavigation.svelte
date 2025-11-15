@@ -15,6 +15,6 @@
 		if (cx.locked) return;
 		cx.path = newPath;
 		cx.partition = null;
-		cx.mode = "navigate-resources";
+		cx.panelMode = "navigate-resources";
 	}}
 />

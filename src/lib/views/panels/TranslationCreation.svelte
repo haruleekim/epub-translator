@@ -57,7 +57,7 @@
 			translated,
 		);
 		cx.project.activeTranslationIds.add(translationId);
-		cx.mode = "list-translations";
+		cx.panelMode = "list-translations";
 		await cx.project.save();
 	}
 </script>

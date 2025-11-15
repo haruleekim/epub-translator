@@ -28,7 +28,8 @@
 		const NODE_ID_ATTRIBUTE = "data-node-id";
 
 		if (!mediaType || !XML_LIKE_MIME_TYPES.includes(mediaType)) {
-			return new Blob([data], { type: mediaType });
+			if (data instanceof Blob) return data.text();
+			else return data;
 		}
 
 		const content = data instanceof Blob ? await data.text() : data;
@@ -52,18 +53,12 @@
 		});
 		await Promise.all(promises);
 
-		return new Blob([vdom.render(doc, DOM_OPTIONS)], { type: mediaType });
-	});
-
-	const url = $derived(transformed.then(URL.createObjectURL));
-	$effect(() => {
-		url;
-		() => url.then(URL.revokeObjectURL);
+		return vdom.render(doc, DOM_OPTIONS);
 	});
 </script>
 
 <iframe
-	src={await url}
+	srcdoc={await transformed}
 	title="content-viewer"
 	sandbox="allow-scripts allow-same-origin"
 	class={classValue}

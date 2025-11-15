@@ -2,8 +2,10 @@
 	import { settled } from "svelte";
 	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
 	import IconDifferenceLeft from "virtual:icons/mdi/difference-left";
+	import IconEye from "virtual:icons/mdi/eye";
 	import IconFormatListNumbered from "virtual:icons/mdi/format-list-numbered";
 	import IconHome from "virtual:icons/mdi/home";
+	import IconSelectDrag from "virtual:icons/mdi/select-drag";
 	import IconSettings from "virtual:icons/mdi/settings";
 	import { resolve } from "$app/paths";
 	import HtmlViewer from "$lib/components/HtmlViewer.svelte";
@@ -13,6 +15,7 @@
 	import ResourceNavigation from "$lib/views/panels/ResourceNavigation.svelte";
 	import TranslationCreation from "$lib/views/panels/TranslationCreation.svelte";
 	import TranslationList from "$lib/views/panels/TranslationList.svelte";
+	import TranslationPreview from "$lib/views/viewers/TranslationPreview.svelte";
 
 	const props: { project: Project; path: string } = $props();
 
@@ -64,49 +67,49 @@
 			</li>
 			<li class:menu-disabled={cx.locked}>
 				<button
-					onclick={() => (cx.mode = "navigate-resources")}
+					onclick={() => (cx.panelMode = "navigate-resources")}
 					disabled={cx.locked}
-					class:menu-active={cx.mode === "navigate-resources"}
+					class:menu-active={cx.panelMode === "navigate-resources"}
 				>
 					<IconFormatListNumbered class="size-4" />
 				</button>
 			</li>
 			<li class:menu-disabled={cx.locked}>
 				<button
-					onclick={() => (cx.mode = "add-translation")}
+					onclick={() => (cx.panelMode = "add-translation")}
 					disabled={cx.locked}
-					class:menu-active={cx.mode === "add-translation"}
+					class:menu-active={cx.panelMode === "add-translation"}
 				>
 					<IconAddCircleOutline class="size-4" />
 				</button>
 			</li>
 			<li class:menu-disabled={cx.locked}>
 				<button
-					onclick={() => (cx.mode = "list-translations")}
+					onclick={() => (cx.panelMode = "list-translations")}
 					disabled={cx.locked}
-					class:menu-active={cx.mode === "list-translations"}
+					class:menu-active={cx.panelMode === "list-translations"}
 				>
 					<IconDifferenceLeft class="size-4" />
 				</button>
 			</li>
 			<li class:menu-disabled={cx.locked}>
 				<button
-					onclick={() => (cx.mode = "project-settings")}
+					onclick={() => (cx.panelMode = "project-settings")}
 					disabled={cx.locked}
-					class:menu-active={cx.mode === "project-settings"}
+					class:menu-active={cx.panelMode === "project-settings"}
 				>
 					<IconSettings class="size-4" />
 				</button>
 			</li>
 		</ul>
 		<div class="overflow-auto">
-			{#if cx.mode === "navigate-resources"}
+			{#if cx.panelMode === "navigate-resources"}
 				<ResourceNavigation class="w-full overflow-auto" />
-			{:else if cx.mode === "add-translation"}
+			{:else if cx.panelMode === "add-translation"}
 				<TranslationCreation class="p-2" />
-			{:else if cx.mode === "list-translations"}
+			{:else if cx.panelMode === "list-translations"}
 				<TranslationList class="p-2" />
-			{:else if cx.mode === "project-settings"}
+			{:else if cx.panelMode === "project-settings"}
 				<ProjectSettings class="p-2" />
 			{/if}
 		</div>
@@ -123,17 +126,45 @@
 		}}
 	></button>
 
-	<div id="viewer" bind:this={viewer} class="col-start-3 overflow-auto p-2">
-		<HtmlViewer
-			class="h-full w-full"
-			html={await text}
-			translations={cx.project.activeTranslationsForPath(cx.path)}
-			transformUrl={resource?.resolveUrl}
-			partition={cx.partition}
-			onSelectionChange={(newPartition) => {
-				if (cx.locked) return;
-				cx.partition = newPartition;
-			}}
-		/>
+	<div id="viewer" bind:this={viewer} class="col-start-3 overflow-auto">
+		<ul
+			class="menu menu-horizontal absolute top-2 right-2 z-10 ml-auto flex justify-end menu-xs rounded-2xl bg-base-300/90"
+		>
+			<li class:menu-disabled={cx.locked}>
+				<button
+					onclick={() => (cx.viewerMode = "select-partitions")}
+					disabled={cx.locked}
+					class:menu-active={cx.viewerMode === "select-partitions"}
+				>
+					<IconSelectDrag class="size-4" />
+				</button>
+			</li>
+			<li class:menu-disabled={cx.locked}>
+				<button
+					onclick={() => (cx.viewerMode = "preview-translations")}
+					disabled={cx.locked}
+					class:menu-active={cx.viewerMode === "preview-translations"}
+				>
+					<IconEye class="size-4" />
+				</button>
+			</li>
+		</ul>
+		<div class="h-full w-full overflow-auto">
+			{#if cx.viewerMode === "select-partitions"}
+				<HtmlViewer
+					class="h-full w-full p-2"
+					html={await text}
+					translations={cx.project.activeTranslationsForPath(cx.path)}
+					transformUrl={resource?.resolveUrl}
+					partition={cx.partition}
+					onSelectionChange={(newPartition) => {
+						if (cx.locked) return;
+						cx.partition = newPartition;
+					}}
+				/>
+			{:else if cx.viewerMode === "preview-translations"}
+				<TranslationPreview class="h-full w-full" />
+			{/if}
+		</div>
 	</div>
 </div>
