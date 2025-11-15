@@ -16,8 +16,6 @@ import {
 export type ProjectDump = {
 	id: string;
 	epub: ArrayBuffer;
-	sourceLanguage: string;
-	targetLanguage: string;
 	createdAt: Date;
 	translations: Map<string, TranslationDump>;
 	activeTranslationIds: Set<string>;
@@ -27,8 +25,6 @@ export type ProjectDump = {
 export default class Project {
 	readonly id: string;
 	readonly epub: Epub;
-	sourceLanguage: string;
-	targetLanguage: string;
 	createdAt: SvelteDate;
 	private translations: SvelteMap<string, Translation>;
 	activeTranslationIds: SvelteSet<string>;
@@ -41,8 +37,6 @@ export default class Project {
 	private constructor(
 		id: string,
 		epub: Epub,
-		sourceLanguage: string,
-		targetLanguage: string,
 		createdAt: Date,
 		translations: Map<string, Translation>,
 		activeTranslationIds: Set<string>,
@@ -50,8 +44,6 @@ export default class Project {
 	) {
 		this.id = $state(id);
 		this.epub = $state(epub);
-		this.sourceLanguage = $state(sourceLanguage);
-		this.targetLanguage = $state(targetLanguage);
 		this.createdAt = new SvelteDate(createdAt);
 		this.translations = new SvelteMap(translations);
 		this.activeTranslationIds = new SvelteSet(activeTranslationIds);
@@ -61,8 +53,6 @@ export default class Project {
 			[
 				this.id,
 				this.epub,
-				this.sourceLanguage,
-				this.targetLanguage,
 				this.createdAt,
 				this.translations,
 				this.activeTranslationIds,
@@ -72,16 +62,8 @@ export default class Project {
 		});
 	}
 
-	static create(epub: Epub, sourceLanguage: string, targetLanguage: string) {
-		return new Project(
-			nanoid(),
-			epub,
-			sourceLanguage,
-			targetLanguage,
-			new Date(),
-			new Map(),
-			new Set(),
-		);
+	static create(epub: Epub, defaultPrompt: string) {
+		return new Project(nanoid(), epub, new Date(), new Map(), new Set(), defaultPrompt);
 	}
 
 	static async load(dump: ProjectDump): Promise<Project> {
@@ -95,8 +77,6 @@ export default class Project {
 		const project = new Project(
 			hydrated.id,
 			hydrated.epub,
-			hydrated.sourceLanguage,
-			hydrated.targetLanguage,
 			hydrated.createdAt,
 			hydrated.translations,
 			hydrated.activeTranslationIds,
@@ -110,8 +90,6 @@ export default class Project {
 		return {
 			id: this.id,
 			epub: await this.epub.dump(),
-			sourceLanguage: this.sourceLanguage,
-			targetLanguage: this.targetLanguage,
 			createdAt: new Date(this.createdAt),
 			translations: new Map(
 				this.translations.entries().map(([id, tr]) => [id, dumpTranslation(tr)]),

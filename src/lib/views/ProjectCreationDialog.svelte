@@ -5,8 +5,8 @@
 	import IconClose from "virtual:icons/mdi/close";
 	import IconError from "virtual:icons/mdi/error";
 	import Epub from "$lib/core/epub";
+	import defaultPromptTemplate from "$lib/data/default-prompt.template.txt?raw";
 	import Project from "$lib/project.svelte";
-	import { ALL_LANGUAGES } from "$lib/utils/languages";
 
 	type Props = {
 		open?: boolean;
@@ -20,8 +20,7 @@
 	let creating = $state(false);
 	let errorMessage = $state<string | null>(null);
 
-	let sourceLanguageInput = $state<HTMLSelectElement>();
-	let targetLanguageInput = $state<HTMLSelectElement>();
+	let defaultPromptInput = $state<HTMLTextAreaElement>();
 </script>
 
 <dialog class={["modal", classValue]} {open} transition:blur={{ duration: 150 }}>
@@ -29,14 +28,10 @@
 		class="modal-box"
 		onsubmit={async (event) => {
 			event.preventDefault();
-			if (creating || !sourceLanguageInput?.value || !targetLanguageInput?.value) return;
+			if (creating || !defaultPromptInput?.value) return;
 			creating = true;
 			try {
-				const project = Project.create(
-					(await epub)!,
-					sourceLanguageInput.value,
-					targetLanguageInput.value,
-				);
+				const project = Project.create((await epub)!, defaultPromptInput.value);
 				await onCreate?.(project);
 			} catch (error: any) {
 				errorMessage = error?.message ?? "Unknown error";
@@ -93,12 +88,9 @@
 					const file = event.currentTarget.files?.item(0) ?? undefined;
 					if (file) {
 						epub = Epub.load(file);
-						epub.then(async (epub) => {
-							const lang = epub.language?.code;
-							if (sourceLanguageInput) sourceLanguageInput.value = lang ?? "";
+						epub.then(async () => {
 							await tick();
-							if (lang) targetLanguageInput?.focus();
-							else sourceLanguageInput?.focus();
+							defaultPromptInput?.focus();
 						}).catch((error: any) => {
 							errorMessage = error?.message ?? "Failed to load EPUB";
 						});
@@ -109,27 +101,17 @@
 			/>
 		</fieldset>
 
-		<fieldset class="fieldset grid-cols-2 gap-2" hidden={!(await epub)}>
-			<legend class="col-span-2 fieldset-legend">Language</legend>
-			<select class="select" bind:this={sourceLanguageInput} name="source-language" required>
-				<option disabled selected value="">Select source language</option>
-				{#each ALL_LANGUAGES as { code, name } (code)}
-					<option value={code}>
-						{name}
-						{#await epub then epub}
-							{#if epub?.language?.code === code}
-								(Detected)
-							{/if}
-						{/await}
-					</option>
-				{/each}
-			</select>
-			<select class="select" bind:this={targetLanguageInput} name="target-language" required>
-				<option disabled selected value="">Select target language</option>
-				{#each ALL_LANGUAGES as { code, name } (code)}
-					<option value={code}>{name}</option>
-				{/each}
-			</select>
+		<fieldset class="fieldset" hidden={!(await epub)}>
+			<label class="contents">
+				<span class="label">Prompt</span>
+				<textarea
+					class="textarea field-sizing-content w-full resize-none textarea-xs"
+					bind:this={defaultPromptInput}
+					name="default-prompt"
+					required
+					defaultValue={defaultPromptTemplate}
+				></textarea>
+			</label>
 		</fieldset>
 
 		<div class="modal-action">

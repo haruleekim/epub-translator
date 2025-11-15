@@ -1,15 +1,13 @@
 <script lang="ts">
 	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
-	import IconArrowRightThin from "virtual:icons/mdi/arrow-right-thin";
 	import IconTrashCan from "virtual:icons/mdi/trash-can";
 	import { resolve } from "$app/paths";
 	import { removeProject } from "$lib/database";
 	import Project from "$lib/project.svelte";
-	import { getLanguage } from "$lib/utils/languages";
 	import ProjectCreationDialog from "$lib/views/ProjectCreationDialog.svelte";
 
 	const props: { projects: Project[] } = $props();
-	const projects = $derived(
+	const projects = $state(
 		props.projects.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
 	);
 
@@ -61,11 +59,6 @@
 				<div class="text-xs text-base-content/50">
 					{project.createdAt.toISOString()}
 				</div>
-			</div>
-			<div class="flex items-center gap-2 text-base-content/75">
-				<div>{getLanguage(project.sourceLanguage)?.name}</div>
-				<IconArrowRightThin class="size-8" />
-				<div>{getLanguage(project.targetLanguage)?.name}</div>
 			</div>
 		</a>
 		<div class="ml-4 flex items-center">
