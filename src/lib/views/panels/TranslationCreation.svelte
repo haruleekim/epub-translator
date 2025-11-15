@@ -84,6 +84,7 @@
 				class="textarea field-sizing-content w-full resize-none textarea-xs"
 				name="prompt"
 				placeholder="Prompt"
+				spellcheck={false}
 				required
 				defaultValue={cx.project.defaultPrompt}
 			></textarea>
@@ -99,6 +100,7 @@
 			<textarea
 				class="textarea field-sizing-content w-full resize-none textarea-xs"
 				placeholder="Translation"
+				spellcheck={false}
 				required
 				disabled={cx.locked}
 				bind:value={translated}

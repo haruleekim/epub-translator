@@ -109,6 +109,7 @@
 					bind:this={defaultPromptInput}
 					name="default-prompt"
 					required
+					spellcheck={false}
 					defaultValue={defaultPromptTemplate}
 				></textarea>
 			</label>

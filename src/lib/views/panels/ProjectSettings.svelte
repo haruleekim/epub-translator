@@ -34,6 +34,7 @@
 				<span class="label">Default Prompt</span>
 				<textarea
 					class="textarea field-sizing-content w-full"
+					spellcheck={false}
 					bind:value={cx.project.defaultPrompt}
 				></textarea>
 			</label>
