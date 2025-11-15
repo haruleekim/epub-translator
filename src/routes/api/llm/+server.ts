@@ -1,5 +1,4 @@
 import { error } from "@sveltejs/kit";
-import { createResponse } from "better-sse";
 import OpenAI from "openai";
 import * as z from "zod";
 
@@ -17,18 +16,30 @@ export async function POST({ request }) {
 
 	const openai = new OpenAI({ apiKey: import.meta.env.VITE_OPENAI_API_KEY });
 
-	const stream = await openai.responses.create({
+	const stream = openai.responses.create({
 		model: "gpt-4o",
 		instructions,
 		input,
 		stream: true,
 	});
 
-	return createResponse(request, async (session) => {
+	const { readable, writable } = new TransformStream();
+
+	stream.then(async (stream) => {
+		const writer = writable.getWriter();
 		for await (const event of stream) {
 			if (event.type !== "response.output_text.delta") continue;
-			session.push(event.delta, "message");
+			writer.write(`event: message\ndata: ${JSON.stringify(event.delta)}\n\n`);
 		}
-		session.push(null, "done");
+		writer.write(`event: done\ndata: null\n\n`);
+		writer.close();
+	});
+
+	return new Response(readable, {
+		headers: {
+			"Content-Type": "text/event-stream",
+			"Cache-Control": "no-cache",
+			Connection: "keep-alive",
+		},
 	});
 }

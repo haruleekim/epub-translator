@@ -5,40 +5,36 @@
 	import IconFormatListNumbered from "virtual:icons/mdi/format-list-numbered";
 	import IconSettings from "virtual:icons/mdi/settings";
 	import IconTrashCan from "virtual:icons/mdi/trash-can";
-	import FileTree from "$lib/components/FileTree.svelte";
 	import HtmlViewer from "$lib/components/HtmlViewer.svelte";
 	import TranslationList from "$lib/components/TranslationList.svelte";
-	import type { Partition } from "$lib/core/dom";
+	import { setWorkspaceContext, type WorkspaceContext } from "$lib/context.svelte";
 	import { saveProject } from "$lib/database";
 	import Project from "$lib/project";
 	import type { Translation } from "$lib/translation";
-	import TranslationCreationView from "$lib/views/panels/TranslationCreation.svelte";
+	import TranslationCreation from "$lib/views/panels/TranslationCreation.svelte";
+	import ResourceNavigation from "./panels/ResourceNavigation.svelte";
 
 	const props: { project: Project; path: string } = $props();
 
-	const project = $derived(props.project);
-	let path = $derived(props.path);
-	const resource = $derived(project.epub.getResource(path));
+	const cx = $state<WorkspaceContext>({
+		project: props.project,
+		path: props.path,
+		partition: null,
+		mode: "navigate-resources",
+		locked: false,
+		translations: props.project.listTranslationsForPath(props.path),
+		activeTranslationIds: props.project.getActivatedTranslationIdsForPath(props.path),
+	});
+	setWorkspaceContext(cx);
+
+	const resource = $derived(cx.project.epub.getResource(cx.path));
 	const blob = $derived(resource ? resource.getBlob() : Promise.resolve(new Blob()));
 	const text = $derived(blob.then((blob) => blob.text()));
 
-	let mode = $state<
-		"navigate-resources" | "add-translation" | "list-translations" | "project-settings"
-	>("navigate-resources");
-
-	let partition = $state<Partition | null>(null);
-	const selectedText = $derived(
-		partition ? project.getOriginalContent(path, partition) : Promise.resolve(""),
-	);
-
-	let partitionLocked = $state(false);
-
-	let translations = $derived(project.listTranslationsForPath(path));
-	let activeTranslationIds = $derived(project.getActivatedTranslationIdsForPath(path));
 	let activeTranslations = $derived(
-		activeTranslationIds
-			.map((id) => translations.find((t) => t.id === id))
-			.filter(Boolean) as Translation[],
+		cx.activeTranslationIds
+			.map((id) => cx.translations.find((t) => t.id === id)!)
+			.filter(Boolean),
 	);
 
 	let viewer = $state<HTMLElement>();
@@ -76,92 +72,64 @@
 		<ul class="menu menu-horizontal mx-auto flex menu-xs">
 			<li>
 				<button
-					onclick={() => (mode = "navigate-resources")}
-					class:menu-active={mode === "navigate-resources"}
+					onclick={() => (cx.mode = "navigate-resources")}
+					class:menu-active={cx.mode === "navigate-resources"}
 				>
 					<IconFormatListNumbered class="size-4" />
 				</button>
 			</li>
 			<li>
 				<button
-					onclick={() => (mode = "add-translation")}
-					class:menu-active={mode === "add-translation"}
+					onclick={() => (cx.mode = "add-translation")}
+					class:menu-active={cx.mode === "add-translation"}
 				>
 					<IconAddCircleOutline class="size-4" />
 				</button>
 			</li>
 			<li>
 				<button
-					onclick={() => (mode = "list-translations")}
-					class:menu-active={mode === "list-translations"}
+					onclick={() => (cx.mode = "list-translations")}
+					class:menu-active={cx.mode === "list-translations"}
 				>
 					<IconDifferenceLeft class="size-4" />
 				</button>
 			</li>
 			<li>
 				<button
-					onclick={() => (mode = "project-settings")}
-					class:menu-active={mode === "project-settings"}
+					onclick={() => (cx.mode = "project-settings")}
+					class:menu-active={cx.mode === "project-settings"}
 				>
 					<IconSettings class="size-4" />
 				</button>
 			</li>
 		</ul>
 		<div class="overflow-auto">
-			{#if mode === "navigate-resources"}
-				<FileTree
-					class="w-full overflow-auto"
-					paths={project.epub.listSpinePaths()}
-					activePath={path}
-					onSelect={async (newPath) => {
-						path = newPath;
-						partition = null;
-						mode = "navigate-resources";
-					}}
-				/>
-			{:else if mode === "add-translation"}
-				<TranslationCreationView
-					class="p-2"
-					original={selectedText}
-					targetLanguage={project.targetLanguage}
-					onPartitionLockChange={(locked) => (partitionLocked = locked)}
-					onTranslationAdd={async (translated) => {
-						if (!partition) return;
-						const translationId = project.addTranslation(
-							path,
-							partition,
-							await selectedText,
-							translated,
-						);
-						project.activateTranslation(translationId);
-						translations = project.listTranslationsForPath(path);
-						activeTranslationIds = project.getActivatedTranslationIdsForPath(path);
-						mode = "list-translations";
-						await saveProject(project);
-					}}
-				/>
-			{:else if mode === "list-translations"}
+			{#if cx.mode === "navigate-resources"}
+				<ResourceNavigation class="w-full overflow-auto" />
+			{:else if cx.mode === "add-translation"}
+				<TranslationCreation class="p-2" />
+			{:else if cx.mode === "list-translations"}
 				<TranslationList
 					class="p-2"
-					{translations}
-					selectedIds={activeTranslationIds}
+					translations={cx.translations}
+					selectedIds={cx.activeTranslationIds}
 					onSelectionChange={async (newIds) => {
-						project.setActivatedTranslationsForPath(path, newIds);
-						activeTranslationIds = newIds;
-						await saveProject(project);
+						cx.project.setActivatedTranslationsForPath(cx.path, newIds);
+						cx.activeTranslationIds = newIds;
+						await saveProject(cx.project);
 					}}
 					itemSnippet={translationItemSnippet}
 				/>
-			{:else if mode === "project-settings"}
+			{:else if cx.mode === "project-settings"}
 				<div class="p-2">
 					<button
 						class="btn w-full btn-primary"
 						onclick={async () => {
-							const blob = await project.exportEpub();
+							const blob = await cx.project.exportEpub();
 							const url = URL.createObjectURL(blob);
 							const a = document.createElement("a");
 							a.href = url;
-							a.download = `${project.id}.epub`;
+							a.download = `${cx.project.id}.epub`;
 							a.click();
 							URL.revokeObjectURL(url);
 						}}
@@ -190,10 +158,10 @@
 			html={await text}
 			translations={activeTranslations}
 			transformUrl={resource?.resolveUrl}
-			{partition}
+			partition={cx.partition}
 			onSelectionChange={(newPartition) => {
-				if (partitionLocked) return;
-				partition = newPartition;
+				if (cx.locked) return;
+				cx.partition = newPartition;
 			}}
 		/>
 	</div>
@@ -204,10 +172,12 @@
 		class="btn btn-circle btn-ghost btn-error"
 		onclick={async () => {
 			if (confirm("Are you sure you want to delete this translation?")) {
-				project.removeTranslation(translation.id);
-				translations = translations.filter((t) => t.id !== translation.id);
-				activeTranslationIds = activeTranslationIds.filter((id) => id !== translation.id);
-				await saveProject(project);
+				cx.project.removeTranslation(translation.id);
+				cx.translations = cx.translations.filter((t) => t.id !== translation.id);
+				cx.activeTranslationIds = cx.activeTranslationIds.filter(
+					(id) => id !== translation.id,
+				);
+				await saveProject(cx.project);
 			}
 		}}
 	>

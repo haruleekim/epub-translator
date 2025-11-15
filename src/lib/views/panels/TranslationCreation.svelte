@@ -3,75 +3,70 @@
 	import type { ClassValue } from "svelte/elements";
 	import { resolve } from "$app/paths";
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
+	import { getWorkspaceContext } from "$lib/context.svelte";
 	import defaultPromptTemplate from "$lib/data/default-prompt.template.txt?raw";
-	import { getLanguage } from "$lib/utils/languages";
+	import { saveProject } from "$lib/database";
 
-	let {
-		translated = $bindable(),
-		...props
-	}: {
-		original: Promise<string>;
-		translated?: string;
-		targetLanguage: string;
-		onTranslationAdd?: (translated: string) => void;
-		onPartitionLockChange?: (locked: boolean) => void;
-		class?: ClassValue | null;
-	} = $props();
+	const props: { class?: ClassValue | null } = $props();
 
-	const defaultPrompt = $derived(
-		defaultPromptTemplate.replaceAll(
-			"{{lang}}",
-			getLanguage(props.targetLanguage)?.name ?? "English",
-		),
-	);
+	const cx = getWorkspaceContext();
 
-	let generating = $state(false);
+	const originalPromise = $derived.by(async () => {
+		if (!cx.partition) return null;
+		return cx.project.getOriginalContent(cx.path, cx.partition);
+	});
+	const original = $derived(await originalPromise);
+	let translated = $state("");
+
+	const defaultPrompt = $derived(defaultPromptTemplate.replaceAll("{{lang}}", "Korean"));
 
 	async function handleGenerateTranslation(this: HTMLFormElement, event: SubmitEvent) {
 		event.preventDefault();
 
 		try {
-			props.onPartitionLockChange?.(true);
-			generating = true;
+			cx.locked = true;
 
 			const form = new FormData(this);
 			const instructions = form.get("prompt");
 			if (typeof instructions !== "string") throw new Error("Invalid prompt");
-			if (!(await props.original)) throw new Error("Original text is empty");
+			if (!original) throw new Error("Original text is empty");
 
 			const sse = new SSE(resolve("/api/llm"), {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				payload: JSON.stringify({
-					instructions,
-					input: await props.original,
-				}),
+				headers: { "Content-Type": "application/json" },
+				payload: JSON.stringify({ instructions, input: original }),
 			});
-
 			await new Promise((resolve, reject) => {
-				sse.addEventListener("open", () => {
-					translated = "";
-				});
-				sse.addEventListener("done", () => {
-					resolve(void 0);
-				});
+				sse.addEventListener("open", () => (translated = ""));
+				sse.addEventListener("error", reject);
 				sse.addEventListener("message", (event: { data: string }) => {
 					translated += JSON.parse(event.data);
 				});
-				sse.addEventListener("error", reject);
+				sse.addEventListener("done", () => {
+					sse.close();
+					resolve(void 0);
+				});
 			});
 		} finally {
-			generating = false;
-			props.onPartitionLockChange?.(false);
+			cx.locked = false;
 		}
 	}
 
 	async function handleAddTranslation(this: HTMLFormElement, event: SubmitEvent) {
 		event.preventDefault();
 		if (!translated) return;
-		props.onTranslationAdd?.(translated);
+		if (!cx.partition) return;
+		const translationId = cx.project.addTranslation(
+			cx.path,
+			cx.partition,
+			await cx.project.getOriginalContent(cx.path, cx.partition),
+			translated,
+		);
+		cx.project.activateTranslation(translationId);
+		cx.translations = cx.project.listTranslationsForPath(cx.path);
+		cx.activeTranslationIds = cx.project.getActivatedTranslationIdsForPath(cx.path);
+		cx.mode = "list-translations";
+		await saveProject(cx.project);
 	}
 </script>
 
@@ -80,14 +75,11 @@
 		<label class="">
 			<input type="checkbox" hidden />
 			<div class="max-h-40 overflow-y-auto [input[type=checkbox]:checked+&]:max-h-none">
-				{#if translated && !generating}
-					<TranslationDiff
-						original={await props.original}
-						translated={translated ?? ""}
-					/>
+				{#if translated && original && !cx.locked}
+					<TranslationDiff {original} {translated} />
 				{:else}
 					<code class="text-xs leading-normal whitespace-pre-wrap">
-						{await props.original}
+						{original}
 					</code>
 				{/if}
 			</div>
@@ -106,11 +98,7 @@
 				required
 				defaultValue={defaultPrompt}
 			></textarea>
-			<button
-				type="submit"
-				class="btn ml-auto flex btn-xs"
-				disabled={generating || !(await props.original)}
-			>
+			<button type="submit" class="btn ml-auto flex btn-xs" disabled={cx.locked || !original}>
 				Generate
 			</button>
 		</fieldset>
@@ -123,14 +111,14 @@
 				class="textarea w-full textarea-xs"
 				placeholder="Translation"
 				required
-				disabled={generating}
+				disabled={cx.locked}
 				bind:value={translated}
 			></textarea>
 			<div class="label"></div>
 			<button
 				class="btn btn-sm btn-primary"
 				type="submit"
-				disabled={generating || !(await props.original)}
+				disabled={cx.locked || !original || !translated}
 			>
 				Add Translation
 			</button>
