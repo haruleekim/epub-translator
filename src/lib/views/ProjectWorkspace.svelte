@@ -4,27 +4,17 @@
 	import IconDifferenceLeft from "virtual:icons/mdi/difference-left";
 	import IconFormatListNumbered from "virtual:icons/mdi/format-list-numbered";
 	import IconSettings from "virtual:icons/mdi/settings";
-	import IconTrashCan from "virtual:icons/mdi/trash-can";
 	import HtmlViewer from "$lib/components/HtmlViewer.svelte";
-	import TranslationList from "$lib/components/TranslationList.svelte";
-	import { setWorkspaceContext, type WorkspaceContext } from "$lib/context.svelte";
-	import { saveProject } from "$lib/database";
+	import { setWorkspaceContext, WorkspaceContext } from "$lib/context.svelte";
 	import Project from "$lib/project";
-	import type { Translation } from "$lib/translation";
+	import ProjectSettings from "$lib/views/panels/ProjectSettings.svelte";
+	import ResourceNavigation from "$lib/views/panels/ResourceNavigation.svelte";
 	import TranslationCreation from "$lib/views/panels/TranslationCreation.svelte";
-	import ResourceNavigation from "./panels/ResourceNavigation.svelte";
+	import TranslationList from "$lib/views/panels/TranslationList.svelte";
 
 	const props: { project: Project; path: string } = $props();
 
-	const cx = $state<WorkspaceContext>({
-		project: props.project,
-		path: props.path,
-		partition: null,
-		mode: "navigate-resources",
-		locked: false,
-		translations: props.project.listTranslationsForPath(props.path),
-		activeTranslationIds: props.project.getActivatedTranslationIdsForPath(props.path),
-	});
+	const cx = $state(new WorkspaceContext(props.project, props.path));
 	setWorkspaceContext(cx);
 
 	const resource = $derived(cx.project.epub.getResource(cx.path));
@@ -109,34 +99,9 @@
 			{:else if cx.mode === "add-translation"}
 				<TranslationCreation class="p-2" />
 			{:else if cx.mode === "list-translations"}
-				<TranslationList
-					class="p-2"
-					translations={cx.translations}
-					selectedIds={cx.activeTranslationIds}
-					onSelectionChange={async (newIds) => {
-						cx.project.setActivatedTranslationsForPath(cx.path, newIds);
-						cx.activeTranslationIds = newIds;
-						await saveProject(cx.project);
-					}}
-					itemSnippet={translationItemSnippet}
-				/>
+				<TranslationList class="p-2" />
 			{:else if cx.mode === "project-settings"}
-				<div class="p-2">
-					<button
-						class="btn w-full btn-primary"
-						onclick={async () => {
-							const blob = await cx.project.exportEpub();
-							const url = URL.createObjectURL(blob);
-							const a = document.createElement("a");
-							a.href = url;
-							a.download = `${cx.project.id}.epub`;
-							a.click();
-							URL.revokeObjectURL(url);
-						}}
-					>
-						Export translated EPUB
-					</button>
-				</div>
+				<ProjectSettings class="p-2" />
 			{/if}
 		</div>
 	</div>
@@ -166,21 +131,3 @@
 		/>
 	</div>
 </div>
-
-{#snippet translationItemSnippet(translation: Translation)}
-	<button
-		class="btn btn-circle btn-ghost btn-error"
-		onclick={async () => {
-			if (confirm("Are you sure you want to delete this translation?")) {
-				cx.project.removeTranslation(translation.id);
-				cx.translations = cx.translations.filter((t) => t.id !== translation.id);
-				cx.activeTranslationIds = cx.activeTranslationIds.filter(
-					(id) => id !== translation.id,
-				);
-				await saveProject(cx.project);
-			}
-		}}
-	>
-		<IconTrashCan class="size-6" />
-	</button>
-{/snippet}

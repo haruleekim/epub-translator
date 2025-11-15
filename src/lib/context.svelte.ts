@@ -9,7 +9,7 @@ export type WorkspaceMode =
 	| "list-translations"
 	| "project-settings";
 
-export interface WorkspaceContext {
+export class WorkspaceContext {
 	project: Project;
 	path: string;
 	partition: Partition | null;
@@ -17,6 +17,18 @@ export interface WorkspaceContext {
 	locked: boolean;
 	translations: Translation[];
 	activeTranslationIds: string[];
+
+	constructor(project: Project, path: string) {
+		this.project = $state(project);
+		this.path = $state(path);
+		this.partition = $state(null);
+		this.mode = $state("navigate-resources");
+		this.locked = $state(false);
+		this.translations = $derived(this.project.listTranslationsForPath(this.path));
+		this.activeTranslationIds = $derived(
+			this.project.getActivatedTranslationIdsForPath(this.path),
+		);
+	}
 }
 
 export const [getWorkspaceContext, setWorkspaceContext] = createContext<WorkspaceContext>();

@@ -1,25 +1,21 @@
 <script lang="ts">
-	import type { Snippet } from "svelte";
 	import type { ClassValue } from "svelte/elements";
 	import IconChevronDown from "virtual:icons/mdi/chevron-down";
 	import IconChevronRight from "virtual:icons/mdi/chevron-right";
+	import IconTrashCan from "virtual:icons/mdi/trash-can";
+	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
+	import { getWorkspaceContext } from "$lib/context.svelte";
 	import { Partition } from "$lib/core/dom";
-	import type { Translation } from "$lib/translation";
-	import TranslationDiff from "./TranslationDiff.svelte";
+	import { saveProject } from "$lib/database";
 
-	type Props = {
-		translations: Translation[];
-		selectedIds: string[];
-		onSelectionChange?: (translationIds: string[]) => void;
-		itemSnippet?: Snippet<[Translation]>;
-		class?: ClassValue | null;
-	};
-	const props: Props = $props();
+	const props: { class?: ClassValue | null } = $props();
+
+	const cx = getWorkspaceContext();
 
 	const items = $derived(
-		props.translations
+		cx.translations
 			.toSorted((a, b) => Partition.totalOrderCompare(a.partition, b.partition))
-			.map((tr) => [tr, props.selectedIds.includes(tr.id)] as const),
+			.map((tr) => [tr, cx.activeTranslationIds.includes(tr.id)] as const),
 	);
 
 	const folds = $state<Record<string, boolean>>({});
@@ -47,24 +43,44 @@
 				<div class="text-sm text-base-content/75">{path} · {partition}</div>
 				<div class="text-sm text-base-content/75">{createdAt.toLocaleString()}</div>
 			</div>
-			<div class="col-span-2 list-col-wrap rounded bg-base-200 p-2" hidden={!folds[id]}>
-				<TranslationDiff class="w-full" {original} {translated} />
-			</div>
+			{#if folds[id]}
+				<div class="col-span-2 list-col-wrap rounded bg-base-200 p-2">
+					<TranslationDiff class="w-full" {original} {translated} />
+				</div>
+			{/if}
 			<div>
-				{@render props.itemSnippet?.(translation)}
+				<button
+					class="btn btn-circle btn-ghost btn-error"
+					onclick={async () => {
+						if (confirm("Are you sure you want to delete this translation?")) {
+							cx.project.removeTranslation(translation.id);
+							cx.translations = cx.translations.filter(
+								(t) => t.id !== translation.id,
+							);
+							cx.activeTranslationIds = cx.activeTranslationIds.filter(
+								(id) => id !== translation.id,
+							);
+							await saveProject(cx.project);
+						}
+					}}
+				>
+					<IconTrashCan class="size-6" />
+				</button>
 			</div>
 			<input
 				class="checkbox"
 				type="checkbox"
 				checked={selected}
-				onchange={(event) => {
-					let selectedIds: string[];
+				onchange={async (event) => {
 					if (event.currentTarget.checked) {
-						selectedIds = [...props.selectedIds, id];
+						cx.activeTranslationIds = [...cx.activeTranslationIds, id];
 					} else {
-						selectedIds = props.selectedIds.filter((sid) => sid !== id);
+						cx.activeTranslationIds = cx.activeTranslationIds.filter(
+							(sid) => sid !== id,
+						);
 					}
-					props.onSelectionChange?.(selectedIds);
+					cx.project.setActivatedTranslationsForPath(cx.path, cx.activeTranslationIds);
+					await saveProject(cx.project);
 				}}
 			/>
 		</li>
