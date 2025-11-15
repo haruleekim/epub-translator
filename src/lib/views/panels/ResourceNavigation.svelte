@@ -12,6 +12,7 @@
 	paths={cx.project.epub.listSpinePaths()}
 	activePath={cx.path}
 	onSelect={async (newPath) => {
+		if (cx.locked) return;
 		cx.path = newPath;
 		cx.partition = null;
 		cx.mode = "navigate-resources";

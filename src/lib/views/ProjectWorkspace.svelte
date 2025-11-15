@@ -54,33 +54,37 @@
 >
 	<div id="panel" class="col-start-1 flex flex-col overflow-auto bg-base-200">
 		<ul class="menu menu-horizontal mx-auto flex menu-xs">
-			<li>
+			<li class:menu-disabled={cx.locked}>
 				<button
 					onclick={() => (cx.mode = "navigate-resources")}
+					disabled={cx.locked}
 					class:menu-active={cx.mode === "navigate-resources"}
 				>
 					<IconFormatListNumbered class="size-4" />
 				</button>
 			</li>
-			<li>
+			<li class:menu-disabled={cx.locked}>
 				<button
 					onclick={() => (cx.mode = "add-translation")}
+					disabled={cx.locked}
 					class:menu-active={cx.mode === "add-translation"}
 				>
 					<IconAddCircleOutline class="size-4" />
 				</button>
 			</li>
-			<li>
+			<li class:menu-disabled={cx.locked}>
 				<button
 					onclick={() => (cx.mode = "list-translations")}
+					disabled={cx.locked}
 					class:menu-active={cx.mode === "list-translations"}
 				>
 					<IconDifferenceLeft class="size-4" />
 				</button>
 			</li>
-			<li>
+			<li class:menu-disabled={cx.locked}>
 				<button
 					onclick={() => (cx.mode = "project-settings")}
+					disabled={cx.locked}
 					class:menu-active={cx.mode === "project-settings"}
 				>
 					<IconSettings class="size-4" />

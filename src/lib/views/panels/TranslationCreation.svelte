@@ -4,19 +4,12 @@
 	import { resolve } from "$app/paths";
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
 	import { getWorkspaceContext } from "$lib/context.svelte";
-	import defaultPromptTemplate from "$lib/data/default-prompt.template.txt?raw";
 
 	const props: { class?: ClassValue | null } = $props();
 	const cx = getWorkspaceContext();
 
-	const originalPromise = $derived.by(async () => {
-		if (!cx.partition) return null;
-		return cx.project.getOriginalContent(cx.path, cx.partition);
-	});
-	const original = $derived(await originalPromise);
+	const original = $derived(cx.partition && cx.project.getOriginalContent(cx.path, cx.partition));
 	let translated = $state("");
-
-	const defaultPrompt = $derived(defaultPromptTemplate.replaceAll("{{lang}}", "Korean"));
 
 	async function handleGenerateTranslation(this: HTMLFormElement, event: SubmitEvent) {
 		event.preventDefault();
@@ -32,7 +25,7 @@
 			const sse = new SSE(resolve("/api/llm"), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				payload: JSON.stringify({ instructions, input: original }),
+				payload: JSON.stringify({ instructions, input: await original }),
 			});
 			await new Promise((resolve, reject) => {
 				sse.addEventListener("open", () => (translated = ""));
@@ -72,10 +65,10 @@
 			<input type="checkbox" hidden />
 			<div class="max-h-40 overflow-y-auto [input[type=checkbox]:checked+&]:max-h-none">
 				{#if translated && original && !cx.locked}
-					<TranslationDiff {original} {translated} />
+					<TranslationDiff original={await original} {translated} />
 				{:else}
 					<code class="text-xs leading-normal whitespace-pre-wrap">
-						{original}
+						{await original}
 					</code>
 				{/if}
 			</div>
@@ -88,11 +81,11 @@
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Generate translation from LLM</legend>
 			<textarea
-				class="textarea w-full textarea-xs"
+				class="textarea field-sizing-content w-full resize-none textarea-xs"
 				name="prompt"
 				placeholder="Prompt"
 				required
-				defaultValue={defaultPrompt}
+				defaultValue={cx.project.defaultPrompt}
 			></textarea>
 			<button type="submit" class="btn ml-auto flex btn-xs" disabled={cx.locked || !original}>
 				Generate
@@ -104,7 +97,7 @@
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Translation</legend>
 			<textarea
-				class="textarea w-full textarea-xs"
+				class="textarea field-sizing-content w-full resize-none textarea-xs"
 				placeholder="Translation"
 				required
 				disabled={cx.locked}
