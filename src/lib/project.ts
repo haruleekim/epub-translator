@@ -43,6 +43,7 @@ export type ProjectDump = {
 	createdAt: Date;
 	translations: Map<string, TranslationDump>;
 	activeTranslationIds: Set<string>;
+	defaultPrompt: string | undefined;
 };
 
 export default class Project {
@@ -57,6 +58,7 @@ export default class Project {
 		public readonly createdAt: Readonly<Date>,
 		public readonly translations: Readonly<Map<string, Translation>>,
 		public readonly activeTranslationIds: Readonly<Set<string>>,
+		public readonly defaultPrompt?: string,
 	) {}
 
 	static create(epub: Epub, sourceLanguage: string, targetLanguage: string) {
@@ -98,6 +100,7 @@ export default class Project {
 			hydrated.createdAt,
 			hydrated.translations,
 			hydrated.activeTranslationIds,
+			hydrated.defaultPrompt,
 		);
 		project.#recalculateIndices();
 		return project;
