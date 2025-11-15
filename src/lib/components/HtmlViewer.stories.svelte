@@ -4,10 +4,10 @@
 	import { Partition } from "$lib/core/dom";
 	import Epub from "$lib/core/epub";
 	import sample from "$lib/data/sample.epub?url";
-	import Project from "$lib/project";
+	import Project from "$lib/project.svelte";
 
 	const epub = await Epub.load(sample);
-	const project = Project.create(epub, "eng", "kor");
+	const project = Project.create(epub, "");
 	const resource = project.epub.getSpineItem(2)!;
 	const blob = await resource.getBlob();
 	const text = await blob.text();
@@ -32,7 +32,7 @@
 		component: HtmlViewer,
 		args: {
 			html: text,
-			translations: project.listTranslationsForPath(resource.path),
+			translations: project.translationsForPath(resource.path),
 			transformUrl: resource.resolveUrl,
 			onSelectionChange: (partition) => {
 				console.log(partition);
