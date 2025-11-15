@@ -5,7 +5,6 @@
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
 	import { getWorkspaceContext } from "$lib/context.svelte";
 	import defaultPromptTemplate from "$lib/data/default-prompt.template.txt?raw";
-	import { saveProject } from "$lib/database";
 
 	const props: { class?: ClassValue | null } = $props();
 	const cx = getWorkspaceContext();
@@ -63,7 +62,7 @@
 		);
 		cx.project.activeTranslationIds.add(translationId);
 		cx.mode = "list-translations";
-		await saveProject(cx.project);
+		await cx.project.save();
 	}
 </script>
 

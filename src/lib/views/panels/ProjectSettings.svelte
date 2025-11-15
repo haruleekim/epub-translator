@@ -8,7 +8,7 @@
 
 <div class={props.class}>
 	<button
-		class="btn w-full btn-primary"
+		class="btn btn-block btn-soft btn-accent"
 		onclick={async () => {
 			const blob = await cx.project.exportEpub();
 			const url = URL.createObjectURL(blob);
@@ -21,4 +21,30 @@
 	>
 		Export translated EPUB
 	</button>
+
+	<form
+		class="mt-4"
+		onsubmit={async (event) => {
+			event.preventDefault();
+			await cx.project.save();
+		}}
+	>
+		<fieldset class="fieldset">
+			<label class="contents">
+				<span class="label">Default Prompt</span>
+				<textarea
+					class="textarea field-sizing-content w-full"
+					bind:value={cx.project.defaultPrompt}
+				></textarea>
+			</label>
+		</fieldset>
+
+		<button
+			type="submit"
+			class="btn mt-2 flex btn-block btn-primary"
+			disabled={!cx.project.dirty}
+		>
+			Confirm
+		</button>
+	</form>
 </div>

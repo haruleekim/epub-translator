@@ -3,7 +3,7 @@
 	import IconArrowRightThin from "virtual:icons/mdi/arrow-right-thin";
 	import IconTrashCan from "virtual:icons/mdi/trash-can";
 	import { resolve } from "$app/paths";
-	import { removeProject, saveProject } from "$lib/database";
+	import { removeProject } from "$lib/database";
 	import Project from "$lib/project.svelte";
 	import { getLanguage } from "$lib/utils/languages";
 	import ProjectCreationDialog from "$lib/views/ProjectCreationDialog.svelte";
@@ -22,7 +22,7 @@
 		onCreate={async (project) => {
 			projects.splice(0, 0, project);
 			dialogOpen = false;
-			await saveProject(project);
+			await project.save();
 		}}
 	/>
 {/if}

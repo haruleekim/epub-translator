@@ -6,7 +6,6 @@
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
 	import { getWorkspaceContext } from "$lib/context.svelte";
 	import { Partition } from "$lib/core/dom";
-	import { saveProject } from "$lib/database";
 
 	const props: { class?: ClassValue | null } = $props();
 	const cx = getWorkspaceContext();
@@ -53,7 +52,7 @@
 					onclick={async () => {
 						if (confirm("Are you sure you want to delete this translation?")) {
 							cx.project.removeTranslation(translation.id);
-							await saveProject(cx.project);
+							await cx.project.save();
 						}
 					}}
 				>
@@ -70,7 +69,7 @@
 					} else {
 						cx.project.activeTranslationIds.delete(id);
 					}
-					await saveProject(cx.project);
+					await cx.project.save();
 				}}
 			/>
 		</li>

@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 import { SvelteDate, SvelteMap, SvelteSet } from "svelte/reactivity";
 import { Dom, Partition, type NodeId } from "$lib/core/dom";
 import Epub from "$lib/core/epub";
+import { saveProject } from "$lib/database";
 import {
 	dumpTranslation,
 	loadTranslation,
@@ -35,6 +36,7 @@ export default class Project {
 
 	#doms: SvelteMap<string, Dom> = new SvelteMap();
 	#translationIdToPath: SvelteMap<string, string> = new SvelteMap();
+	#dirty: boolean;
 
 	private constructor(
 		id: string,
@@ -54,6 +56,20 @@ export default class Project {
 		this.translations = new SvelteMap(translations);
 		this.activeTranslationIds = new SvelteSet(activeTranslationIds);
 		this.defaultPrompt = $state(defaultPrompt);
+
+		this.#dirty = $derived.by(() => {
+			[
+				this.id,
+				this.epub,
+				this.sourceLanguage,
+				this.targetLanguage,
+				this.createdAt,
+				this.translations,
+				this.activeTranslationIds,
+				this.defaultPrompt,
+			];
+			return true;
+		});
 	}
 
 	static create(epub: Epub, sourceLanguage: string, targetLanguage: string) {
@@ -103,6 +119,17 @@ export default class Project {
 			activeTranslationIds: new Set(this.activeTranslationIds),
 			defaultPrompt: this.defaultPrompt,
 		};
+	}
+
+	async save(): Promise<void> {
+		if (this.#dirty) {
+			this.#dirty = false;
+			await saveProject(this);
+		}
+	}
+
+	get dirty(): boolean {
+		return this.#dirty;
 	}
 
 	async exportEpub(): Promise<Blob> {
