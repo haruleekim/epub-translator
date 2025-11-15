@@ -17,7 +17,8 @@ export async function POST({ request }) {
 	const openai = new OpenAI({ apiKey: import.meta.env.VITE_OPENAI_API_KEY });
 
 	const stream = openai.responses.create({
-		model: "gpt-4o",
+		model: "gpt-5",
+		reasoning: { effort: "minimal" },
 		instructions,
 		input,
 		stream: true,
