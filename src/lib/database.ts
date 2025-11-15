@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from "idb";
-import Project from "$lib/project";
+import Project from "$lib/project.svelte";
 
 const db = openDatabase();
 

@@ -1,6 +1,6 @@
 import { createContext } from "svelte";
 import type { Partition } from "$lib/core/dom";
-import type Project from "$lib/project";
+import type Project from "$lib/project.svelte";
 import type { Translation } from "$lib/translation";
 
 export type WorkspaceMode =

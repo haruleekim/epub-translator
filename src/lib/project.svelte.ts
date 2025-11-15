@@ -1,6 +1,8 @@
+/* eslint-disable svelte/prefer-svelte-reactivity */
 import JSZip from "jszip";
 import _ from "lodash";
 import { nanoid } from "nanoid";
+import { SvelteDate, SvelteMap, SvelteSet } from "svelte/reactivity";
 import { Dom, Partition, type NodeId } from "$lib/core/dom";
 import Epub from "$lib/core/epub";
 import {
@@ -22,19 +24,37 @@ export type ProjectDump = {
 };
 
 export default class Project {
-	doms: Map<string, Dom> = new Map();
-	translationIdToPath: Map<string, string> = new Map();
+	readonly id: string;
+	readonly epub: Epub;
+	sourceLanguage: string;
+	targetLanguage: string;
+	createdAt: Date;
+	translations: Map<string, Translation>;
+	activeTranslationIds: Set<string>;
+	defaultPrompt?: string;
+
+	#doms: Map<string, Dom> = new Map();
+	#translationIdToPath: Map<string, string> = new Map();
 
 	private constructor(
-		public readonly id: string,
-		public readonly epub: Readonly<Epub>,
-		public readonly sourceLanguage: string,
-		public readonly targetLanguage: string,
-		public readonly createdAt: Readonly<Date>,
-		public readonly translations: Readonly<Map<string, Translation>>,
-		public readonly activeTranslationIds: Readonly<Set<string>>,
-		private defaultPrompt?: string,
-	) {}
+		id: string,
+		epub: Epub,
+		sourceLanguage: string,
+		targetLanguage: string,
+		createdAt: Date,
+		translations: Map<string, Translation>,
+		activeTranslationIds: Set<string>,
+		defaultPrompt?: string,
+	) {
+		this.id = $state(id);
+		this.epub = $state(epub);
+		this.sourceLanguage = $state(sourceLanguage);
+		this.targetLanguage = $state(targetLanguage);
+		this.createdAt = new SvelteDate(createdAt);
+		this.translations = new SvelteMap(translations);
+		this.activeTranslationIds = new SvelteSet(activeTranslationIds);
+		this.defaultPrompt = $state(defaultPrompt);
+	}
 
 	static create(epub: Epub, sourceLanguage: string, targetLanguage: string) {
 		return new Project(
@@ -72,12 +92,16 @@ export default class Project {
 
 	async dump(): Promise<ProjectDump> {
 		return {
-			...this,
+			id: this.id,
 			epub: await this.epub.dump(),
+			sourceLanguage: this.sourceLanguage,
+			targetLanguage: this.targetLanguage,
+			createdAt: new Date(this.createdAt),
 			translations: new Map(
 				this.translations.entries().map(([id, tr]) => [id, dumpTranslation(tr)]),
 			),
-			doms: undefined,
+			activeTranslationIds: new Set(this.activeTranslationIds),
+			defaultPrompt: this.defaultPrompt,
 		};
 	}
 
@@ -108,20 +132,20 @@ export default class Project {
 			translated,
 			createdAt: new Date(),
 		});
-		this.translationIdToPath.set(id, path);
+		this.#translationIdToPath.set(id, path);
 		return id;
 	}
 
 	removeTranslation(id: string) {
 		this.translations.delete(id);
 		this.activeTranslationIds.delete(id);
-		this.translationIdToPath.delete(id);
+		this.#translationIdToPath.delete(id);
 	}
 
 	#recalculateIndices() {
-		this.translationIdToPath.clear();
+		this.#translationIdToPath.clear();
 		for (const [id, { path }] of this.translations) {
-			this.translationIdToPath.set(id, path);
+			this.#translationIdToPath.set(id, path);
 		}
 	}
 
@@ -156,13 +180,13 @@ export default class Project {
 	}
 
 	async #getDom(path: string): Promise<Dom> {
-		let dom = this.doms.get(path);
+		let dom = this.#doms.get(path);
 		if (!dom) {
 			const resource = this.epub.getResource(path);
 			if (!resource) throw new Error(`Resource not found: ${path}`);
 			const content = await resource.getBlob().then((blob) => blob.text());
 			dom = await Dom.loadAsync(content);
-			if (!this.doms.get(path)) this.doms.set(path, dom);
+			if (!this.#doms.get(path)) this.#doms.set(path, dom);
 		}
 		return dom;
 	}
@@ -173,7 +197,7 @@ export default class Project {
 	}
 
 	async checkOverlaps(translationIds: string[]): Promise<boolean> {
-		const grouped = _.groupBy(translationIds, (id) => this.translationIdToPath.get(id));
+		const grouped = _.groupBy(translationIds, (id) => this.#translationIdToPath.get(id));
 		const promises = Object.entries(grouped).map(async ([, ids]) => {
 			const partitions = ids.map((id) => {
 				const translation = this.translations.get(id);
@@ -188,7 +212,7 @@ export default class Project {
 
 	async renderTranslatedContent(path: string, translationIds: string[]): Promise<string> {
 		const dom = await this.#getDom(path);
-		translationIds = translationIds.filter((id) => this.translationIdToPath.get(id) === path);
+		translationIds = translationIds.filter((id) => this.#translationIdToPath.get(id) === path);
 		const translations = translationIds.map((id) => {
 			const translation = this.translations.get(id);
 			if (!translation) throw new Error(`Translation not found: ${id}`);
@@ -197,13 +221,5 @@ export default class Project {
 		return dom.substituteAll(
 			translations.map((tr) => ({ partition: tr.partition, content: tr.translated })),
 		);
-	}
-
-	getDefaultPrompt(): string | undefined {
-		return this.defaultPrompt;
-	}
-
-	setDefaultPrompt(prompt: string) {
-		this.defaultPrompt = prompt;
 	}
 }

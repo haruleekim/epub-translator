@@ -6,7 +6,7 @@
 	import IconSettings from "virtual:icons/mdi/settings";
 	import HtmlViewer from "$lib/components/HtmlViewer.svelte";
 	import { setWorkspaceContext, WorkspaceContext } from "$lib/context.svelte";
-	import Project from "$lib/project";
+	import Project from "$lib/project.svelte";
 	import ProjectSettings from "$lib/views/panels/ProjectSettings.svelte";
 	import ResourceNavigation from "$lib/views/panels/ResourceNavigation.svelte";
 	import TranslationCreation from "$lib/views/panels/TranslationCreation.svelte";

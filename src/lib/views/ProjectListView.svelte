@@ -4,7 +4,7 @@
 	import IconTrashCan from "virtual:icons/mdi/trash-can";
 	import { resolve } from "$app/paths";
 	import { removeProject, saveProject } from "$lib/database";
-	import Project from "$lib/project";
+	import Project from "$lib/project.svelte";
 	import { getLanguage } from "$lib/utils/languages";
 	import ProjectCreationDialog from "$lib/views/ProjectCreationDialog.svelte";
 

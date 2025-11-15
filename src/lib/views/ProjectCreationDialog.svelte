@@ -5,7 +5,7 @@
 	import IconClose from "virtual:icons/mdi/close";
 	import IconError from "virtual:icons/mdi/error";
 	import Epub from "$lib/core/epub";
-	import Project from "$lib/project";
+	import Project from "$lib/project.svelte";
 	import { ALL_LANGUAGES } from "$lib/utils/languages";
 
 	type Props = {
