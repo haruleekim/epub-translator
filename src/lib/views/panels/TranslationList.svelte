@@ -9,20 +9,17 @@
 	import { saveProject } from "$lib/database";
 
 	const props: { class?: ClassValue | null } = $props();
-
 	const cx = getWorkspaceContext();
 
-	const items = $derived(
-		cx.translations
-			.toSorted((a, b) => Partition.totalOrderCompare(a.partition, b.partition))
-			.map((tr) => [tr, cx.activeTranslationIds.includes(tr.id)] as const),
+	const translations = $derived(
+		cx.translations.toSorted((a, b) => Partition.totalOrderCompare(a.partition, b.partition)),
 	);
 
 	const folds = $state<Record<string, boolean>>({});
 </script>
 
 <ul class={["list", props.class]}>
-	{#each items as [translation, selected] (translation.id)}
+	{#each translations as translation (translation.id)}
 		{@const { id, path, partition, original, translated, createdAt } = translation}
 		<li class="list-row items-center hover:bg-base-300">
 			<button
@@ -70,7 +67,7 @@
 			<input
 				class="checkbox"
 				type="checkbox"
-				checked={selected}
+				checked={cx.project.activeTranslationIds.has(id)}
 				onchange={async (event) => {
 					if (event.currentTarget.checked) {
 						cx.project.activeTranslationIds.add(id);

@@ -3,7 +3,6 @@
 	import { getWorkspaceContext } from "$lib/context.svelte";
 
 	const props: { class?: ClassValue | null } = $props();
-
 	const cx = getWorkspaceContext();
 </script>
 

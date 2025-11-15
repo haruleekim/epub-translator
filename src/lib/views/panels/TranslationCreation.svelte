@@ -8,7 +8,6 @@
 	import { saveProject } from "$lib/database";
 
 	const props: { class?: ClassValue | null } = $props();
-
 	const cx = getWorkspaceContext();
 
 	const originalPromise = $derived.by(async () => {
