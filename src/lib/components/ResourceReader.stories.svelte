@@ -1,6 +1,6 @@
 <script lang="ts" module>
 	import { defineMeta } from "@storybook/addon-svelte-csf";
-	import ContentViewer from "$lib/components/ContentViewer.svelte";
+	import ResourceReader from "$lib/components/ResourceReader.svelte";
 	import Epub from "$lib/core/epub";
 	import sample from "$lib/data/sample.epub?url";
 
@@ -15,7 +15,7 @@
 	}
 
 	const { Story } = defineMeta({
-		component: ContentViewer,
+		component: ResourceReader,
 		args: { data: blob, transformUrl, class: "w-full h-full" },
 		parameters: { layout: "fullscreen" },
 	});
