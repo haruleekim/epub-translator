@@ -12,7 +12,7 @@
 	import { saveProject } from "$lib/database";
 	import Project from "$lib/project";
 	import type { Translation } from "$lib/translation";
-	import TranslationCreationView from "./TranslationCreationView.svelte";
+	import TranslationCreationView from "$lib/views/panels/TranslationCreation.svelte";
 
 	const props: { project: Project; path: string } = $props();
 
