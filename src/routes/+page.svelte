@@ -5,4 +5,8 @@
 	const props: PageProps = $props();
 </script>
 
+<svelte:head>
+	<title>EPUB Translator</title>
+</svelte:head>
+
 <ProjectListView projects={props.data.projects} />
