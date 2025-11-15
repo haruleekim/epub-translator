@@ -33,7 +33,7 @@ export default class Project {
 		public readonly createdAt: Readonly<Date>,
 		public readonly translations: Readonly<Map<string, Translation>>,
 		public readonly activeTranslationIds: Readonly<Set<string>>,
-		public readonly defaultPrompt?: string,
+		private defaultPrompt?: string,
 	) {}
 
 	static create(epub: Epub, sourceLanguage: string, targetLanguage: string) {
@@ -197,5 +197,13 @@ export default class Project {
 		return dom.substituteAll(
 			translations.map((tr) => ({ partition: tr.partition, content: tr.translated })),
 		);
+	}
+
+	getDefaultPrompt(): string | undefined {
+		return this.defaultPrompt;
+	}
+
+	setDefaultPrompt(prompt: string) {
+		this.defaultPrompt = prompt;
 	}
 }
