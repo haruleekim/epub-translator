@@ -62,9 +62,7 @@
 			await cx.project.getOriginalContent(cx.path, cx.partition),
 			translated,
 		);
-		cx.project.activateTranslation(translationId);
-		cx.translations = cx.project.listTranslationsForPath(cx.path);
-		cx.activeTranslationIds = cx.project.getActivatedTranslationIdsForPath(cx.path);
+		cx.project.activeTranslationIds.add(translationId);
 		cx.mode = "list-translations";
 		await saveProject(cx.project);
 	}

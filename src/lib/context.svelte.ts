@@ -24,10 +24,8 @@ export class WorkspaceContext {
 		this.partition = $state(null);
 		this.mode = $state("navigate-resources");
 		this.locked = $state(false);
-		this.translations = $derived(this.project.listTranslationsForPath(this.path));
-		this.activeTranslationIds = $derived(
-			this.project.getActivatedTranslationIdsForPath(this.path),
-		);
+		this.translations = $derived(this.project.translationsForPath(this.path));
+		this.activeTranslationIds = $derived(this.project.activeTranslationIdsForPath(this.path));
 	}
 }
 

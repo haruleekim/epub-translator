@@ -73,13 +73,10 @@
 				checked={selected}
 				onchange={async (event) => {
 					if (event.currentTarget.checked) {
-						cx.activeTranslationIds = [...cx.activeTranslationIds, id];
+						cx.project.activeTranslationIds.add(id);
 					} else {
-						cx.activeTranslationIds = cx.activeTranslationIds.filter(
-							(sid) => sid !== id,
-						);
+						cx.project.activeTranslationIds.delete(id);
 					}
-					cx.project.setActivatedTranslationsForPath(cx.path, cx.activeTranslationIds);
 					await saveProject(cx.project);
 				}}
 			/>

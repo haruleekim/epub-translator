@@ -29,7 +29,7 @@ export default class Project {
 	sourceLanguage: string;
 	targetLanguage: string;
 	createdAt: SvelteDate;
-	translations: SvelteMap<string, Translation>;
+	private translations: SvelteMap<string, Translation>;
 	activeTranslationIds: SvelteSet<string>;
 	defaultPrompt?: string;
 
@@ -149,34 +149,28 @@ export default class Project {
 		}
 	}
 
-	activateTranslation(id: string) {
-		if (!this.translations.has(id)) throw new Error(`Translation not found: ${id}`);
-		this.activeTranslationIds.add(id);
-	}
-
-	deactivateTranslation(id: string) {
-		this.activeTranslationIds.delete(id);
-	}
-
-	listTranslationsForPath(path: string): Translation[] {
+	translationsForPath(path: string): Translation[] {
 		return Array.from(this.translations.values().filter((tr) => tr.path === path));
 	}
 
-	getActivatedTranslationIdsForPath(path: string): string[] {
+	activeTranslationIdsForPath(path: string): string[] {
 		return Array.from(this.translations.values())
 			.filter((tr) => tr.path === path && this.activeTranslationIds.has(tr.id))
 			.map((tr) => tr.id);
 	}
 
-	setActivatedTranslationsForPath(path: string, ids: string[]) {
-		const translations = this.listTranslationsForPath(path);
-		for (const tr of translations) {
-			if (ids.includes(tr.id)) {
-				this.activateTranslation(tr.id);
-			} else {
-				this.deactivateTranslation(tr.id);
-			}
-		}
+	async checkOverlaps(translationIds: string[]): Promise<boolean> {
+		const grouped = _.groupBy(translationIds, (id) => this.#translationIdToPath.get(id));
+		const promises = Object.entries(grouped).map(async ([, ids]) => {
+			const partitions = ids.map((id) => {
+				const translation = this.translations.get(id);
+				if (!translation) throw new Error(`Translation not found: ${id}`);
+				return translation.partition;
+			});
+			return Partition.checkOverlap(partitions);
+		});
+		const results = await Promise.all(promises);
+		return results.some(_.identity);
 	}
 
 	async #getDom(path: string): Promise<Dom> {
@@ -194,20 +188,6 @@ export default class Project {
 	async getOriginalContent(path: string, arg: NodeId | Partition): Promise<string> {
 		const dom = await this.#getDom(path);
 		return dom.extractContent(arg);
-	}
-
-	async checkOverlaps(translationIds: string[]): Promise<boolean> {
-		const grouped = _.groupBy(translationIds, (id) => this.#translationIdToPath.get(id));
-		const promises = Object.entries(grouped).map(async ([, ids]) => {
-			const partitions = ids.map((id) => {
-				const translation = this.translations.get(id);
-				if (!translation) throw new Error(`Translation not found: ${id}`);
-				return translation.partition;
-			});
-			return Partition.checkOverlap(partitions);
-		});
-		const results = await Promise.all(promises);
-		return results.some(_.identity);
 	}
 
 	async renderTranslatedContent(path: string, translationIds: string[]): Promise<string> {
