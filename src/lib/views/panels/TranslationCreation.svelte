@@ -63,23 +63,6 @@
 </script>
 
 <div class={props.class}>
-	<div>
-		<label class="">
-			<input type="checkbox" hidden />
-			<div class="max-h-40 overflow-y-auto [input[type=checkbox]:checked+&]:max-h-none">
-				{#if translated && original && !cx.locked}
-					<TranslationDiff original={await original} {translated} />
-				{:else}
-					<code class="text-xs leading-normal whitespace-pre-wrap">
-						{await original}
-					</code>
-				{/if}
-			</div>
-		</label>
-	</div>
-
-	<div class="divider"></div>
-
 	<form onsubmit={handleGenerateTranslation}>
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Generate translation from LLM</legend>
@@ -116,4 +99,16 @@
 			</button>
 		</fieldset>
 	</form>
+
+	<div class="divider"></div>
+
+	<div>
+		{#if translated && original && !cx.locked}
+			<TranslationDiff original={await original} {translated} />
+		{:else}
+			<code class="text-xs leading-normal whitespace-pre-wrap">
+				{await original}
+			</code>
+		{/if}
+	</div>
 </div>
