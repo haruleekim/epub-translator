@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { settled } from "svelte";
 	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
 	import IconDifferenceLeft from "virtual:icons/mdi/difference-left";
 	import IconEye from "virtual:icons/mdi/eye";
@@ -8,29 +7,15 @@
 	import IconSelectDrag from "virtual:icons/mdi/select-drag";
 	import IconSettings from "virtual:icons/mdi/settings";
 	import { resolve } from "$app/paths";
-	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
 	import { getWorkspaceContext } from "$lib/context.svelte";
 	import ProjectSettings from "$lib/views/panels/ProjectSettings.svelte";
 	import ResourceNavigation from "$lib/views/panels/ResourceNavigation.svelte";
 	import TranslationCreation from "$lib/views/panels/TranslationCreation.svelte";
 	import TranslationList from "$lib/views/panels/TranslationList.svelte";
 	import TranslationPreview from "$lib/views/viewers/TranslationPreview.svelte";
+	import PartitionSelection from "./viewers/PartitionSelection.svelte";
 
 	const cx = getWorkspaceContext();
-
-	const resource = $derived(cx.project.epub.getResource(cx.path));
-	const blob = $derived(resource ? resource.getBlob() : Promise.resolve(new Blob()));
-	const text = $derived(blob.then((blob) => blob.text()));
-
-	let viewer = $state<HTMLElement>();
-	$effect(() => {
-		let cancelled = false;
-		text.then(() => settled()).then(() => {
-			if (cancelled) return;
-			viewer?.scrollTo({ top: 0, left: 0 });
-		});
-		return () => (cancelled = true);
-	});
 
 	let panelWidth = $state(480);
 	let panelResizing = $state(false);
@@ -122,10 +107,8 @@
 		}}
 	></button>
 
-	<div id="viewer" bind:this={viewer} class="col-start-3 overflow-auto">
-		<ul
-			class="menu menu-horizontal absolute top-2 right-2 z-10 ml-auto flex justify-end menu-xs rounded-2xl bg-base-300/90"
-		>
+	<div id="viewer" class="col-start-3 overflow-auto">
+		<ul class="menu menu-horizontal absolute top-2 right-2 menu-xs rounded-2xl bg-base-300/90">
 			<li class:menu-disabled={cx.locked}>
 				<button
 					onclick={() => (cx.viewerMode = "select-partitions")}
@@ -147,17 +130,7 @@
 		</ul>
 		<div class="h-full w-full overflow-auto">
 			{#if cx.viewerMode === "select-partitions"}
-				<PartitionSelector
-					class="h-full w-full p-2"
-					html={await text}
-					translations={cx.project.activeTranslationsForPath(cx.path)}
-					transformUrl={resource?.resolveUrl}
-					partition={cx.partition}
-					onSelectionChange={(newPartition) => {
-						if (cx.locked) return;
-						cx.partition = newPartition;
-					}}
-				/>
+				<PartitionSelection class="h-full w-full" />
 			{:else if cx.viewerMode === "preview-translations"}
 				<TranslationPreview class="h-full w-full" />
 			{/if}
