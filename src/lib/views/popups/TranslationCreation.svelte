@@ -59,6 +59,7 @@
 		cx.project.activeTranslationIds.add(translationId);
 		cx.panelMode = "list-translations";
 		await cx.project.save();
+		cx.popup = null;
 	}
 </script>
 
@@ -95,9 +96,7 @@
 			></textarea>
 			<div class="label"></div>
 
-			<div class="divider my-2"></div>
-
-			<div class="text-xs">
+			<div class="my-2 border-y-2 border-base-200 py-2 text-xs">
 				{#if translated && original && !cx.locked}
 					<TranslationDiff original={await original} {translated} />
 				{:else}
@@ -106,8 +105,6 @@
 					</code>
 				{/if}
 			</div>
-
-			<div class="divider my-2"></div>
 
 			<button
 				class="btn btn-sm btn-primary"

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ClassValue } from "svelte/elements";
+	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
 	import IconChevronDown from "virtual:icons/mdi/chevron-down";
 	import IconChevronRight from "virtual:icons/mdi/chevron-right";
 	import IconTrashCan from "virtual:icons/mdi/trash-can";
@@ -33,6 +34,17 @@
 
 <div class={props.class}>
 	<ul class="list">
+		{#if cx.partition}
+			<li class="list-row">
+				<button
+					class="list-col-grow btn btn-outline btn-sm"
+					onclick={() => (cx.popup = { mode: "add-translation" })}
+				>
+					<IconAddCircleOutline class="size-4" />
+					Translation
+				</button>
+			</li>
+		{/if}
 		{#each translations as translation (translation.id)}
 			{@const { id, original, translated, createdAt } = translation}
 			<li class="list-row items-center gap-y-2 rounded-sm p-2">
