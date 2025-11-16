@@ -3,7 +3,7 @@
 	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
 	import IconChevronDown from "virtual:icons/mdi/chevron-down";
 	import IconChevronRight from "virtual:icons/mdi/chevron-right";
-	import IconTrashCan from "virtual:icons/mdi/trash-can";
+	import IconTrashCanOutline from "virtual:icons/mdi/trash-can-outline";
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
 	import { getWorkspaceContext } from "$lib/context.svelte";
 	import { Partition } from "$lib/core/dom";
@@ -67,7 +67,7 @@
 				</button>
 
 				<button
-					class="btn btn-circle btn-ghost btn-xs btn-error"
+					class="btn btn-circle btn-ghost btn-xs hover:btn-error"
 					onclick={async () => {
 						if (confirm("Are you sure you want to delete this translation?")) {
 							cx.project.removeTranslation(translation.id);
@@ -75,7 +75,7 @@
 						}
 					}}
 				>
-					<IconTrashCan class="size-4" />
+					<IconTrashCanOutline class="size-4" />
 				</button>
 
 				<input
