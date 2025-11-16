@@ -63,7 +63,7 @@
 		</a>
 		<div class="ml-4 flex items-center">
 			<button
-				class="btn btn-circle btn-soft btn-error"
+				class="btn btn-circle btn-soft hover:btn-error"
 				onclick={async () => {
 					if (confirm("Are you sure you want to delete this project?")) {
 						removeProject(project.id);
