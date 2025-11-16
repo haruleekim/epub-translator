@@ -40,46 +40,48 @@
 >
 	<div
 		id="panel"
-		class="relative col-start-1 flex flex-col overflow-auto bg-base-200"
+		class="relative col-start-1 flex flex-col overflow-x-auto bg-base-200/50 [scrollbar-width:none]"
 		class:pointer-events-none={panelResizing}
 	>
-		<a
-			aria-disabled={cx.locked}
-			href={resolve("/")}
-			class="btn absolute top-0 left-0 m-2 border-none btn-ghost btn-xs"
-		>
-			<IconArrowBack class="size-4" />
-		</a>
-		<ul class="menu menu-horizontal mx-auto flex menu-xs">
-			<li class:menu-disabled={cx.locked}>
-				<button
-					onclick={() => (cx.panelMode = "navigate-resources")}
-					disabled={cx.locked}
-					class:menu-active={cx.panelMode === "navigate-resources"}
-				>
-					<IconFileTreeOutline class="size-4" />
-				</button>
-			</li>
-			<li class:menu-disabled={cx.locked}>
-				<button
-					onclick={() => (cx.panelMode = "list-translations")}
-					disabled={cx.locked}
-					class:menu-active={cx.panelMode === "list-translations"}
-				>
-					<IconTranslate class="size-4" />
-				</button>
-			</li>
-			<li class:menu-disabled={cx.locked}>
-				<button
-					onclick={() => (cx.panelMode = "project-settings")}
-					disabled={cx.locked}
-					class:menu-active={cx.panelMode === "project-settings"}
-				>
-					<IconSettingsOutline class="size-4" />
-				</button>
-			</li>
-		</ul>
-		<div class="flex-1 overflow-x-auto overflow-y-scroll">
+		<div class="sticky top-0 left-0 z-1 bg-base-300/90 shadow-2xl backdrop-blur-2xl">
+			<a
+				aria-disabled={cx.locked}
+				href={resolve("/")}
+				class="btn absolute top-0 left-0 m-2 border-none btn-ghost btn-xs"
+			>
+				<IconArrowBack class="size-4" />
+			</a>
+			<ul class="menu menu-horizontal mx-auto flex menu-xs">
+				<li class:menu-disabled={cx.locked}>
+					<button
+						onclick={() => (cx.panelMode = "navigate-resources")}
+						disabled={cx.locked}
+						class:menu-active={cx.panelMode === "navigate-resources"}
+					>
+						<IconFileTreeOutline class="size-4" />
+					</button>
+				</li>
+				<li class:menu-disabled={cx.locked}>
+					<button
+						onclick={() => (cx.panelMode = "list-translations")}
+						disabled={cx.locked}
+						class:menu-active={cx.panelMode === "list-translations"}
+					>
+						<IconTranslate class="size-4" />
+					</button>
+				</li>
+				<li class:menu-disabled={cx.locked}>
+					<button
+						onclick={() => (cx.panelMode = "project-settings")}
+						disabled={cx.locked}
+						class:menu-active={cx.panelMode === "project-settings"}
+					>
+						<IconSettingsOutline class="size-4" />
+					</button>
+				</li>
+			</ul>
+		</div>
+		<div class="flex-1">
 			{#if cx.panelMode === "navigate-resources"}
 				<ResourceNavigation class="w-full" />
 			{:else if cx.panelMode === "list-translations"}
@@ -135,9 +137,9 @@
 				</button>
 			</li>
 		</ul>
-		<div class="h-full w-full overflow-auto">
+		<div class="h-full w-full overflow-auto [scrollbar-width:none]">
 			{#if cx.viewerMode === "select-partitions-preview" || cx.viewerMode === "select-partitions-markup"}
-				<PartitionSelection class="h-full w-full" />
+				<PartitionSelection />
 			{:else if cx.viewerMode === "preview-translations"}
 				<TranslationPreview class="h-full w-full" />
 			{/if}

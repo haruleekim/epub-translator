@@ -70,7 +70,7 @@
 			</button>
 
 			<div
-				class="tooltip tooltip-bottom text-xs [&:has(*:focus)]:tooltip-success [&:has(*:focus)]:before:content-['Copied!']"
+				class="tooltip text-xs [&:has(*:focus)]:tooltip-success [&:has(*:focus)]:before:content-['Copied!']"
 				data-tip="Copy Translated Text"
 			>
 				<button
@@ -83,7 +83,7 @@
 				</button>
 			</div>
 
-			<div class="tooltip tooltip-bottom text-xs" data-tip="Edit">
+			<div class="tooltip text-xs" data-tip="Edit">
 				<button
 					class="btn btn-circle btn-ghost btn-xs"
 					onclick={() => {
@@ -97,7 +97,7 @@
 				</button>
 			</div>
 
-			<div class="tooltip tooltip-bottom text-xs tooltip-error" data-tip="Delete">
+			<div class="tooltip text-xs tooltip-error" data-tip="Delete">
 				<button
 					class="btn btn-circle btn-ghost btn-xs hover:btn-error"
 					onclick={async () => {
