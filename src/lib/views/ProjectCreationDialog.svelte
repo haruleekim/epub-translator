@@ -105,7 +105,7 @@
 			<label class="contents">
 				<span class="label">Prompt</span>
 				<textarea
-					class="textarea field-sizing-content w-full resize-none textarea-xs"
+					class="textarea field-sizing-content w-full textarea-xs"
 					bind:this={defaultPromptInput}
 					name="default-prompt"
 					required

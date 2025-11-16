@@ -85,7 +85,7 @@
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Generate translation from LLM</legend>
 			<textarea
-				class="textarea field-sizing-content min-h-8 w-full resize-none textarea-xs"
+				class="textarea field-sizing-content min-h-8 w-full textarea-xs"
 				name="prompt"
 				placeholder="Additional prompt (optional)"
 				spellcheck={false}
@@ -104,7 +104,7 @@
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Translation</legend>
 			<textarea
-				class="textarea field-sizing-content w-full resize-none textarea-xs"
+				class="textarea field-sizing-content w-full textarea-xs"
 				placeholder="Enter translated text here..."
 				spellcheck={false}
 				required
