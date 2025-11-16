@@ -88,9 +88,9 @@
 				</button>
 			</li>
 		</ul>
-		<div class="overflow-auto">
+		<div class="overflow-x-auto overflow-y-scroll">
 			{#if cx.panelMode === "navigate-resources"}
-				<ResourceNavigation class="w-full overflow-auto" />
+				<ResourceNavigation class="w-full" />
 			{:else if cx.panelMode === "add-translation"}
 				<TranslationCreation class="p-2" />
 			{:else if cx.panelMode === "list-translations"}
