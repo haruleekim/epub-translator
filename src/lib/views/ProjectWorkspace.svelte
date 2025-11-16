@@ -1,9 +1,9 @@
 <script lang="ts">
 	import IconArrowBack from "virtual:icons/mdi/arrow-back";
 	import IconEyeOutline from "virtual:icons/mdi/eye-outline";
+	import IconFileTreeOutline from "virtual:icons/mdi/file-tree-outline";
 	import IconSelectDrag from "virtual:icons/mdi/select-drag";
 	import IconSettingsOutline from "virtual:icons/mdi/settings-outline";
-	import IconSitemapOutline from "virtual:icons/mdi/sitemap-outline";
 	import IconTranslate from "virtual:icons/mdi/translate";
 	import IconXml from "virtual:icons/mdi/xml";
 	import { resolve } from "$app/paths";
@@ -57,7 +57,7 @@
 					disabled={cx.locked}
 					class:menu-active={cx.panelMode === "navigate-resources"}
 				>
-					<IconSitemapOutline class="size-4" />
+					<IconFileTreeOutline class="size-4" />
 				</button>
 			</li>
 			<li class:menu-disabled={cx.locked}>
