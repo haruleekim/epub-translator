@@ -39,7 +39,11 @@
 	class="grid h-screen w-screen grid-cols-[var(--panel-width)_auto_1fr] overflow-auto"
 	style:--panel-width="{panelWidth}px"
 >
-	<div id="panel" class="col-start-1 flex flex-col overflow-auto bg-base-200">
+	<div
+		id="panel"
+		class="col-start-1 flex flex-col overflow-auto bg-base-200"
+		class:pointer-events-none={panelResizing}
+	>
 		<ul class="menu menu-horizontal mx-auto flex menu-xs">
 			<li class:menu-disabled={cx.locked}>
 				<!-- svelte-ignore a11y_no_redundant_roles -->
@@ -108,7 +112,7 @@
 		}}
 	></button>
 
-	<div id="viewer" class="col-start-3 overflow-auto">
+	<div id="viewer" class="col-start-3 overflow-auto" class:pointer-events-none={panelResizing}>
 		<ul class="menu menu-horizontal absolute top-2 right-2 menu-xs rounded-2xl bg-base-300/90">
 			<li class:menu-disabled={cx.locked}>
 				<button
