@@ -18,12 +18,12 @@ export class WorkspaceContext {
 	viewerMode: ViewerMode;
 	locked: boolean;
 
-	constructor(project: Project, path: string) {
+	constructor(project: Project, path: string, panelMode: PanelMode, viewerMode: ViewerMode) {
 		this.project = $state(project);
 		this.path = $state(path);
 		this.partition = $state(null);
-		this.panelMode = $state("navigate-resources");
-		this.viewerMode = $state("preview-translations");
+		this.panelMode = $state(panelMode);
+		this.viewerMode = $state(viewerMode);
 		this.locked = $state(false);
 	}
 }
