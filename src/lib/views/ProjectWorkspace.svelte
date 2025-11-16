@@ -79,7 +79,7 @@
 				</button>
 			</li>
 		</ul>
-		<div class="overflow-x-auto overflow-y-scroll">
+		<div class="flex-1 overflow-x-auto overflow-y-scroll">
 			{#if cx.panelMode === "navigate-resources"}
 				<ResourceNavigation class="w-full" />
 			{:else if cx.panelMode === "list-translations"}
