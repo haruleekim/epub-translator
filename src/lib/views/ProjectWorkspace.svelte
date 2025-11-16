@@ -1,11 +1,11 @@
 <script lang="ts">
-	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
-	import IconDifferenceLeft from "virtual:icons/mdi/difference-left";
-	import IconEye from "virtual:icons/mdi/eye";
-	import IconFormatListNumbered from "virtual:icons/mdi/format-list-numbered";
-	import IconHome from "virtual:icons/mdi/home";
+	import IconArrowBack from "virtual:icons/mdi/arrow-back";
+	import IconEyeOutline from "virtual:icons/mdi/eye-outline";
 	import IconSelectDrag from "virtual:icons/mdi/select-drag";
-	import IconSettings from "virtual:icons/mdi/settings";
+	import IconSettingsOutline from "virtual:icons/mdi/settings-outline";
+	import IconSitemapOutline from "virtual:icons/mdi/sitemap-outline";
+	import IconTextBoxOutline from "virtual:icons/mdi/text-box-outline";
+	import IconTranslate from "virtual:icons/mdi/translate";
 	import IconXml from "virtual:icons/mdi/xml";
 	import { resolve } from "$app/paths";
 	import { getWorkspaceContext } from "$lib/context.svelte";
@@ -41,23 +41,24 @@
 >
 	<div
 		id="panel"
-		class="col-start-1 flex flex-col overflow-auto bg-base-200"
+		class="relative col-start-1 flex flex-col overflow-auto bg-base-200"
 		class:pointer-events-none={panelResizing}
 	>
+		<a
+			aria-disabled={cx.locked}
+			href={resolve("/")}
+			class="btn absolute top-0 left-0 m-2 border-none btn-ghost btn-xs"
+		>
+			<IconArrowBack class="size-4" />
+		</a>
 		<ul class="menu menu-horizontal mx-auto flex menu-xs">
-			<li class:menu-disabled={cx.locked}>
-				<!-- svelte-ignore a11y_no_redundant_roles -->
-				<a role="link" aria-disabled={cx.locked} href={resolve("/")}>
-					<IconHome class="size-4" />
-				</a>
-			</li>
 			<li class:menu-disabled={cx.locked}>
 				<button
 					onclick={() => (cx.panelMode = "navigate-resources")}
 					disabled={cx.locked}
 					class:menu-active={cx.panelMode === "navigate-resources"}
 				>
-					<IconFormatListNumbered class="size-4" />
+					<IconSitemapOutline class="size-4" />
 				</button>
 			</li>
 			<li class:menu-disabled={cx.locked}>
@@ -66,7 +67,7 @@
 					disabled={cx.locked}
 					class:menu-active={cx.panelMode === "add-translation"}
 				>
-					<IconAddCircleOutline class="size-4" />
+					<IconTranslate class="size-4" />
 				</button>
 			</li>
 			<li class:menu-disabled={cx.locked}>
@@ -75,7 +76,7 @@
 					disabled={cx.locked}
 					class:menu-active={cx.panelMode === "list-translations"}
 				>
-					<IconDifferenceLeft class="size-4" />
+					<IconTextBoxOutline class="size-4" />
 				</button>
 			</li>
 			<li class:menu-disabled={cx.locked}>
@@ -84,7 +85,7 @@
 					disabled={cx.locked}
 					class:menu-active={cx.panelMode === "project-settings"}
 				>
-					<IconSettings class="size-4" />
+					<IconSettingsOutline class="size-4" />
 				</button>
 			</li>
 		</ul>
@@ -112,7 +113,11 @@
 		}}
 	></button>
 
-	<div id="viewer" class="col-start-3 overflow-auto" class:pointer-events-none={panelResizing}>
+	<div
+		id="viewer"
+		class="relative col-start-3 overflow-auto"
+		class:pointer-events-none={panelResizing}
+	>
 		<ul class="menu menu-horizontal absolute top-2 right-2 menu-xs rounded-2xl bg-base-300/90">
 			<li class:menu-disabled={cx.locked}>
 				<button
@@ -138,7 +143,7 @@
 					disabled={cx.locked}
 					class:menu-active={cx.viewerMode === "preview-translations"}
 				>
-					<IconEye class="size-4" />
+					<IconEyeOutline class="size-4" />
 				</button>
 			</li>
 		</ul>
