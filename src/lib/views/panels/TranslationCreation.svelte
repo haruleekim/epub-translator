@@ -62,7 +62,7 @@
 	}
 </script>
 
-<div class={props.class}>
+<div class={props.class} hidden={!cx.partition}>
 	<form onsubmit={handleGenerateTranslation}>
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Generate translation from LLM</legend>
@@ -94,6 +94,21 @@
 				bind:value={translated}
 			></textarea>
 			<div class="label"></div>
+
+			<div class="divider my-2"></div>
+
+			<div class="text-xs">
+				{#if translated && original && !cx.locked}
+					<TranslationDiff original={await original} {translated} />
+				{:else}
+					<code class="text-xs leading-normal whitespace-pre-wrap">
+						{await original}
+					</code>
+				{/if}
+			</div>
+
+			<div class="divider my-2"></div>
+
 			<button
 				class="btn btn-sm btn-primary"
 				type="submit"
@@ -103,16 +118,4 @@
 			</button>
 		</fieldset>
 	</form>
-
-	<div class="divider"></div>
-
-	<div>
-		{#if translated && original && !cx.locked}
-			<TranslationDiff original={await original} {translated} />
-		{:else}
-			<code class="text-xs leading-normal whitespace-pre-wrap">
-				{await original}
-			</code>
-		{/if}
-	</div>
 </div>
