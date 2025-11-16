@@ -8,7 +8,7 @@
 	import IconSelectDrag from "virtual:icons/mdi/select-drag";
 	import IconSettings from "virtual:icons/mdi/settings";
 	import { resolve } from "$app/paths";
-	import HtmlViewer from "$lib/components/HtmlViewer.svelte";
+	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
 	import { getWorkspaceContext } from "$lib/context.svelte";
 	import ProjectSettings from "$lib/views/panels/ProjectSettings.svelte";
 	import ResourceNavigation from "$lib/views/panels/ResourceNavigation.svelte";
@@ -147,7 +147,7 @@
 		</ul>
 		<div class="h-full w-full overflow-auto">
 			{#if cx.viewerMode === "select-partitions"}
-				<HtmlViewer
+				<PartitionSelector
 					class="h-full w-full p-2"
 					html={await text}
 					translations={cx.project.activeTranslationsForPath(cx.path)}

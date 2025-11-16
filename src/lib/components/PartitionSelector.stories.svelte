@@ -1,6 +1,6 @@
 <script lang="ts" module>
 	import { defineMeta } from "@storybook/addon-svelte-csf";
-	import HtmlViewer from "$lib/components/HtmlViewer.svelte";
+	import PartitionSelector from "$lib/components/PartitionSelector.svelte";
 	import { Partition } from "$lib/core/dom";
 	import Epub from "$lib/core/epub";
 	import sample from "$lib/data/sample.epub?url";
@@ -29,7 +29,7 @@
 	);
 
 	const { Story } = defineMeta({
-		component: HtmlViewer,
+		component: PartitionSelector,
 		args: {
 			html: text,
 			translations: project.translationsForPath(resource.path),
