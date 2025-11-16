@@ -3,6 +3,7 @@
 	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
 	import IconChevronDown from "virtual:icons/mdi/chevron-down";
 	import IconChevronRight from "virtual:icons/mdi/chevron-right";
+	import IconEditOutline from "virtual:icons/mdi/edit-outline";
 	import IconTrashCanOutline from "virtual:icons/mdi/trash-can-outline";
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
 	import { getWorkspaceContext } from "$lib/context.svelte";
@@ -14,7 +15,7 @@
 	const translations = $derived.by(() => {
 		let translations = cx.project
 			.translationsForPath(cx.path)
-			.toSorted((a, b) => Partition.totalOrderCompare(a.partition, b.partition));
+			.sort((a, b) => Partition.totalOrderCompare(a.partition, b.partition));
 		if (cx.partition) {
 			const partition = cx.partition;
 			translations = translations.filter((t) => !Partition.compare(t.partition, partition));
@@ -38,7 +39,12 @@
 			<li class="list-row">
 				<button
 					class="list-col-grow btn btn-outline btn-sm"
-					onclick={() => (cx.popup = { mode: "add-translation" })}
+					onclick={() => {
+						cx.popup = {
+							mode: "edit-translation",
+							translation: null,
+						};
+					}}
 				>
 					<IconAddCircleOutline class="size-4" />
 					Translation
@@ -53,9 +59,9 @@
 					onclick={() => (folds[id] = !folds[id])}
 				>
 					{#if folds[id]}
-						<IconChevronDown class="size-4" />
+						<IconChevronDown class="size-5" />
 					{:else}
-						<IconChevronRight class="size-4" />
+						<IconChevronRight class="size-5" />
 					{/if}
 				</button>
 
@@ -64,6 +70,18 @@
 					onclick={() => (folds[id] = !folds[id])}
 				>
 					{createdAt.toLocaleString()}
+				</button>
+
+				<button
+					class="btn btn-circle btn-ghost btn-xs"
+					onclick={() => {
+						cx.popup = {
+							mode: "edit-translation",
+							translation,
+						};
+					}}
+				>
+					<IconEditOutline class="size-4" />
 				</button>
 
 				<button
@@ -93,7 +111,7 @@
 				/>
 
 				{#if folds[id]}
-					<div class="col-span-4 col-start-1 row-start-2 rounded bg-base-200 p-1 text-xs">
+					<div class="col-span-5 col-start-1 row-start-2 rounded bg-base-200 p-1 text-xs">
 						<svelte:boundary>
 							<TranslationDiff class="w-full" {original} {translated} />
 							{#snippet pending()}

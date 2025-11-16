@@ -11,7 +11,7 @@
 	import ProjectSettings from "$lib/views/panels/ProjectSettings.svelte";
 	import ResourceNavigation from "$lib/views/panels/ResourceNavigation.svelte";
 	import TranslationList from "$lib/views/panels/TranslationList.svelte";
-	import TranslationCreation from "$lib/views/popups/TranslationCreation.svelte";
+	import TranslationEditor from "$lib/views/popups/TranslationEditor.svelte";
 	import TranslationPreview from "$lib/views/viewers/TranslationPreview.svelte";
 	import PartitionSelection from "./viewers/PartitionSelection.svelte";
 
@@ -151,8 +151,8 @@
 			class="btn absolute top-2 right-2 btn-circle btn-ghost btn-xs"
 			onclick={() => (cx.popup = null)}>✕</button
 		>
-		{#if cx.popup?.mode === "add-translation"}
-			<TranslationCreation />
+		{#if cx.popup?.mode === "edit-translation"}
+			<TranslationEditor />
 		{/if}
 	</div>
 </dialog>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { SSE } from "sse.js";
 	import type { ClassValue } from "svelte/elements";
+	import { fade } from "svelte/transition";
 	import { resolve } from "$app/paths";
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
 	import { getWorkspaceContext } from "$lib/context.svelte";
@@ -8,8 +9,20 @@
 	const props: { class?: ClassValue | null } = $props();
 	const cx = getWorkspaceContext();
 
-	const original = $derived(cx.partition && cx.project.getOriginalContent(cx.path, cx.partition));
-	let translated = $state("");
+	const translation = $derived.by(() => {
+		if (cx.popup?.mode !== "edit-translation") return null;
+		return cx.popup.translation;
+	});
+
+	const original = $derived.by(() => {
+		if (translation) return translation.original;
+		return cx.partition && cx.project.getOriginalContent(cx.path, cx.partition);
+	});
+
+	let translated = $derived.by(() => {
+		if (translation) return translation.translated;
+		return "";
+	});
 
 	async function handleGenerateTranslation(this: HTMLFormElement, event: SubmitEvent) {
 		event.preventDefault();
@@ -46,24 +59,28 @@
 		}
 	}
 
-	async function handleAddTranslation(this: HTMLFormElement, event: SubmitEvent) {
+	async function handleConfirm(this: HTMLFormElement, event: SubmitEvent) {
 		event.preventDefault();
-		if (!translated) return;
-		if (!cx.partition) return;
-		const translationId = cx.project.addTranslation(
-			cx.path,
-			cx.partition,
-			await cx.project.getOriginalContent(cx.path, cx.partition),
-			translated,
-		);
-		cx.project.activeTranslationIds.add(translationId);
+		if (translation) {
+			cx.project.updateTranslation(translation.id, translated);
+		} else {
+			if (!translated) return;
+			if (!cx.partition) return;
+			const translationId = cx.project.addTranslation(
+				cx.path,
+				cx.partition,
+				await cx.project.getOriginalContent(cx.path, cx.partition),
+				translated,
+			);
+			cx.project.activeTranslationIds.add(translationId);
+		}
 		cx.panelMode = "list-translations";
 		await cx.project.save();
 		cx.popup = null;
 	}
 </script>
 
-<div class={props.class} hidden={!cx.partition}>
+<div class={props.class} transition:fade>
 	<form onsubmit={handleGenerateTranslation}>
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Generate translation from LLM</legend>
@@ -83,7 +100,7 @@
 		</fieldset>
 	</form>
 
-	<form onsubmit={handleAddTranslation}>
+	<form onsubmit={handleConfirm}>
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Translation</legend>
 			<textarea
@@ -111,7 +128,11 @@
 				type="submit"
 				disabled={cx.locked || !original || !translated}
 			>
-				Add Translation
+				{#if translation}
+					Save Changes
+				{:else}
+					Add Translation
+				{/if}
 			</button>
 		</fieldset>
 	</form>

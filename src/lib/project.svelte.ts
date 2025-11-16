@@ -49,6 +49,7 @@ export default class Project {
 		this.activeTranslationIds = new SvelteSet(activeTranslationIds);
 		this.defaultPrompt = $state(defaultPrompt);
 
+		// Only shallow modifications can be detected.
 		this.#dirty = $derived.by(() => {
 			[
 				this.id,
@@ -60,6 +61,7 @@ export default class Project {
 			];
 			return true;
 		});
+		this.#dirty = false;
 	}
 
 	static create(epub: Epub, defaultPrompt: string) {
@@ -100,10 +102,7 @@ export default class Project {
 	}
 
 	async save(): Promise<void> {
-		if (this.#dirty) {
-			this.#dirty = false;
-			await saveProject(this);
-		}
+		await saveProject(this);
 	}
 
 	get dirty(): boolean {
@@ -145,6 +144,15 @@ export default class Project {
 		this.translations.delete(id);
 		this.activeTranslationIds.delete(id);
 		this.#translationIdToPath.delete(id);
+	}
+
+	updateTranslation(id: string, translated: string): Translation {
+		const translation = this.translations.get(id);
+		if (!translation) throw new Error(`Translation not found: ${id}`);
+		translation.translated = translated;
+		translation.createdAt = new Date();
+		this.translations.set(id, { ...translation });
+		return translation;
 	}
 
 	#recalculateIndices() {
