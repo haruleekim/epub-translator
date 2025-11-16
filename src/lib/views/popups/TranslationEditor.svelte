@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { SSE } from "sse.js";
+	import { cubicOut } from "svelte/easing";
 	import type { ClassValue } from "svelte/elements";
 	import { fade } from "svelte/transition";
 	import { resolve } from "$app/paths";
@@ -80,7 +81,7 @@
 	}
 </script>
 
-<div class={props.class} transition:fade>
+<div class={props.class} out:fade>
 	<form onsubmit={handleGenerateTranslation}>
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Generate translation from LLM</legend>
