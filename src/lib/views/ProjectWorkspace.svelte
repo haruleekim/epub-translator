@@ -9,18 +9,14 @@
 	import IconSettings from "virtual:icons/mdi/settings";
 	import { resolve } from "$app/paths";
 	import HtmlViewer from "$lib/components/HtmlViewer.svelte";
-	import { setWorkspaceContext, WorkspaceContext } from "$lib/context.svelte";
-	import Project from "$lib/project.svelte";
+	import { getWorkspaceContext } from "$lib/context.svelte";
 	import ProjectSettings from "$lib/views/panels/ProjectSettings.svelte";
 	import ResourceNavigation from "$lib/views/panels/ResourceNavigation.svelte";
 	import TranslationCreation from "$lib/views/panels/TranslationCreation.svelte";
 	import TranslationList from "$lib/views/panels/TranslationList.svelte";
 	import TranslationPreview from "$lib/views/viewers/TranslationPreview.svelte";
 
-	const props: { project: Project; path: string } = $props();
-
-	const cx = $state(new WorkspaceContext(props.project, props.path));
-	setWorkspaceContext(cx);
+	const cx = getWorkspaceContext();
 
 	const resource = $derived(cx.project.epub.getResource(cx.path));
 	const blob = $derived(resource ? resource.getBlob() : Promise.resolve(new Blob()));
