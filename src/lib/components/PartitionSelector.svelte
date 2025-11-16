@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ClassValue } from "svelte/elements";
-	import { Dom, NodeId, Partition } from "$lib/core/dom";
+	import { Dom, NodeId, Partition, type Token } from "$lib/core/dom";
 	import type { Translation } from "$lib/translation";
 	import type { AnyNode, Element, NodeWithChildren, Text } from "$lib/utils/virtual-dom";
 	import DynamicElement from "./DynamicElement.svelte";
@@ -11,6 +11,7 @@
 		partition,
 		onSelectionChange,
 		transformUrl,
+		mode = "preview",
 		class: classValue,
 	}: {
 		html: string;
@@ -18,6 +19,7 @@
 		partition?: Partition | null;
 		onSelectionChange?: (partition: Partition | null) => void;
 		transformUrl?: (url: string) => string | Promise<string>;
+		mode?: "preview" | "markup";
 		class?: ClassValue | null;
 	} = $props();
 
@@ -92,10 +94,42 @@
 <div
 	onpointerdown={handlePointerDown}
 	onpointerup={handlePointerUp}
-	class={["prose max-w-none text-xs select-none", classValue]}
+	class={["max-w-none text-xs select-none", classValue]}
 >
-	{@render tree((await dom).root, NodeId.root())}
+	{#if mode === "markup"}
+		<code class="whitespace-pre-wrap">
+			{@render tagTokens((await dom).tokenize())}
+		</code>
+	{:else if mode === "preview"}
+		<div class="prose text-xs">
+			{@render tree((await dom).root, NodeId.root())}
+		</div>
+	{/if}
 </div>
+
+{#snippet tagTokens(tokens: Token[])}
+	{#each tokens as { node, nodeId, content, close } (`${nodeId}${close ? "!" : ""}`)}
+		{@const selected = partition?.contains(nodeId) ?? false}
+		{@const translationCount = translations
+			.map((t) => t.partition)
+			.filter((p) => p.contains(nodeId)).length}
+		<span
+			data-node-id={nodeId}
+			data-node-type="text"
+			data-selected={selected || undefined}
+			onpointerenter={handlePointerEnter}
+			class={[
+				"p-0.5 data-selected:bg-accent data-selected:text-accent-content",
+				node.type !== "text" && "text-base-content/40",
+				translationCount === 0 && "hover:text-accent",
+				translationCount === 1 && "bg-primary text-primary-content",
+				translationCount > 1 && "bg-error text-error-content",
+			]}
+		>
+			{content}
+		</span>
+	{/each}
+{/snippet}
 
 {#snippet tree(node: AnyNode, nodeId: NodeId)}
 	{@const selected = partition?.contains(nodeId) ?? false}

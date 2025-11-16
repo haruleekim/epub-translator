@@ -8,7 +8,10 @@ export type PanelMode =
 	| "list-translations"
 	| "project-settings";
 
-export type ViewerMode = "select-partitions" | "preview-translations";
+export type ViewerMode =
+	| "select-partitions-preview"
+	| "select-partitions-markup"
+	| "preview-translations";
 
 export class WorkspaceContext {
 	project: Project;

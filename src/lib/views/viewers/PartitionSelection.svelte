@@ -25,6 +25,7 @@
 <div class={["overflow-auto p-2", props.class]} bind:this={container}>
 	<PartitionSelector
 		class="h-full w-full"
+		mode={cx.viewerMode === "select-partitions-markup" ? "markup" : "preview"}
 		html={await text}
 		translations={cx.project.activeTranslationsForPath(cx.path)}
 		transformUrl={resource?.resolveUrl}

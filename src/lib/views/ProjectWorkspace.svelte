@@ -6,6 +6,7 @@
 	import IconHome from "virtual:icons/mdi/home";
 	import IconSelectDrag from "virtual:icons/mdi/select-drag";
 	import IconSettings from "virtual:icons/mdi/settings";
+	import IconXml from "virtual:icons/mdi/xml";
 	import { resolve } from "$app/paths";
 	import { getWorkspaceContext } from "$lib/context.svelte";
 	import ProjectSettings from "$lib/views/panels/ProjectSettings.svelte";
@@ -111,11 +112,20 @@
 		<ul class="menu menu-horizontal absolute top-2 right-2 menu-xs rounded-2xl bg-base-300/90">
 			<li class:menu-disabled={cx.locked}>
 				<button
-					onclick={() => (cx.viewerMode = "select-partitions")}
+					onclick={() => (cx.viewerMode = "select-partitions-preview")}
 					disabled={cx.locked}
-					class:menu-active={cx.viewerMode === "select-partitions"}
+					class:menu-active={cx.viewerMode === "select-partitions-preview"}
 				>
 					<IconSelectDrag class="size-4" />
+				</button>
+			</li>
+			<li class:menu-disabled={cx.locked}>
+				<button
+					onclick={() => (cx.viewerMode = "select-partitions-markup")}
+					disabled={cx.locked}
+					class:menu-active={cx.viewerMode === "select-partitions-markup"}
+				>
+					<IconXml class="size-4" />
 				</button>
 			</li>
 			<li class:menu-disabled={cx.locked}>
@@ -129,7 +139,7 @@
 			</li>
 		</ul>
 		<div class="h-full w-full overflow-auto">
-			{#if cx.viewerMode === "select-partitions"}
+			{#if cx.viewerMode === "select-partitions-preview" || cx.viewerMode === "select-partitions-markup"}
 				<PartitionSelection class="h-full w-full" />
 			{:else if cx.viewerMode === "preview-translations"}
 				<TranslationPreview class="h-full w-full" />

@@ -13,7 +13,7 @@ export async function load({ params, url }) {
 	if (!panelMode) panelMode = "navigate-resources";
 
 	let viewerMode = url.searchParams.get("viewer") as ViewerMode | null;
-	if (!viewerMode) viewerMode = "select-partitions";
+	if (!viewerMode) viewerMode = "select-partitions-preview";
 
 	return { url, project, path, panelMode, viewerMode };
 }
