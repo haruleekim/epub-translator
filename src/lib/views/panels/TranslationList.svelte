@@ -3,6 +3,7 @@
 	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
 	import IconChevronDown from "virtual:icons/mdi/chevron-down";
 	import IconChevronRight from "virtual:icons/mdi/chevron-right";
+	import IconClipboardOutline from "virtual:icons/mdi/clipboard-outline";
 	import IconEditOutline from "virtual:icons/mdi/edit-outline";
 	import IconTrashCanOutline from "virtual:icons/mdi/trash-can-outline";
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
@@ -72,46 +73,66 @@
 					{createdAt.toLocaleString()}
 				</button>
 
-				<button
-					class="btn btn-circle btn-ghost btn-xs"
-					onclick={() => {
-						cx.popup = {
-							mode: "edit-translation",
-							translation,
-						};
-					}}
+				<div
+					class="tooltip text-xs [&:has(*:focus)]:tooltip-success [&:has(*:focus)]:before:content-['Copied!']"
+					data-tip="Copy Translated Text"
 				>
-					<IconEditOutline class="size-4" />
-				</button>
+					<button
+						class="btn btn-circle btn-ghost btn-xs focus:btn-success"
+						onclick={async () => {
+							await navigator.clipboard.writeText(translated);
+						}}
+					>
+						<IconClipboardOutline class="size-4" />
+					</button>
+				</div>
 
-				<button
-					class="btn btn-circle btn-ghost btn-xs hover:btn-error"
-					onclick={async () => {
-						if (confirm("Are you sure you want to delete this translation?")) {
-							cx.project.removeTranslation(translation.id);
+				<div class="tooltip text-xs" data-tip="Edit">
+					<button
+						class="btn btn-circle btn-ghost btn-xs"
+						onclick={() => {
+							cx.popup = {
+								mode: "edit-translation",
+								translation,
+							};
+						}}
+					>
+						<IconEditOutline class="size-4" />
+					</button>
+				</div>
+
+				<div class="tooltip text-xs tooltip-error" data-tip="Delete">
+					<button
+						class="btn btn-circle btn-ghost btn-xs hover:btn-error"
+						onclick={async () => {
+							if (confirm("Are you sure you want to delete this translation?")) {
+								cx.project.removeTranslation(translation.id);
+								await cx.project.save();
+							}
+						}}
+					>
+						<IconTrashCanOutline class="size-4" />
+					</button>
+				</div>
+
+				<div class="tooltip tooltip-left text-xs" data-tip="Toggle Active">
+					<input
+						class="checkbox checkbox-xs"
+						type="checkbox"
+						checked={cx.project.activeTranslationIds.has(id)}
+						onchange={async (event) => {
+							if (event.currentTarget.checked) {
+								cx.project.activeTranslationIds.add(id);
+							} else {
+								cx.project.activeTranslationIds.delete(id);
+							}
 							await cx.project.save();
-						}
-					}}
-				>
-					<IconTrashCanOutline class="size-4" />
-				</button>
-
-				<input
-					class="checkbox checkbox-xs"
-					type="checkbox"
-					checked={cx.project.activeTranslationIds.has(id)}
-					onchange={async (event) => {
-						if (event.currentTarget.checked) {
-							cx.project.activeTranslationIds.add(id);
-						} else {
-							cx.project.activeTranslationIds.delete(id);
-						}
-						await cx.project.save();
-					}}
-				/>
+						}}
+					/>
+				</div>
 
 				{#if folds[id]}
-					<div class="col-span-5 col-start-1 row-start-2 rounded bg-base-200 p-1 text-xs">
+					<div class="col-span-6 col-start-1 row-start-2 rounded bg-base-200 p-1 text-xs">
 						<svelte:boundary>
 							<TranslationDiff class="w-full" {original} {translated} />
 							{#snippet pending()}
