@@ -230,7 +230,7 @@ test("substitute content", async () => {
 	expect(() => dom.substituteAll([tr0, tr1, tr2, tr3])).toThrow();
 });
 
-test("substitute content", async () => {
+test("substitute content by merging", async () => {
 	const dom = Dom.load(sampleDoc);
 	const tr0 = {
 		partition: new Partition(new NodeId([2, 0])),

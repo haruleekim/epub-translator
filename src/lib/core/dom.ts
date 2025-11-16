@@ -126,6 +126,35 @@ export class Partition {
 		return this.size === other.size && this.offset.equals(other.offset);
 	}
 
+	static covering(start: NodeId, end: NodeId): Partition {
+		const commonAncestor = NodeId.commonAncestor(start, end);
+		const ordering = NodeId.compare(start, end);
+		if (ordering) {
+			let [s, e] = ordering < 0 ? [start, end] : [end, start];
+			while (s.length > commonAncestor.length + 1) s = s.parent!;
+			while (e.length > commonAncestor.length + 1) e = e.parent!;
+			let [offset, size] = [s, 1];
+			while (NodeId.compare(s, e) && size++) s = s.sibling(1)!;
+			return new Partition(offset, size);
+		} else {
+			return new Partition(commonAncestor);
+		}
+	}
+
+	static coveringAll(partitions: Partition[]): Partition {
+		if (partitions.length === 0) throw new Error("No partitions to cover");
+		let first = partitions[0].first;
+		let last = partitions[0].last;
+		for (let i = 1; i < partitions.length; i++) {
+			const p = partitions[i];
+			const firstOrd = NodeId.compare(p.first, first);
+			const lastOrd = NodeId.compare(p.last, last);
+			if (firstOrd < 0 || (!firstOrd && p.first.length < first.length)) first = p.first;
+			if (lastOrd > 0 || (!lastOrd && p.last.length < last.length)) last = p.last;
+		}
+		return Partition.covering(first, last);
+	}
+
 	static checkOverlap(partitions: Partition[], skipSort: boolean = false): boolean {
 		if (!skipSort) partitions = partitions.toSorted(Partition.totalOrderCompare);
 		for (let i = 0; i < partitions.length - 1; i++) {

@@ -29,21 +29,8 @@
 	let end = $state<string | null>(partition?.last.toString() ?? null);
 
 	function updatePartition(): void {
-		let partition: Partition | undefined;
-		if (!start || !end) return (partition = void onSelectionChange?.(null));
-		const [startId, endId] = [NodeId.parse(start), NodeId.parse(end)];
-		const commonAncestor = NodeId.commonAncestor(startId, endId);
-		const ordering = NodeId.compare(startId, endId);
-		if (ordering) {
-			let [s, e] = ordering < 0 ? [startId, endId] : [endId, startId];
-			while (s.length > commonAncestor.length + 1) s = s.parent!;
-			while (e.length > commonAncestor.length + 1) e = e.parent!;
-			let [offset, size] = [s, 1];
-			while (NodeId.compare(s, e) && size++) s = s.sibling(1)!;
-			partition = new Partition(offset, size);
-		} else {
-			partition = new Partition(commonAncestor);
-		}
+		if (!start || !end) return void onSelectionChange?.(null);
+		const partition = Partition.covering(NodeId.parse(start), NodeId.parse(end));
 		onSelectionChange?.(partition);
 	}
 
