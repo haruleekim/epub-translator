@@ -127,7 +127,7 @@ export class Partition {
 	}
 
 	static checkOverlap(partitions: Partition[], skipSort: boolean = false): boolean {
-		if (!skipSort) partitions = [...partitions].sort(Partition.totalOrderCompare);
+		if (!skipSort) partitions = partitions.toSorted(Partition.totalOrderCompare);
 		for (let i = 0; i < partitions.length - 1; i++) {
 			const a = partitions[i];
 			const b = partitions[i + 1];
@@ -231,6 +231,30 @@ export class Dom {
 				result += this.text.slice(node.startIndex!, node.endIndex! + 1);
 				nodeId = nodeId.sibling(1);
 				node = node.next ?? node;
+			}
+		}
+
+		return result;
+	}
+
+	// TODO: Optimize to avoid multiple DOM parsing
+	async substituteAllMerged(
+		substitutions: { partition: Partition; content: string }[],
+	): Promise<string> {
+		const groups = _.groupBy(substitutions, (tr) => tr.partition.size);
+		const sizes = Object.keys(groups)
+			.map(Number)
+			.sort((a, b) => b - a);
+
+		let result = this.text;
+		let dom = this as Dom;
+		for (const size of sizes) {
+			const group = groups[size];
+			try {
+				result = dom.substituteAll(group);
+				dom = await Dom.loadAsync(result);
+			} catch (error) {
+				throw new Error("Cannot merge partitions", { cause: error });
 			}
 		}
 

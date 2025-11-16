@@ -7,7 +7,7 @@
 	const cx = getWorkspaceContext();
 
 	const translated = $derived(
-		cx.project.renderTranslatedContent(
+		cx.project.renderTranslations(
 			cx.path,
 			cx.project.activeTranslationIds.values().toArray(),
 		),

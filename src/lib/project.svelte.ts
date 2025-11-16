@@ -114,7 +114,7 @@ export default class Project {
 		const groups = _.groupBy(Array.from(this.translations.values()), (tr) => tr.path);
 		const promises = Object.entries(groups).map(async ([path, translations]) => {
 			const translationIds = translations.map((t) => t.id);
-			const translated = await this.renderTranslatedContent(path, translationIds);
+			const translated = await this.renderTranslations(path, translationIds);
 			container.file(path, translated);
 		});
 		await Promise.all(promises);
@@ -202,7 +202,7 @@ export default class Project {
 		return dom.extractContent(arg);
 	}
 
-	async renderTranslatedContent(path: string, translationIds: string[]): Promise<string> {
+	async renderTranslations(path: string, translationIds: string[]): Promise<string> {
 		const dom = await this.#getDom(path);
 		translationIds = translationIds.filter((id) => this.#translationIdToPath.get(id) === path);
 		const translations = translationIds.map((id) => {
