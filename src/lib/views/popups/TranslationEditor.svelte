@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { SSE } from "sse.js";
-	import { cubicOut } from "svelte/easing";
 	import type { ClassValue } from "svelte/elements";
 	import { fade } from "svelte/transition";
 	import { resolve } from "$app/paths";
