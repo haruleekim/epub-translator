@@ -35,7 +35,7 @@
 	<ul class="list">
 		{#each translations as translation (translation.id)}
 			{@const { id, original, translated, createdAt } = translation}
-			<li class="list-row items-center rounded-sm p-2">
+			<li class="list-row items-center gap-y-2 rounded-sm p-2">
 				<button
 					class="h-full hover:cursor-pointer"
 					onclick={() => (folds[id] = !folds[id])}
@@ -81,7 +81,7 @@
 				/>
 
 				{#if folds[id]}
-					<div class="col-span-4 col-start-1 row-start-2 rounded bg-base-200 p-2">
+					<div class="col-span-4 col-start-1 row-start-2 rounded bg-base-200 p-1 text-xs">
 						<svelte:boundary>
 							<TranslationDiff class="w-full" {original} {translated} />
 							{#snippet pending()}

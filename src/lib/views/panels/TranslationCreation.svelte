@@ -67,12 +67,16 @@
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Generate translation from LLM</legend>
 			<textarea
-				class="textarea field-sizing-content w-full resize-none textarea-xs"
+				class="textarea field-sizing-content min-h-8 w-full resize-none textarea-xs"
 				name="prompt"
 				placeholder="Additional prompt (optional)"
 				spellcheck={false}
 			></textarea>
-			<button type="submit" class="btn ml-auto flex btn-xs" disabled={cx.locked || !original}>
+			<button
+				type="submit"
+				class="btn ml-auto flex btn-soft btn-xs"
+				disabled={cx.locked || !original}
+			>
 				Generate
 			</button>
 		</fieldset>
@@ -83,7 +87,7 @@
 			<legend class="fieldset-legend">Translation</legend>
 			<textarea
 				class="textarea field-sizing-content w-full resize-none textarea-xs"
-				placeholder="Translation"
+				placeholder="Enter translated text here..."
 				spellcheck={false}
 				required
 				disabled={cx.locked}
