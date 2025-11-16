@@ -172,9 +172,9 @@ export default class Project {
 		);
 	}
 
-	async checkOverlaps(translationIds: string[]): Promise<boolean> {
+	checkOverlaps(translationIds: string[]): boolean {
 		const grouped = _.groupBy(translationIds, (id) => this.#translationIdToPath.get(id));
-		const promises = Object.entries(grouped).map(async ([, ids]) => {
+		const results = Object.entries(grouped).map(([, ids]) => {
 			const partitions = ids.map((id) => {
 				const translation = this.translations.get(id);
 				if (!translation) throw new Error(`Translation not found: ${id}`);
@@ -182,7 +182,6 @@ export default class Project {
 			});
 			return Partition.checkOverlap(partitions);
 		});
-		const results = await Promise.all(promises);
 		return results.some(_.identity);
 	}
 

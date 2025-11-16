@@ -22,4 +22,7 @@
 	});
 </script>
 
-<Story name="Default" />
+<Story name="Default" args={{ meta }} />
+{#snippet meta(path: string)}
+	{path.length}
+{/snippet}

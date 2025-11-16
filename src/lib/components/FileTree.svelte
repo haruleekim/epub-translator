@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from "svelte";
 	import type { ClassValue } from "svelte/elements";
 	import IconFileOutline from "virtual:icons/mdi/file-outline";
 	import IconFolderOutline from "virtual:icons/mdi/folder-outline";
@@ -8,9 +9,10 @@
 		paths?: readonly string[];
 		onSelect?: (path: string) => void;
 		defaultOpen?: boolean;
+		meta?: Snippet<[string]>;
 		class?: ClassValue | null | undefined;
 	}
-	const { activePath, paths, onSelect, defaultOpen, class: classValue }: Props = $props();
+	const { activePath, paths, onSelect, defaultOpen, meta, class: classValue }: Props = $props();
 
 	interface Tree {
 		path: string;
@@ -66,7 +68,7 @@
 		<details open={defaultOpen}>
 			<summary class="text-nowrap">
 				<IconFolderOutline class="size-4" />
-				{name}
+				<span>{name}</span>
 			</summary>
 			<ul>
 				{#each Object.entries(tree.children) as [segment, subtree] (segment)}
@@ -82,7 +84,9 @@
 			class={["text-nowrap", { "menu-active": activePath === tree.path }]}
 		>
 			<IconFileOutline class="size-4" />
-			{name}
+			<span>{name}</span>
+			<span>{@render meta?.(tree.path)}</span>
+			<span></span>
 		</button>
 	{/if}
 {/snippet}

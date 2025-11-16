@@ -17,4 +17,18 @@
 		cx.partition = null;
 		cx.panelMode = "navigate-resources";
 	}}
-/>
+>
+	{#snippet meta(path)}
+		{@const translations = cx.project.translationsForPath(path)}
+		{@const overlapping = cx.project.checkOverlaps(translations.map((t) => t.id))}
+		<span
+			class={[
+				"badge rounded-full badge-xs",
+				overlapping && "badge-error",
+				!overlapping && translations.length > 0 && "badge-success",
+			]}
+		>
+			{translations.length}
+		</span>
+	{/snippet}
+</FileTree>
