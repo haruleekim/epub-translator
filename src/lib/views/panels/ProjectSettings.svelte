@@ -5,7 +5,7 @@
 	const props: { class?: ClassValue | null } = $props();
 	const cx = getWorkspaceContext();
 
-	let exportErrorMessage = $state<string>();
+	let downloadErrorMessage = $state<string>();
 </script>
 
 <div class={props.class}>
@@ -22,13 +22,13 @@
 					a.click();
 					URL.revokeObjectURL(url);
 				} catch (error) {
-					exportErrorMessage = error instanceof Error ? error.message : String(error);
+					downloadErrorMessage = error instanceof Error ? error.message : String(error);
 				}
 			}}
 		>
-			Export translated EPUB
+			Download translated EPUB
 		</button>
-		<p class="label text-xs text-error">{exportErrorMessage}</p>
+		<p class="label text-xs text-error">{downloadErrorMessage}</p>
 	</fieldset>
 
 	<form
