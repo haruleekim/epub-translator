@@ -14,14 +14,9 @@
 	const cx = getWorkspaceContext();
 
 	const translations = $derived.by(() => {
-		let translations = cx.project
+		return cx.project
 			.translationsForPath(cx.path)
 			.sort((a, b) => Partition.totalOrderCompare(a.partition, b.partition));
-		if (cx.partition) {
-			const partition = cx.partition;
-			translations = translations.filter((t) => !Partition.compare(t.partition, partition));
-		}
-		return translations;
 	});
 
 	const folds = $state<Record<string, boolean>>({});
@@ -81,8 +76,14 @@
 	</li>
 
 	{#each translations as translation (translation.id)}
-		{@const { id, original, translated, createdAt } = translation}
-		<li class="list-row items-center gap-y-2 rounded-sm p-2" transition:slide>
+		{@const { id, original, translated, createdAt, partition } = translation}
+		<li
+			class={[
+				"list-row items-center gap-y-2 rounded-sm p-2",
+				cx.partition && !Partition.compare(partition, cx.partition) && "bg-base-200",
+			]}
+			transition:slide
+		>
 			<input class="checkbox checkbox-xs" type="checkbox" bind:checked={checks[id]} />
 
 			<button
@@ -149,7 +150,7 @@
 			/>
 
 			{#if folds[id]}
-				<div class="col-span-6 col-start-1 row-start-2 rounded bg-base-200 p-1 text-xs">
+				<div class="col-span-6 col-start-1 row-start-2 rounded p-1 text-xs">
 					<svelte:boundary>
 						<TranslationDiff class="w-full" {original} {translated} />
 						{#snippet pending()}

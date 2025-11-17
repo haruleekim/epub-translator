@@ -218,6 +218,7 @@ export default class Project {
 	async mergeTranslations(path: string, translationIds: string[]): Promise<Substitution> {
 		const dom = await this.#getDom(path);
 		translationIds = translationIds.filter((id) => this.#translationIdToPath.get(id) === path);
+		console.log(translationIds);
 		const translations = translationIds.map((id) => {
 			const translation = this.translations.get(id);
 			if (!translation) throw new Error(`Translation not found: ${id}`);
