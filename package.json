@@ -6,10 +6,12 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "vite preview",
+		"preview": "pnpm run build && wrangler dev",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"deploy": "pnpm run build && wrangler deploy",
+		"cf-typegen": "wrangler types ./src/worker-configuration.d.ts",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"test:unit": "vitest",
@@ -56,7 +58,8 @@
 		"unplugin-icons": "^22.5.0",
 		"vite": "^7.2.2",
 		"vitest": "^3.2.4",
-		"vitest-browser-svelte": "^1.1.0"
+		"vitest-browser-svelte": "^1.1.0",
+		"wrangler": "^4.47.0"
 	},
 	"dependencies": {
 		"css-select": "^6.0.0",

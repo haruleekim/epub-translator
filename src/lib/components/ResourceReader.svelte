@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ClassValue } from "svelte/elements";
 	import { Dom } from "$lib/core/dom";
-	import * as vdom from "$lib/utils/virtual-dom";
+	import { render } from "$lib/utils/virtual-dom";
 
 	type Props = {
 		data: Blob | string;
@@ -53,7 +53,7 @@
 		});
 		await Promise.all(promises);
 
-		return vdom.render(doc, DOM_OPTIONS);
+		return render(doc, DOM_OPTIONS);
 	});
 </script>
 

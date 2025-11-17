@@ -1,9 +1,23 @@
 import { Document } from "domhandler";
 import { createDocumentStream, type Options } from "htmlparser2";
 
-export * from "domhandler";
-export * from "htmlparser2";
-export * from "dom-serializer";
+export {
+	type AnyNode,
+	Document,
+	Element,
+	Text,
+	NodeWithChildren,
+	type ChildNode,
+	CDATA,
+	Comment,
+	DataNode,
+	DomHandler,
+	type DomHandlerOptions,
+	Node,
+	type ParentNode,
+} from "domhandler";
+export { parseDocument } from "htmlparser2";
+export { render } from "dom-serializer";
 export * as CSS from "css-select";
 
 export function parseDocumentAsync(data: string, options: Options): Promise<Document> {

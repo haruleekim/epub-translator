@@ -10,7 +10,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler",
-		"types": ["unplugin-icons/types/svelte"],
+		"types": ["unplugin-icons/types/svelte", "./src/worker-configuration.d.ts"],
 		"plugins": [{ "name": "typescript-svelte-plugin", "enabled": true }]
 	}
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias

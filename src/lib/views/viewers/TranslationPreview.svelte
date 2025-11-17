@@ -7,10 +7,7 @@
 	const cx = getWorkspaceContext();
 
 	const translated = $derived(
-		cx.project.renderTranslations(
-			cx.path,
-			cx.project.activeTranslationIds.values().toArray(),
-		),
+		cx.project.renderTranslations(cx.path, cx.project.activeTranslationIds.values().toArray()),
 	);
 </script>
 
