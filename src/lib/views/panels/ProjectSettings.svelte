@@ -11,7 +11,7 @@
 <div class={props.class}>
 	<fieldset class="fieldset">
 		<button
-			class="btn btn-block btn-soft btn-accent"
+			class="btn btn-block btn-dash btn-accent"
 			onclick={async () => {
 				try {
 					const blob = await cx.project.exportEpub();
