@@ -25,13 +25,6 @@
 	});
 
 	const folds = $state<Record<string, boolean>>({});
-
-	$effect(() => {
-		if (cx.partition && translations.length === 1) {
-			const translationId = translations[0].id;
-			queueMicrotask(() => (folds[translationId] = true));
-		}
-	});
 </script>
 
 <ul class={["list", props.class]}>
