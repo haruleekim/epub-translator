@@ -20,7 +20,10 @@
 >
 	{#snippet meta(path)}
 		{@const translations = cx.project.translationsForPath(path)}
-		{@const overlapping = cx.project.checkOverlaps(translations.map((t) => t.id))}
+		{@const activeTranslations = translations.filter((t) => {
+			return cx.project.activeTranslationIds.has(t.id);
+		})}
+		{@const overlapping = cx.project.checkOverlaps(activeTranslations.map((t) => t.id))}
 		<span
 			class={[
 				"badge rounded-full badge-xs",
@@ -28,7 +31,7 @@
 				!overlapping && translations.length > 0 && "badge-success",
 			]}
 		>
-			{translations.length}
+			{activeTranslations.length}/{translations.length}
 		</span>
 	{/snippet}
 </FileTree>
