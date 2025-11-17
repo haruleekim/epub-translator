@@ -32,7 +32,6 @@
 		transformUrl={resource?.resolveUrl}
 		partition={cx.partition}
 		onSelectionChange={(newPartition) => {
-			if (cx.locked) return;
 			cx.partition = newPartition;
 		}}
 	/>

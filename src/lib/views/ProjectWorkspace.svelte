@@ -47,35 +47,31 @@
 	>
 		<div class="sticky top-0 left-0 z-1 bg-base-300/90 shadow-2xl backdrop-blur-2xl">
 			<a
-				aria-disabled={cx.locked}
 				href={resolve("/")}
 				class="btn absolute top-0 left-0 m-2 border-none btn-ghost btn-xs"
 			>
 				<IconArrowBack class="size-4" />
 			</a>
 			<ul class="menu menu-horizontal mx-auto flex menu-xs">
-				<li class:menu-disabled={cx.locked}>
+				<li>
 					<button
 						onclick={() => (cx.panelMode = "navigate-resources")}
-						disabled={cx.locked}
 						class:menu-active={cx.panelMode === "navigate-resources"}
 					>
 						<IconFileTreeOutline class="size-4" />
 					</button>
 				</li>
-				<li class:menu-disabled={cx.locked}>
+				<li>
 					<button
 						onclick={() => (cx.panelMode = "list-translations")}
-						disabled={cx.locked}
 						class:menu-active={cx.panelMode === "list-translations"}
 					>
 						<IconTranslate class="size-4" />
 					</button>
 				</li>
-				<li class:menu-disabled={cx.locked}>
+				<li>
 					<button
 						onclick={() => (cx.panelMode = "project-settings")}
-						disabled={cx.locked}
 						class:menu-active={cx.panelMode === "project-settings"}
 					>
 						<IconSettingsOutline class="size-4" />
@@ -114,28 +110,25 @@
 		class:pointer-events-none={resizing}
 	>
 		<ul class="menu menu-horizontal absolute top-2 right-2 menu-xs rounded-2xl bg-base-300/90">
-			<li class:menu-disabled={cx.locked}>
+			<li>
 				<button
 					onclick={() => (cx.viewerMode = "select-partitions-preview")}
-					disabled={cx.locked}
 					class:menu-active={cx.viewerMode === "select-partitions-preview"}
 				>
 					<IconSelectDrag class="size-4" />
 				</button>
 			</li>
-			<li class:menu-disabled={cx.locked}>
+			<li>
 				<button
 					onclick={() => (cx.viewerMode = "select-partitions-markup")}
-					disabled={cx.locked}
 					class:menu-active={cx.viewerMode === "select-partitions-markup"}
 				>
 					<IconXml class="size-4" />
 				</button>
 			</li>
-			<li class:menu-disabled={cx.locked}>
+			<li>
 				<button
 					onclick={() => (cx.viewerMode = "preview-translations")}
-					disabled={cx.locked}
 					class:menu-active={cx.viewerMode === "preview-translations"}
 				>
 					<IconEyeOutline class="size-4" />

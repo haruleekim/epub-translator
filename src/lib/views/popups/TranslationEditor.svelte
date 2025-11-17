@@ -24,11 +24,13 @@
 		return "";
 	});
 
+	let generating = $state(false);
+
 	async function handleGenerateTranslation(this: HTMLFormElement, event: SubmitEvent) {
 		event.preventDefault();
 
 		try {
-			cx.locked = true;
+			generating = true;
 
 			const form = new FormData(this);
 			const additionalPrompt = form.get("prompt");
@@ -55,7 +57,7 @@
 				});
 			});
 		} finally {
-			cx.locked = false;
+			generating = false;
 		}
 	}
 
@@ -93,7 +95,7 @@
 			<button
 				type="submit"
 				class="btn ml-auto flex btn-soft btn-xs"
-				disabled={cx.locked || !original}
+				disabled={generating || !original}
 			>
 				Generate
 			</button>
@@ -108,13 +110,13 @@
 				placeholder="Enter translated text here..."
 				spellcheck={false}
 				required
-				disabled={cx.locked}
+				disabled={generating}
 				bind:value={translated}
 			></textarea>
 			<div class="label"></div>
 
 			<div class="my-2 border-y-2 border-base-200 py-2 text-xs">
-				{#if translated && original && !cx.locked}
+				{#if translated && original && !generating}
 					<TranslationDiff original={await original} {translated} />
 				{:else}
 					<code class="text-xs leading-normal whitespace-pre-wrap">
@@ -126,7 +128,7 @@
 			<button
 				class="btn btn-sm btn-primary"
 				type="submit"
-				disabled={cx.locked || !original || !translated}
+				disabled={generating || !original || !translated}
 			>
 				{#if translation}
 					Save Changes
