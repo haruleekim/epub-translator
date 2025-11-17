@@ -10,31 +10,20 @@ export default class PromiseRegistry<K, V> {
 		const cached = this.registry.get(key);
 		if (cached) return cached;
 
-		const { port1: tx, port2: rx } = new MessageChannel();
-
-		let result: V | unknown;
-
-		const promise = new Promise<V>((resolve, reject) => {
-			rx.addEventListener("message", (event) => {
-				if (event.data) {
-					resolve(result as V);
-				} else {
-					reject(result as unknown);
-				}
-			});
-			rx.start();
+		let resolve: any, reject: any;
+		const promise = new Promise<V>((resolve_, reject_) => {
+			[resolve, reject] = [resolve_, reject_];
 		});
 
 		this.registry.set(key, promise);
 
 		try {
-			result = await this.getter(key);
-			tx.postMessage(true);
-			return result as V;
+			const result = await this.getter(key);
+			resolve(result);
+			return result;
 		} catch (error) {
-			result = error;
-			tx.postMessage(false);
-			throw result as unknown;
+			reject(error);
+			throw error;
 		}
 	}
 
