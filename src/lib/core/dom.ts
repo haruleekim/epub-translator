@@ -279,10 +279,10 @@ export class Dom {
 
 	// TODO: Optimize to avoid multiple DOM parsing
 	async mergeSubstitutions(substitutions: Substitution[]): Promise<Substitution> {
-		const groups = _.groupBy(substitutions, (tr) => tr.partition.size);
+		const groups = _.groupBy(substitutions, (tr) => tr.partition.first.length);
 		const sizes = Object.keys(groups)
 			.map(Number)
-			.sort((a, b) => b - a);
+			.sort((a, b) => a - b);
 		let result = this.text;
 		let dom = this as Dom;
 		for (const size of sizes) {
