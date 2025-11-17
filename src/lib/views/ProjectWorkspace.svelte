@@ -13,6 +13,7 @@
 	import TranslationList from "$lib/views/panels/TranslationList.svelte";
 	import TranslationEditor from "$lib/views/popups/TranslationEditor.svelte";
 	import TranslationPreview from "$lib/views/viewers/TranslationPreview.svelte";
+	import TranslationMergeEditor from "./popups/TranslationMergeEditor.svelte";
 	import PartitionSelection from "./viewers/PartitionSelection.svelte";
 
 	const cx = getWorkspaceContext();
@@ -155,6 +156,8 @@
 		>
 		{#if cx.popup?.mode === "edit-translation"}
 			<TranslationEditor />
+		{:else if cx.popup?.mode === "merge-translations"}
+			<TranslationMergeEditor />
 		{/if}
 	</div>
 </dialog>

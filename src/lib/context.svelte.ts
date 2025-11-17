@@ -11,10 +11,15 @@ export type ViewerMode =
 	| "preview-translations";
 
 export type PopupMode = Popup["mode"];
-export type Popup = {
-	mode: "edit-translation";
-	translation: Translation | null;
-};
+export type Popup =
+	| {
+			mode: "edit-translation";
+			translation: Translation | null;
+	  }
+	| {
+			mode: "merge-translations";
+			translationIds: string[];
+	  };
 
 export class WorkspaceContext {
 	project: Project;

@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import _ from "lodash";
 import { nanoid } from "nanoid";
 import { SvelteDate, SvelteMap, SvelteSet } from "svelte/reactivity";
-import { Dom, Partition, type NodeId } from "$lib/core/dom";
+import { Dom, Partition, type NodeId, type Substitution } from "$lib/core/dom";
 import Epub from "$lib/core/epub";
 import { saveProject } from "$lib/database";
 import {
@@ -211,6 +211,19 @@ export default class Project {
 			return translation;
 		});
 		return dom.substituteAll(
+			translations.map((tr) => ({ partition: tr.partition, content: tr.translated })),
+		);
+	}
+
+	async mergeTranslations(path: string, translationIds: string[]): Promise<Substitution> {
+		const dom = await this.#getDom(path);
+		translationIds = translationIds.filter((id) => this.#translationIdToPath.get(id) === path);
+		const translations = translationIds.map((id) => {
+			const translation = this.translations.get(id);
+			if (!translation) throw new Error(`Translation not found: ${id}`);
+			return translation;
+		});
+		return await dom.mergeSubstitutions(
 			translations.map((tr) => ({ partition: tr.partition, content: tr.translated })),
 		);
 	}

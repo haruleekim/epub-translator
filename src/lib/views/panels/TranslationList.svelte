@@ -1,10 +1,9 @@
 <script lang="ts">
 	import type { ClassValue } from "svelte/elements";
 	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
-	import IconChevronDown from "virtual:icons/mdi/chevron-down";
-	import IconChevronRight from "virtual:icons/mdi/chevron-right";
 	import IconClipboardOutline from "virtual:icons/mdi/clipboard-outline";
 	import IconEditOutline from "virtual:icons/mdi/edit-outline";
+	import IconMerge from "virtual:icons/mdi/merge";
 	import IconTrashCanOutline from "virtual:icons/mdi/trash-can-outline";
 	import TranslationDiff from "$lib/components/TranslationDiff.svelte";
 	import { getWorkspaceContext } from "$lib/context.svelte";
@@ -25,35 +24,65 @@
 	});
 
 	const folds = $state<Record<string, boolean>>({});
+
+	const checks = $state<Record<string, boolean>>({});
+	const checkedTranslations = $derived.by(() => {
+		return translations.filter((t) => checks[t.id]);
+	});
 </script>
 
 <ul class={["list", props.class]}>
-	{#if cx.partition}
-		<li class="list-row">
+	<li class="list-row gap-1">
+		<div class="list-col-grow grid w-full grid-flow-col grid-cols-3 gap-1">
 			<button
-				class="list-col-grow btn btn-outline btn-sm"
+				class="btn text-nowrap btn-soft btn-xs btn-error"
+				disabled={!checkedTranslations.length}
+				onclick={async () => {
+					if (
+						confirm(
+							`Are you sure you want to delete ${checkedTranslations.length} selected translation(s)?`,
+						)
+					) {
+						for (const translation of checkedTranslations) {
+							cx.project.removeTranslation(translation.id);
+						}
+						await cx.project.save();
+					}
+				}}
+			>
+				<IconTrashCanOutline class="size-4" />
+				Delete
+			</button>
+			<button
+				class="btn text-nowrap btn-soft btn-xs btn-warning"
+				disabled={checkedTranslations.length < 2}
 				onclick={() => {
 					cx.popup = {
-						mode: "edit-translation",
-						translation: null,
+						mode: "merge-translations",
+						translationIds: checkedTranslations.map((t) => t.id),
 					};
 				}}
 			>
-				<IconAddCircleOutline class="size-4" />
-				Translation
+				<IconMerge class="size-4" />
+				Merge
 			</button>
-		</li>
-	{/if}
+			<button
+				class="btn text-nowrap btn-soft btn-xs btn-success"
+				disabled={!cx.partition}
+				onclick={() => {
+					cx.popup = { mode: "edit-translation", translation: null };
+				}}
+			>
+				<IconAddCircleOutline class="size-4" />
+				Add
+			</button>
+		</div>
+	</li>
+
 	{#each translations as translation (translation.id)}
 		{@const { id, original, translated, createdAt } = translation}
 		<li class="list-row items-center gap-y-2 rounded-sm p-2">
-			<button class="h-full hover:cursor-pointer" onclick={() => (folds[id] = !folds[id])}>
-				{#if folds[id]}
-					<IconChevronDown class="size-5" />
-				{:else}
-					<IconChevronRight class="size-5" />
-				{/if}
-			</button>
+			<input class="checkbox checkbox-xs" type="checkbox" bind:checked={checks[id]} />
 
 			<button
 				class="text-justify hover:cursor-pointer"
@@ -104,21 +133,19 @@
 				</button>
 			</div>
 
-			<div class="tooltip tooltip-left text-xs" data-tip="Toggle Active">
-				<input
-					class="checkbox checkbox-xs"
-					type="checkbox"
-					checked={cx.project.activeTranslationIds.has(id)}
-					onchange={async (event) => {
-						if (event.currentTarget.checked) {
-							cx.project.activeTranslationIds.add(id);
-						} else {
-							cx.project.activeTranslationIds.delete(id);
-						}
-						await cx.project.save();
-					}}
-				/>
-			</div>
+			<input
+				class="toggle toggle-xs"
+				type="checkbox"
+				checked={cx.project.activeTranslationIds.has(id)}
+				onchange={async (event) => {
+					if (event.currentTarget.checked) {
+						cx.project.activeTranslationIds.add(id);
+					} else {
+						cx.project.activeTranslationIds.delete(id);
+					}
+					await cx.project.save();
+				}}
+			/>
 
 			{#if folds[id]}
 				<div class="col-span-6 col-start-1 row-start-2 rounded bg-base-200 p-1 text-xs">
