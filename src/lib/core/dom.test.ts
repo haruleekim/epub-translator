@@ -298,24 +298,24 @@ suite("Dom", () => {
 		expect(dom.substituteAll([])).toBe(sampleXml);
 		expect(dom.substituteAll([tr0, tr1, tr2])).toBe(
 			formatXml`
-			<tag0>
 				<tag0>
-					<tag0>a/a/a</tag0>
-					<tag1>a/a/b</tag1>
-					<tag2>a/a/c</tag2>
+					<tag0>
+						<tag0>a/a/a</tag0>
+						<tag1>a/a/b</tag1>
+						<tag2>a/a/c</tag2>
+					</tag0>
+					<tag1>
+						<tag0>a/b/a</tag0>
+						<tag1>a/b/b</tag1>
+						<tag2>a/b/c</tag2>
+					</tag1>
+					<tag2>
+						<tag0>0/2/0</tag0>
+						<tag1>0/2/1</tag1>
+						<tag2>0/2/2</tag2>
+					</tag2>
 				</tag0>
-				<tag1>
-					<tag0>a/b/a</tag0>
-					<tag1>a/b/b</tag1>
-					<tag2>a/b/c</tag2>
-				</tag1>
-				<tag2>
-					<tag0>0/2/0</tag0>
-					<tag1>0/2/1</tag1>
-					<tag2>0/2/2</tag2>
-				</tag2>
-			</tag0>
-        `,
+	        `,
 		);
 		expect(() => dom.substituteAll([tr0, tr1, tr2, tr3])).toThrow();
 	});
