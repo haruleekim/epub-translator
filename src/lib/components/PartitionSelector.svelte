@@ -1,3 +1,22 @@
+<script lang="ts" module>
+	const NODE_CLASSES = [
+		"data-[node-highlight='active-single']:text-primary-content",
+		"data-[node-highlight='active-single']:bg-primary",
+		"data-[node-highlight='active-multiple']:text-error-content",
+		"data-[node-highlight='active-multiple']:bg-error",
+		"data-[node-highlight='inactive']:text-secondary-content",
+		"data-[node-highlight='inactive']:bg-secondary",
+		"data-[node-highlight='normal_selected']:text-accent-content",
+		"data-[node-highlight='normal_selected']:bg-accent",
+		"data-[node-highlight='active-single_selected']:text-[color-mix(in_srgb-linear,var(--color-accent-content),var(--color-primary-content))]",
+		"data-[node-highlight='active-single_selected']:bg-[color-mix(in_srgb-linear,var(--color-accent),var(--color-primary))]",
+		"data-[node-highlight='active-multiple_selected']:text-[color-mix(in_srgb-linear,var(--color-accent-content),var(--color-error-content))]",
+		"data-[node-highlight='active-multiple_selected']:bg-[color-mix(in_srgb-linear,var(--color-accent),var(--color-error))]",
+		"data-[node-highlight='inactive_selected']:text-[color-mix(in_srgb-linear,var(--color-accent-content),var(--color-secondary-content)_5%)]",
+		"data-[node-highlight='inactive_selected']:bg-[color-mix(in_srgb-linear,var(--color-accent),var(--color-secondary))]",
+	];
+</script>
+
 <script lang="ts">
 	import type { ClassValue } from "svelte/elements";
 	import { Dom, NodeId, Partition, type Token } from "$lib/core/dom";
@@ -8,6 +27,7 @@
 	const {
 		html,
 		translations = [],
+		activeTranslationIds = [],
 		partition,
 		onSelectionChange,
 		transformUrl,
@@ -16,6 +36,7 @@
 	}: {
 		html: string;
 		translations?: Translation[];
+		activeTranslationIds?: string[];
 		partition?: Partition | null;
 		onSelectionChange?: (partition: Partition | null) => void;
 		transformUrl?: (url: string) => string | Promise<string>;
@@ -24,6 +45,30 @@
 	} = $props();
 
 	const dom = $derived(Dom.loadAsync(html));
+
+	const activeTranslations = $derived.by(() => {
+		return translations.filter((t) => activeTranslationIds.includes(t.id));
+	});
+
+	function highlightType(nodeId: NodeId) {
+		const selected = partition?.contains(nodeId) ?? false;
+		const trs = translations.filter((p) => p.partition.contains(nodeId));
+		const activeTrs = activeTranslations.filter((p) => p.partition.contains(nodeId));
+		let result = "";
+		if (activeTrs.length === 1) {
+			result = "active-single";
+		} else if (activeTrs.length > 1) {
+			result = "active-multiple";
+		} else if (trs.length > 0) {
+			result = "inactive";
+		} else {
+			result = "normal";
+		}
+		if (selected) {
+			result += " selected";
+		}
+		return result;
+	}
 
 	let start = $state<string | null>(partition?.first.toString() ?? null);
 	let end = $state<string | null>(partition?.last.toString() ?? null);
@@ -96,21 +141,15 @@
 
 {#snippet tagTokens(tokens: Token[])}
 	{#each tokens as { node, nodeId, content, close } (`${nodeId}${close ? "!" : ""}`)}
-		{@const selected = partition?.contains(nodeId) ?? false}
-		{@const translationCount = translations
-			.map((t) => t.partition)
-			.filter((p) => p.contains(nodeId)).length}
 		<span
 			data-node-id={nodeId}
 			data-node-type="text"
-			data-selected={selected || undefined}
+			data-node-highlight={highlightType(nodeId)}
 			onpointerenter={handlePointerEnter}
 			class={[
-				"p-0.5 data-selected:bg-accent data-selected:text-accent-content",
+				"p-0.5 hover:text-accent",
 				node.type !== "text" && "text-base-content/40",
-				translationCount === 0 && "hover:text-accent",
-				translationCount === 1 && "bg-primary text-primary-content",
-				translationCount > 1 && "bg-error text-error-content",
+				...NODE_CLASSES,
 			]}
 		>
 			{content}
@@ -119,11 +158,6 @@
 {/snippet}
 
 {#snippet tree(node: AnyNode, nodeId: NodeId)}
-	{@const selected = partition?.contains(nodeId) ?? false}
-	{@const translationCount = translations
-		.map((t) => t.partition)
-		.filter((p) => p.contains(nodeId)).length}
-
 	{#if node.type === "root"}
 		{@render childTrees(node, nodeId)}
 	{:else if node.type === "tag"}
@@ -134,10 +168,10 @@
 		{:else if node.tagName === "head" || node.tagName === "style" || node.tagName === "script"}
 			<!-- Ignore -->
 		{:else}
-			{@render tagNode(node, nodeId, selected, translationCount)}
+			{@render tagNode(node, nodeId)}
 		{/if}
 	{:else if node.type === "text"}
-		{@render textNode(node, nodeId, selected, translationCount)}
+		{@render textNode(node, nodeId)}
 	{/if}
 {/snippet}
 
@@ -147,27 +181,22 @@
 	{/each}
 {/snippet}
 
-{#snippet textNode(node: Text, nodeId: NodeId, selected: boolean, translationCount: number)}
+{#snippet textNode(node: Text, nodeId: NodeId)}
 	{@const content = node.data.trim()}
 	{#if content}
 		<span
 			data-node-id={nodeId}
 			data-node-type="text"
-			data-selected={selected || undefined}
+			data-node-highlight={highlightType(nodeId)}
 			onpointerenter={handlePointerEnter}
-			class={[
-				"p-0.5 data-selected:bg-accent data-selected:text-accent-content",
-				translationCount === 0 && "hover:text-accent",
-				translationCount === 1 && "bg-primary text-primary-content",
-				translationCount > 1 && "bg-error text-error-content",
-			]}
+			class={["p-0.5 hover:text-accent", ...NODE_CLASSES]}
 		>
 			{node.data}
 		</span>
 	{/if}
 {/snippet}
 
-{#snippet tagNode(node: Element, nodeId: NodeId, selected: boolean, translationCount: number)}
+{#snippet tagNode(node: Element, nodeId: NodeId)}
 	{@const isDisplayLeaf =
 		["br", "hr", "img", "video", "audio", "embed", "picture"].includes(node.tagName) &&
 		node.children.length === 0}
@@ -179,14 +208,12 @@
 		{...attrs}
 		data-node-id={nodeId}
 		data-node-type="tag"
-		data-selected={isDisplayLeaf ? selected || undefined : undefined}
+		data-node-highlight={highlightType(nodeId)}
 		onpointerenter={isDisplayLeaf ? handlePointerEnter : undefined}
 		draggable={isDisplayLeaf ? false : undefined}
 		class={(isDisplayLeaf && [
-			"border p-0.5 data-selected:border-accent data-selected:bg-accent data-selected:text-accent-content",
-			translationCount === 0 && "border-transparent hover:border-accent",
-			translationCount === 1 && "border-primary bg-primary text-primary-content",
-			translationCount > 1 && "border-error bg-error text-error-content",
+			"border border-transparent p-0.5 hover:border-accent",
+			...NODE_CLASSES,
 		]) ||
 			undefined}
 	>

@@ -27,7 +27,8 @@
 		class="h-full w-full"
 		mode={cx.viewerMode === "select-partitions-markup" ? "markup" : "preview"}
 		html={await text}
-		translations={cx.project.activeTranslationsForPath(cx.path)}
+		translations={cx.project.translationsForPath(cx.path)}
+		activeTranslationIds={cx.project.activeTranslationsForPath(cx.path).map((t) => t.id)}
 		transformUrl={resource?.resolveUrl}
 		partition={cx.partition}
 		onSelectionChange={(newPartition) => {
