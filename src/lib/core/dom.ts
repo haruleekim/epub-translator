@@ -57,8 +57,19 @@ export class NodeId {
 		return new NodeId([...this.path, n]);
 	}
 
-	equals(other: NodeId): boolean {
-		return _.isEqual(this.path, other.path);
+	contains(other: NodeId): boolean {
+		if (this.path.length > other.path.length) return false;
+		for (let i = 0; i < this.path.length; i++) {
+			if (this.path[i] !== other.path[i]) return false;
+		}
+		return true;
+	}
+
+	relativeFrom(ancestor: NodeId): NodeId {
+		if (!ancestor.contains(this)) {
+			throw new Error("The specified NodeId is not an ancestor");
+		}
+		return new NodeId(this.path.slice(ancestor.path.length));
 	}
 
 	static commonAncestor(cid1: NodeId, cid2: NodeId): NodeId {
@@ -122,8 +133,8 @@ export class Partition {
 		return s <= 0 && 0 <= e;
 	}
 
-	equals(other: Partition): boolean {
-		return this.size === other.size && this.offset.equals(other.offset);
+	relativeFrom(ancestor: NodeId): Partition {
+		return new Partition(this.offset.relativeFrom(ancestor), this.size);
 	}
 
 	static covering(start: NodeId, end: NodeId): Partition {

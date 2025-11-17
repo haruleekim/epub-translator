@@ -54,6 +54,16 @@ suite("NodeId", () => {
 		expect(result).toStrictEqual(NodeId.root());
 	});
 
+	test("relativeFrom", () => {
+		expect(nid("").relativeFrom(nid(""))).toEqual(nid(""));
+		expect(() => nid("").relativeFrom(nid("1/2/3"))).toThrow();
+		expect(nid("1/2/3").relativeFrom(nid(""))).toEqual(nid("1/2/3"));
+		expect(nid("1/2/3").relativeFrom(nid("1"))).toEqual(nid("2/3"));
+		expect(nid("1/2/3").relativeFrom(nid("1/2"))).toEqual(nid("3"));
+		expect(nid("1/2/3").relativeFrom(nid("1/2/3"))).toEqual(nid(""));
+		expect(() => nid("1/2/3").relativeFrom(nid("1/2/3/4"))).toThrow();
+	});
+
 	test("compare", () => {
 		let result = NodeId.compare(nid("1/1"), nid("1/1"));
 		expect(result).toBe(0);
