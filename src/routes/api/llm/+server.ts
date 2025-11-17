@@ -29,14 +29,18 @@ export async function POST({ request }) {
 
 	stream.then(async (stream) => {
 		const writer = writable.getWriter();
-		for await (const event of stream) {
-			if (event.type !== "response.output_text.delta") continue;
-			writer.write(
-				encoder.encode(`event: message\ndata: ${JSON.stringify(event.delta)}\n\n`),
-			);
+		try {
+			for await (const event of stream) {
+				if (event.type !== "response.output_text.delta") continue;
+				writer.write(
+					encoder.encode(`event: message\ndata: ${JSON.stringify(event.delta)}\n\n`),
+				);
+			}
+			writer.write(encoder.encode(`event: done\ndata: null\n\n`));
+			writer.close();
+		} catch (error) {
+			writer.abort(error);
 		}
-		writer.write(encoder.encode(`event: done\ndata: null\n\n`));
-		writer.close();
 	});
 
 	return new Response(readable, {
