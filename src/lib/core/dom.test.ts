@@ -265,36 +265,36 @@ suite("Dom", () => {
 		expect(content).toEqual("<tag1>0/1/1</tag1><tag2>0/1/2</tag2>");
 	});
 
-	test("substituteAll[Merged]", async () => {
-		const dom = Dom.load(sampleXml);
-		const tr0 = {
-			partition: Partition.parse("0/0-0"),
-			content: formatXml`
+	const tr0 = {
+		partition: Partition.parse("0/0-0"),
+		content: formatXml`
 			<tag0>
 				<tag0>a/a/a</tag0>
 				<tag1>a/a/b</tag1>
 				<tag2>a/a/c</tag2>
 			</tag0>
 		`,
-		};
-		const tr1 = {
-			partition: Partition.parse("0/1/0-1"),
-			content: formatXml`
+	};
+	const tr1 = {
+		partition: Partition.parse("0/1/0-1"),
+		content: formatXml`
 			<tag0>a/b/a</tag0>
 			<tag1>a/b/b</tag1>
 		`,
-		};
-		const tr2 = {
-			partition: Partition.parse("0/1/2-2"),
-			content: formatXml`
+	};
+	const tr2 = {
+		partition: Partition.parse("0/1/2-2"),
+		content: formatXml`
 			<tag2>a/b/c</tag2>
 		`,
-		};
-		const tr3 = {
-			partition: Partition.parse("0/1/1/0-0"),
-			content: "a!/b!/b!",
-		};
+	};
+	const tr3 = {
+		partition: Partition.parse("0/1/1/0-0"),
+		content: "a!/b!/b!",
+	};
 
+	test("substituteAll", () => {
+		const dom = Dom.load(sampleXml);
 		expect(dom.substituteAll([])).toBe(sampleXml);
 		expect(dom.substituteAll([tr0, tr1, tr2])).toBe(
 			formatXml`
@@ -318,9 +318,13 @@ suite("Dom", () => {
         `,
 		);
 		expect(() => dom.substituteAll([tr0, tr1, tr2, tr3])).toThrow();
-		expect(await dom.substituteAllMerged([tr0, tr1, tr2, tr3])).toBe(
-			formatXml`
-			<tag0>
+	});
+
+	test("mergeSubstitutions", async () => {
+		const dom = Dom.load(sampleXml);
+		expect(await dom.mergeSubstitutions([tr0, tr1, tr2, tr3])).toEqual({
+			partition: Partition.parse("0/0-1"),
+			content: formatXml`
 				<tag0>
 					<tag0>a/a/a</tag0>
 					<tag1>a/a/b</tag1>
@@ -331,13 +335,7 @@ suite("Dom", () => {
 					<tag1>a!/b!/b!</tag1>
 					<tag2>a/b/c</tag2>
 				</tag1>
-				<tag2>
-					<tag0>0/2/0</tag0>
-					<tag1>0/2/1</tag1>
-					<tag2>0/2/2</tag2>
-				</tag2>
-			</tag0>
-        `,
-		);
+	        `,
+		});
 	});
 });

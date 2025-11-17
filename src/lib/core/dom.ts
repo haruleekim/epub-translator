@@ -236,7 +236,7 @@ export class Dom {
 		}
 	}
 
-	substituteAll(substitutions: { partition: Partition; content: string }[]): string {
+	substituteAll(substitutions: Substitution[]): string {
 		substitutions = [...substitutions];
 		substitutions.sort((a, b) => Partition.totalOrderCompare(a.partition, b.partition));
 
@@ -278,14 +278,11 @@ export class Dom {
 	}
 
 	// TODO: Optimize to avoid multiple DOM parsing
-	async substituteAllMerged(
-		substitutions: { partition: Partition; content: string }[],
-	): Promise<string> {
+	async mergeSubstitutions(substitutions: Substitution[]): Promise<Substitution> {
 		const groups = _.groupBy(substitutions, (tr) => tr.partition.size);
 		const sizes = Object.keys(groups)
 			.map(Number)
 			.sort((a, b) => b - a);
-
 		let result = this.text;
 		let dom = this as Dom;
 		for (const size of sizes) {
@@ -294,11 +291,11 @@ export class Dom {
 				result = dom.substituteAll(group);
 				dom = await Dom.loadAsync(result);
 			} catch (error) {
-				throw new Error("Cannot merge partitions", { cause: error });
+				throw new Error("These substitutions are cannot be merged", { cause: error });
 			}
 		}
-
-		return result;
+		const covering = Partition.coveringAll(substitutions.map((tr) => tr.partition));
+		return { partition: covering, content: dom.extractContent(covering) };
 	}
 
 	traverse(callback: (traversal: DomTraversal) => void): Document {
@@ -369,6 +366,11 @@ export class Dom {
 		}
 		return tokens;
 	}
+}
+
+export interface Substitution {
+	partition: Partition;
+	content: string;
 }
 
 export type DomTraversal = { nodeId: NodeId; node: AnyNode } & (
