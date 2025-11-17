@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ClassValue } from "svelte/elements";
+	import { slide } from "svelte/transition";
 	import IconAddCircleOutline from "virtual:icons/mdi/add-circle-outline";
 	import IconClipboardOutline from "virtual:icons/mdi/clipboard-outline";
 	import IconEditOutline from "virtual:icons/mdi/edit-outline";
@@ -81,7 +82,7 @@
 
 	{#each translations as translation (translation.id)}
 		{@const { id, original, translated, createdAt } = translation}
-		<li class="list-row items-center gap-y-2 rounded-sm p-2">
+		<li class="list-row items-center gap-y-2 rounded-sm p-2" transition:slide>
 			<input class="checkbox checkbox-xs" type="checkbox" bind:checked={checks[id]} />
 
 			<button
