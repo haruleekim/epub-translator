@@ -111,7 +111,11 @@ export default class Project {
 
 	async exportEpub(): Promise<Blob> {
 		const container = await JSZip.loadAsync(this.epub.dump());
-		const groups = _.groupBy(Array.from(this.translations.values()), (tr) => tr.path);
+		const allActiveTranslations = this.translations
+			.values()
+			.filter((tr) => this.activeTranslationIds.has(tr.id))
+			.toArray();
+		const groups = _.groupBy(allActiveTranslations, (tr) => tr.path);
 		const promises = Object.entries(groups).map(async ([path, translations]) => {
 			const translationIds = translations.map((t) => t.id);
 			const translated = await this.renderTranslations(path, translationIds);
@@ -218,7 +222,6 @@ export default class Project {
 	async mergeTranslations(path: string, translationIds: string[]): Promise<Substitution> {
 		const dom = await this.#getDom(path);
 		translationIds = translationIds.filter((id) => this.#translationIdToPath.get(id) === path);
-		console.log(translationIds);
 		const translations = translationIds.map((id) => {
 			const translation = this.translations.get(id);
 			if (!translation) throw new Error(`Translation not found: ${id}`);
