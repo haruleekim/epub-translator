@@ -160,4 +160,11 @@
 			<TranslationMergeEditor />
 		{/if}
 	</div>
+	<button
+		class="modal-backdrop"
+		onclick={() => {
+			if (cx.popup?.mode === "edit-translation") return;
+			cx.popup = null;
+		}}>close</button
+	>
 </dialog>
