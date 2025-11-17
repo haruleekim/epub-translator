@@ -279,21 +279,33 @@ export class Dom {
 
 	// TODO: Optimize to avoid multiple DOM parsing
 	async mergeSubstitutions(substitutions: Substitution[]): Promise<Substitution> {
-		const groups = _.groupBy(substitutions, (tr) => tr.partition.first.length);
-		const sizes = Object.keys(groups)
-			.map(Number)
-			.sort((a, b) => a - b);
-		let result = this.text;
-		let dom = this as Dom;
-		for (const size of sizes) {
-			const group = groups[size];
-			try {
-				result = dom.substituteAll(group);
-				dom = await Dom.loadAsync(result);
-			} catch (error) {
-				throw new Error("These substitutions are cannot be merged", { cause: error });
+		for (let i = 0; i < substitutions.length - 1; i++) {
+			for (let j = i + 1; j < substitutions.length; j++) {
+				const a = substitutions[i].partition;
+				const b = substitutions[j].partition;
+				if (a.first.length !== b.first.length) continue;
+
+				const p = NodeId.compare(a.first, b.first);
+				const q = NodeId.compare(a.last.sibling(1)!, b.last.sibling(1)!);
+				if (p == 0 && q == 0) throw new Error("Some partitions are identical");
+
+				const r = NodeId.compare(a.first, b.last.sibling(1)!);
+				const s = NodeId.compare(a.last.sibling(1)!, b.first);
+				if (p * q > 0 && r * s < 0) throw new Error("Some partitions overlap");
 			}
 		}
+
+		substitutions = substitutions
+			.toSorted((a, b) => a.partition.first.length - b.partition.first.length)
+			.sort((a, b) => b.partition.size - a.partition.size);
+
+		let result = this.text;
+		let dom = this as Dom;
+		for (const substitution of substitutions) {
+			result = dom.substituteAll([substitution]);
+			dom = await Dom.loadAsync(result);
+		}
+
 		const covering = Partition.coveringAll(substitutions.map((tr) => tr.partition));
 		return { partition: covering, content: dom.extractContent(covering) };
 	}
