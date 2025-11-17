@@ -19,18 +19,19 @@
 	const cx = getWorkspaceContext();
 
 	let panelWidth = $state(480);
-	let panelResizing = $state(false);
+	let resizing = $state<{ prevPanelWidth: number; prevScreenX: number } | null>(null);
 </script>
 
 <svelte:window
 	onmousemove={(event) => {
-		if (panelResizing && event.buttons & 1) {
-			panelWidth += event.movementX;
+		if (resizing && event.buttons & 1) {
+			panelWidth = resizing.prevPanelWidth + event.screenX - resizing.prevScreenX;
+			panelWidth = Math.max(300, panelWidth);
 		}
 	}}
 	onmouseup={(event) => {
 		if (event.button === 0) {
-			panelResizing = false;
+			resizing = null;
 		}
 	}}
 />
@@ -42,7 +43,7 @@
 	<div
 		id="panel"
 		class="relative col-start-1 flex flex-col overflow-x-auto bg-base-200/50 [scrollbar-width:none]"
-		class:pointer-events-none={panelResizing}
+		class:pointer-events-none={resizing}
 	>
 		<div class="sticky top-0 left-0 z-1 bg-base-300/90 shadow-2xl backdrop-blur-2xl">
 			<a
@@ -99,7 +100,10 @@
 		class="col-start-2 block h-full w-1 cursor-col-resize bg-secondary"
 		onmousedown={(event) => {
 			if (event.button === 0) {
-				panelResizing = true;
+				resizing = {
+					prevPanelWidth: panelWidth,
+					prevScreenX: event.screenX,
+				};
 			}
 		}}
 	></button>
@@ -107,7 +111,7 @@
 	<div
 		id="viewer"
 		class="relative col-start-3 overflow-auto"
-		class:pointer-events-none={panelResizing}
+		class:pointer-events-none={resizing}
 	>
 		<ul class="menu menu-horizontal absolute top-2 right-2 menu-xs rounded-2xl bg-base-300/90">
 			<li class:menu-disabled={cx.locked}>

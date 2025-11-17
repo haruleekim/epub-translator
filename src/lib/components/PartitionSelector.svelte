@@ -133,7 +133,7 @@
 			{@render tagTokens((await dom).tokenize())}
 		</code>
 	{:else if mode === "preview"}
-		<div class="prose text-xs">
+		<div class="prose max-w-none text-xs">
 			{@render tree((await dom).root, NodeId.root())}
 		</div>
 	{/if}
