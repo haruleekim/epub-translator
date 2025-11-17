@@ -39,13 +39,13 @@ export class NodeId {
 
 	sibling(relativePosition: number): NodeId | null {
 		if (!this.path.length) return null;
-		const path = _.initial(this.path);
+		const path = this.path.slice(0, -1);
 		if (this.path.length) path.push(this.path[this.path.length - 1] + relativePosition);
 		return new NodeId(path);
 	}
 
 	get parent(): NodeId | null {
-		return this.path.length ? new NodeId(_.initial(this.path)) : null;
+		return this.path.length ? new NodeId(this.path.slice(0, -1)) : null;
 	}
 
 	get firstChild(): NodeId {
