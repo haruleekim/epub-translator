@@ -13,10 +13,12 @@
 	const originalPromise = $derived(Dom.loadAsync(props.original).then(tokenize));
 	const translatedPromise = $derived(Dom.loadAsync(props.translated).then(tokenize));
 
+	let timeoutId: ReturnType<typeof setTimeout>;
 	const diffs = $derived.by(async () => {
 		const [original, translated] = await Promise.all([originalPromise, translatedPromise]);
 		return new Promise<Diff.ChangeObject<string[]>[]>((resolve) => {
-			Diff.diffArrays(original, translated, resolve);
+			clearTimeout(timeoutId);
+			timeoutId = setTimeout(() => Diff.diffArrays(original, translated, resolve));
 		});
 	});
 </script>
