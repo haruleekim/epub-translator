@@ -241,11 +241,11 @@ export class Dom {
 		return this.root;
 	}
 
-	getNode(nodeId: NodeId): AnyNode {
-		let node: AnyNode = this.root;
+	getNode(nodeId: NodeId): AnyNode | null {
+		let node: AnyNode | null = this.root;
 		for (let index = 0; index < nodeId.path.length; index++) {
 			if (node instanceof Element || node instanceof Document) {
-				node = node.children[nodeId.path[index]];
+				node = node.children.at(nodeId.path[index]) ?? null;
 			}
 		}
 		return node;
@@ -253,12 +253,14 @@ export class Dom {
 
 	extractContent(arg: NodeId | Partition): string {
 		if (arg instanceof NodeId) {
-			const { startIndex, endIndex } = this.getNode(arg);
-			return this.text.slice(startIndex!, endIndex! + 1);
+			const node = this.getNode(arg);
+			if (!node) throw new Error("Node not found");
+			return this.text.slice(node.startIndex!, node.endIndex! + 1);
 		} else if (arg instanceof Partition) {
-			const { startIndex } = this.getNode(arg.first);
-			const { endIndex } = this.getNode(arg.last);
-			return this.text.slice(startIndex!, endIndex! + 1);
+			const first = this.getNode(arg.first);
+			const last = this.getNode(arg.last);
+			if (!first || !last) throw new Error("Node not found");
+			return this.text.slice(first.startIndex!, last.endIndex! + 1);
 		} else {
 			throw new Error("Invalid argument");
 		}
@@ -337,30 +339,34 @@ export class Dom {
 			stack[stack.length - 1].partition.first,
 			stack[0].partition.last,
 		);
-		const start = this.getNode(partition.first).startIndex!;
-		const end = this.getNode(partition.last).endIndex! + 1;
+		const [startNode, endNode] = [this.getNode(partition.first), this.getNode(partition.last)];
+		if (!startNode || !endNode) throw new Error("Invalid structure");
+		const [start, end] = [startNode.startIndex!, endNode.endIndex! + 1];
 
 		let content = this.text.slice(start, end);
 		for (const { partition, dom } of stack) {
-			const s = this.getNode(partition.first).startIndex! - start;
-			const e = this.getNode(partition.last).endIndex! + 1 - start;
+			const [sn, en] = [this.getNode(partition.first), this.getNode(partition.last)];
+			if (!sn || !en) throw new Error("Invalid structure");
+			const [s, e] = [sn.startIndex! - start, en.endIndex! + 1 - start];
 			content = content.slice(0, s) + dom.text + content.slice(e);
 		}
 
 		return { partition, content };
 	}
 
-	// TODO: Throw error if structure cannot be matched.
 	substituteSelf(subpartition: Partition, dom: Dom): void {
 		const parent = this.getNode(subpartition.first.parent!);
-		const start = this.getNode(subpartition.first).startIndex!;
-		const end = this.getNode(subpartition.last).endIndex! + 1;
-		if (start == null || end == null || !("children" in parent)) return;
+		const startNode = this.getNode(subpartition.first);
+		const endNode = this.getNode(subpartition.last);
+		if (startNode == null || endNode == null || parent == null || !("children" in parent)) {
+			throw new Error("Node not found or invalid");
+		}
 		parent.children.splice(
 			subpartition.first.leafOrder!,
 			subpartition.size,
 			...dom.root.children,
 		);
+		const [start, end] = [startNode.startIndex!, endNode.endIndex! + 1];
 		this.text = this.text.slice(0, start) + dom.text + this.text.slice(end);
 	}
 
