@@ -102,6 +102,7 @@ export default class Project {
 	}
 
 	async save(): Promise<void> {
+		this.#dirty = false;
 		await saveProject(this);
 	}
 
