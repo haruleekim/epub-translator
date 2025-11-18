@@ -40,7 +40,7 @@ export class NodeId {
 	sibling(relativePosition: number): NodeId | null {
 		if (!this.path.length) return null;
 		const path = this.path.slice(0, -1);
-		if (this.path.length) path.push(this.path[this.path.length - 1] + relativePosition);
+		path.push(this.path[this.path.length - 1] + relativePosition);
 		return new NodeId(path);
 	}
 
