@@ -296,8 +296,8 @@ export class Dom {
 		}
 
 		substitutions = substitutions
-			.toSorted((a, b) => a.partition.first.length - b.partition.first.length)
-			.sort((a, b) => b.partition.size - a.partition.size);
+			.toSorted((a, b) => b.partition.size - a.partition.size)
+			.sort((a, b) => a.partition.first.length - b.partition.first.length);
 
 		let result = this.text;
 		let dom = this as Dom;
