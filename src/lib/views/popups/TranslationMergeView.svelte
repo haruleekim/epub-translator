@@ -24,7 +24,9 @@
 </script>
 
 <div class={props.class} out:fade>
-	{#await substitution then substitution}
+	{#await substitution}
+		<div class="h-40 w-full skeleton"></div>
+	{:then substitution}
 		<form
 			onsubmit={async (event) => {
 				event.preventDefault();
