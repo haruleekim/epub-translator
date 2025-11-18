@@ -55,12 +55,13 @@
 				<button type="submit" class="btn mt-4 btn-primary">Confirm</button>
 			</fieldset>
 		</form>
-	{:catch}
+	{:catch error}
 		<div>
 			<h1 class="mb-2 text-lg font-bold">These translations cannot be merged</h1>
 			<p class="text-sm">
 				Please ensure that the selected translations do not have conflicting changes in the
 				same depth.
+				{error.message}
 			</p>
 			<button
 				class="btn mt-4 btn-block btn-sm btn-secondary"

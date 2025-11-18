@@ -133,6 +133,10 @@ export class Partition {
 		return s <= 0 && 0 <= e;
 	}
 
+	covers(other: Partition): boolean {
+		return this.contains(other.first) && this.contains(other.last);
+	}
+
 	relativeFrom(ancestor: NodeId): Partition {
 		return new Partition(this.offset.relativeFrom(ancestor), this.size);
 	}
@@ -211,8 +215,8 @@ export class Partition {
 
 export class Dom {
 	private constructor(
-		public readonly text: string,
-		public readonly root: Document,
+		private text: string,
+		private root: Document,
 	) {}
 
 	static load(text: string) {
@@ -231,6 +235,10 @@ export class Dom {
 			withEndIndices: true,
 		});
 		return new Dom(text, root);
+	}
+
+	get document(): Readonly<Document> {
+		return this.root;
 	}
 
 	getNode(nodeId: NodeId): AnyNode {
@@ -298,10 +306,11 @@ export class Dom {
 		return result;
 	}
 
-	// TODO: Optimize to avoid multiple DOM parsing
 	async mergeSubstitutions(substitutions: Substitution[]): Promise<Substitution> {
-		substitutions = substitutions.toSorted((a, b) =>
-			Partition.totalOrderCompare(a.partition, b.partition),
+		if (substitutions.length === 0) throw new Error("No substitutions to merge");
+
+		substitutions = substitutions.toSorted(
+			(a, b) => -Partition.totalOrderCompare(a.partition, b.partition),
 		);
 
 		const partitions = substitutions.map((tr) => tr.partition);
@@ -309,19 +318,50 @@ export class Dom {
 			throw new Error("Some partitions are overlapping or identical");
 		}
 
-		substitutions = substitutions
-			.toSorted((a, b) => b.partition.size - a.partition.size)
-			.sort((a, b) => a.partition.first.length - b.partition.first.length);
-
-		let result = this.text;
-		let dom = this as Dom;
-		for (const substitution of substitutions) {
-			result = dom.substituteAll([substitution]);
-			dom = await Dom.loadAsync(result);
+		const stack: { partition: Partition; dom: Dom }[] = [];
+		const doms = substitutions.map((s) => Dom.loadAsync(s.content));
+		for (let i = 0; i < substitutions.length; i++) {
+			const dom = await doms[i];
+			const { partition } = substitutions[i];
+			while (stack.length && partition.covers(stack[stack.length - 1].partition)) {
+				const top = stack.pop()!;
+				const path = top.partition.first.path.slice(partition.first.parent!.length);
+				path.splice(0, 1, path[0] - partition.first.leafOrder!);
+				const relative = new Partition(new NodeId(path), top.partition.size);
+				dom.substituteSelf(relative, top.dom);
+			}
+			stack.push({ partition, dom });
 		}
 
-		const covering = Partition.coveringAll(substitutions.map((tr) => tr.partition));
-		return { partition: covering, content: dom.extractContent(covering) };
+		const partition = Partition.covering(
+			stack[stack.length - 1].partition.first,
+			stack[0].partition.last,
+		);
+		const start = this.getNode(partition.first).startIndex!;
+		const end = this.getNode(partition.last).endIndex! + 1;
+
+		let content = this.text.slice(start, end);
+		for (const { partition, dom } of stack) {
+			const s = this.getNode(partition.first).startIndex! - start;
+			const e = this.getNode(partition.last).endIndex! + 1 - start;
+			content = content.slice(0, s) + dom.text + content.slice(e);
+		}
+
+		return { partition, content };
+	}
+
+	// TODO: Throw error if structure cannot be matched.
+	substituteSelf(subpartition: Partition, dom: Dom): void {
+		const parent = this.getNode(subpartition.first.parent!);
+		const start = this.getNode(subpartition.first).startIndex!;
+		const end = this.getNode(subpartition.last).endIndex! + 1;
+		if (start == null || end == null || !("children" in parent)) return;
+		parent.children.splice(
+			subpartition.first.leafOrder!,
+			subpartition.size,
+			...dom.root.children,
+		);
+		this.text = this.text.slice(0, start) + dom.text + this.text.slice(end);
 	}
 
 	traverse(callback: (traversal: DomTraversal) => void): Document {

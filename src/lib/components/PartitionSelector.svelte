@@ -134,7 +134,7 @@
 		</code>
 	{:else if mode === "preview"}
 		<div class="prose max-w-none text-xs">
-			{@render tree((await dom).root, NodeId.root())}
+			{@render tree((await dom).document, NodeId.root())}
 		</div>
 	{/if}
 </div>

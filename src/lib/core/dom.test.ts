@@ -252,8 +252,8 @@ suite("Dom", () => {
 		const entries: DomTraversal[] = [];
 		let result = dom.traverse((entry) => entries.push(entry));
 		expect(entries).toEqual([
-			{ node: dom.root, nodeId: NodeId.root(), open: true, close: false },
-			{ node: dom.root, nodeId: NodeId.root(), open: false, close: true },
+			{ node: dom.document, nodeId: NodeId.root(), open: true, close: false },
+			{ node: dom.document, nodeId: NodeId.root(), open: false, close: true },
 		]);
 		expect(result).not.toBe(dom);
 
@@ -313,6 +313,37 @@ suite("Dom", () => {
 		partition: Partition.parse("0/1/1/0-0"),
 		content: "a!/b!/b!",
 	};
+	const tr4 = {
+		partition: Partition.parse("0/1/1-1"),
+		content: formatXml`
+			<tag1>a?/b?/b?</tag1>
+		`,
+	};
+
+	const tr5 = {
+		partition: Partition.parse("0/1/0/0-0"),
+		content: "a?/b?/a?",
+	};
+
+	const tr6 = {
+		partition: Partition.parse("0/0/0-2"),
+		content: formatXml`
+			<tag0>a?/a?/a?</tag0>
+			<tag1>a?/a?/b?</tag1>
+			<tag2>a?/a?/c?</tag2>
+		`,
+	};
+
+	const tr7 = {
+		partition: Partition.parse("0/0/1-1"),
+		content: formatXml`
+			<tag1>a!/a!/b!</tag1>
+		`,
+	};
+	const tr8 = {
+		partition: Partition.parse("0/0/2/0-0"),
+		content: "a!/a!/c!",
+	};
 
 	test("substituteAll", () => {
 		const dom = Dom.load(sampleXml);
@@ -343,6 +374,7 @@ suite("Dom", () => {
 
 	test("mergeSubstitutions", async () => {
 		const dom = Dom.load(sampleXml);
+
 		expect(await dom.mergeSubstitutions([tr0, tr1, tr2, tr3])).toEqual({
 			partition: Partition.parse("0/0-1"),
 			content: formatXml`
@@ -356,6 +388,31 @@ suite("Dom", () => {
 					<tag1>a!/b!/b!</tag1>
 					<tag2>a/b/c</tag2>
 				</tag1>
+		       `,
+		});
+
+		expect(await dom.mergeSubstitutions([tr1, tr4])).toEqual({
+			partition: Partition.parse("0/1/0-1"),
+			content: formatXml`
+				<tag0>a/b/a</tag0>
+				<tag1>a?/b?/b?</tag1>
+		       `,
+		});
+
+		expect(await dom.mergeSubstitutions([tr1, tr5])).toEqual({
+			partition: Partition.parse("0/1/0-1"),
+			content: formatXml`
+				<tag0>a?/b?/a?</tag0>
+				<tag1>a/b/b</tag1>
+		       `,
+		});
+
+		expect(await dom.mergeSubstitutions([tr6, tr7, tr8])).toEqual({
+			partition: Partition.parse("0/0/0-2"),
+			content: formatXml`
+				<tag0>a?/a?/a?</tag0>
+				<tag1>a!/a!/b!</tag1>
+				<tag2>a!/a!/c!</tag2>
 	        `,
 		});
 	});
