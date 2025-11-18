@@ -25,12 +25,14 @@
 	});
 
 	let generating = $state(false);
+	let generationErrorMessage = $state<string | null>(null);
 
 	async function handleGenerateTranslation(this: HTMLFormElement, event: SubmitEvent) {
 		event.preventDefault();
 
 		try {
 			generating = true;
+			generationErrorMessage = null;
 
 			const form = new FormData(this);
 			const additionalPrompt = form.get("prompt");
@@ -45,17 +47,18 @@
 				headers: { "Content-Type": "application/json" },
 				payload: JSON.stringify({ instructions, input: await original }),
 			});
-			await new Promise((resolve, reject) => {
+			await new Promise<void>((resolve, reject) => {
 				sse.addEventListener("open", () => (translated = ""));
-				sse.addEventListener("error", reject);
 				sse.addEventListener("message", (event: { data: string }) => {
 					translated += JSON.parse(event.data);
 				});
-				sse.addEventListener("done", () => {
-					sse.close();
-					resolve(void 0);
+				sse.addEventListener("done", () => resolve());
+				sse.addEventListener("error", (event: unknown) => {
+					reject(new Error("SSE connection error", { cause: event }));
 				});
 			});
+		} catch (error) {
+			generationErrorMessage = error instanceof Error ? error.message : String(error);
 		} finally {
 			generating = false;
 		}
@@ -92,6 +95,7 @@
 				placeholder="Additional prompt (optional)"
 				spellcheck={false}
 			></textarea>
+			<p class="label inline-flex text-error">{generationErrorMessage}</p>
 			<button
 				type="submit"
 				class="btn ml-auto flex btn-soft btn-xs"

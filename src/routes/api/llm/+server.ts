@@ -25,16 +25,15 @@ export async function POST({ request }) {
 	});
 
 	const { readable, writable } = new TransformStream();
-	const encoder = new TextEncoder();
 
 	stream.then(async (stream) => {
 		const writer = writable.getWriter();
+		const encoder = new TextEncoder();
 		try {
 			for await (const event of stream) {
 				if (event.type !== "response.output_text.delta") continue;
-				writer.write(
-					encoder.encode(`event: message\ndata: ${JSON.stringify(event.delta)}\n\n`),
-				);
+				const data = JSON.stringify(event.delta);
+				writer.write(encoder.encode(`event: message\ndata: ${data}\n\n`));
 			}
 			writer.write(encoder.encode(`event: done\ndata: null\n\n`));
 			writer.close();
