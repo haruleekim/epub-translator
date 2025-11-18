@@ -194,6 +194,27 @@ suite("Partition", () => {
 		result = Partition.totalOrderCompare(pid("1/1-4"), pid("1/3-5"));
 		expect(result).toBeLessThan(0);
 	});
+
+	test("checkMergeable", () => {
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/0-1")])).toBe(true);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/0-2")])).toBe(false);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/0-3")])).toBe(false);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/0-4")])).toBe(true);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/0-5")])).toBe(true);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/1-2")])).toBe(false);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/1-3")])).toBe(false);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/1-4")])).toBe(true);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/1-5")])).toBe(true);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/2-2")])).toBe(true);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/2-3")])).toBe(true);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/2-4")])).toBe(false);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/2-5")])).toBe(true);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/3-3")])).toBe(true);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/3-4")])).toBe(true);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/3-5")])).toBe(false);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/4-4")])).toBe(true);
+		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/4-5")])).toBe(false);
+	});
 });
 
 suite("Dom", () => {

@@ -177,6 +177,26 @@ export class Partition {
 		return false;
 	}
 
+	static checkMergeable(partitions: Partition[], skipSort: boolean = false): boolean {
+		if (!skipSort) partitions = partitions.toSorted(Partition.totalOrderCompare);
+		for (let i = 0; i < partitions.length - 1; i++) {
+			for (let j = i + 1; j < partitions.length; j++) {
+				const a = partitions[i];
+				const b = partitions[j];
+				if (NodeId.compare(a.offset.parent!, b.offset.parent!) !== 0) break;
+
+				const p = NodeId.compare(a.first, b.first);
+				const q = NodeId.compare(a.last.sibling(1)!, b.last.sibling(1)!);
+				if (p == 0 && q == 0) return false;
+
+				const r = NodeId.compare(a.first, b.last.sibling(1)!);
+				const s = NodeId.compare(a.last.sibling(1)!, b.first);
+				if (p * q > 0 && r * s < 0) return false;
+			}
+		}
+		return true;
+	}
+
 	static compare(p1: Partition, p2: Partition): number {
 		if (_.isEqual(p1.offset, p2.offset) && p1.size === p2.size) return 0;
 		if (NodeId.compare(p1.last, p2.first) < 0) return -1;
@@ -185,7 +205,7 @@ export class Partition {
 	}
 
 	static totalOrderCompare(p1: Partition, p2: Partition): number {
-		return NodeId.totalOrderCompare(p1.offset, p2.offset) || p1.size - p2.size;
+		return NodeId.totalOrderCompare(p1.offset, p2.offset) || p2.size - p1.size;
 	}
 }
 
@@ -237,8 +257,9 @@ export class Dom {
 	}
 
 	substituteAll(substitutions: Substitution[]): string {
-		substitutions = [...substitutions];
-		substitutions.sort((a, b) => Partition.totalOrderCompare(a.partition, b.partition));
+		substitutions = substitutions.toSorted((a, b) =>
+			Partition.totalOrderCompare(a.partition, b.partition),
+		);
 
 		const partitions = substitutions.map((tr) => tr.partition);
 		if (Partition.checkOverlap(partitions, true)) {
@@ -279,20 +300,13 @@ export class Dom {
 
 	// TODO: Optimize to avoid multiple DOM parsing
 	async mergeSubstitutions(substitutions: Substitution[]): Promise<Substitution> {
-		for (let i = 0; i < substitutions.length - 1; i++) {
-			for (let j = i + 1; j < substitutions.length; j++) {
-				const a = substitutions[i].partition;
-				const b = substitutions[j].partition;
-				if (a.first.length !== b.first.length) continue;
+		substitutions = substitutions.toSorted((a, b) =>
+			Partition.totalOrderCompare(a.partition, b.partition),
+		);
 
-				const p = NodeId.compare(a.first, b.first);
-				const q = NodeId.compare(a.last.sibling(1)!, b.last.sibling(1)!);
-				if (p == 0 && q == 0) throw new Error("Some partitions are identical");
-
-				const r = NodeId.compare(a.first, b.last.sibling(1)!);
-				const s = NodeId.compare(a.last.sibling(1)!, b.first);
-				if (p * q > 0 && r * s < 0) throw new Error("Some partitions overlap");
-			}
+		const partitions = substitutions.map((tr) => tr.partition);
+		if (!Partition.checkMergeable(partitions, true)) {
+			throw new Error("Some partitions are overlapping or identical");
 		}
 
 		substitutions = substitutions
