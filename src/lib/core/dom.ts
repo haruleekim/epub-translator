@@ -170,15 +170,15 @@ export class Partition {
 		return Partition.covering(first, last);
 	}
 
-	static checkOverlap(partitions: Partition[], skipSort: boolean = false): boolean {
+	static checkDisjoint(partitions: Partition[], skipSort: boolean = false): boolean {
 		if (!skipSort) partitions = partitions.toSorted(Partition.totalOrderCompare);
 		for (let i = 0; i < partitions.length - 1; i++) {
 			const a = partitions[i];
 			const b = partitions[i + 1];
 			const result = Partition.compare(a, b);
-			if (Number.isNaN(result) || result >= 0) return true;
+			if (Number.isNaN(result) || result >= 0) return false;
 		}
-		return false;
+		return true;
 	}
 
 	static checkMergeable(partitions: Partition[], skipSort: boolean = false): boolean {
@@ -272,7 +272,7 @@ export class Dom {
 		);
 
 		const partitions = substitutions.map((tr) => tr.partition);
-		if (Partition.checkOverlap(partitions, true)) {
+		if (!Partition.checkDisjoint(partitions, true)) {
 			throw new Error("Overlapping partitions");
 		}
 

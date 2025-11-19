@@ -185,7 +185,7 @@ export default class Project {
 				if (!translation) throw new Error(`Translation not found: ${id}`);
 				return translation.partition;
 			});
-			return Partition.checkOverlap(partitions);
+			return !Partition.checkDisjoint(partitions);
 		});
 		return results.some(_.identity);
 	}
