@@ -308,6 +308,22 @@ export class Dom {
 		return result;
 	}
 
+	substituteSelf(subpartition: Partition, dom: Dom): void {
+		const parent = this.getNode(subpartition.first.parent!);
+		const startNode = this.getNode(subpartition.first);
+		const endNode = this.getNode(subpartition.last);
+		if (startNode == null || endNode == null || parent == null || !("children" in parent)) {
+			throw new Error("Node not found or invalid");
+		}
+		parent.children.splice(
+			subpartition.first.leafOrder!,
+			subpartition.size,
+			...dom.root.children,
+		);
+		const [start, end] = [startNode.startIndex!, endNode.endIndex! + 1];
+		this.text = this.text.slice(0, start) + dom.text + this.text.slice(end);
+	}
+
 	async mergeSubstitutions(substitutions: Substitution[]): Promise<Substitution> {
 		if (substitutions.length === 0) throw new Error("No substitutions to merge");
 
@@ -352,22 +368,6 @@ export class Dom {
 		}
 
 		return { partition, content };
-	}
-
-	substituteSelf(subpartition: Partition, dom: Dom): void {
-		const parent = this.getNode(subpartition.first.parent!);
-		const startNode = this.getNode(subpartition.first);
-		const endNode = this.getNode(subpartition.last);
-		if (startNode == null || endNode == null || parent == null || !("children" in parent)) {
-			throw new Error("Node not found or invalid");
-		}
-		parent.children.splice(
-			subpartition.first.leafOrder!,
-			subpartition.size,
-			...dom.root.children,
-		);
-		const [start, end] = [startNode.startIndex!, endNode.endIndex! + 1];
-		this.text = this.text.slice(0, start) + dom.text + this.text.slice(end);
 	}
 
 	traverse(callback: (traversal: DomTraversal) => void): Document {
