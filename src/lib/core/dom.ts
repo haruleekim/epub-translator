@@ -137,10 +137,6 @@ export class Partition {
 		return this.contains(other.first) && this.contains(other.last);
 	}
 
-	relativeFrom(ancestor: NodeId): Partition {
-		return new Partition(this.offset.relativeFrom(ancestor), this.size);
-	}
-
 	static covering(start: NodeId, end: NodeId): Partition {
 		const commonAncestor = NodeId.commonAncestor(start, end);
 		const ordering = NodeId.compare(start, end);
@@ -154,20 +150,6 @@ export class Partition {
 		} else {
 			return new Partition(commonAncestor);
 		}
-	}
-
-	static coveringAll(partitions: Partition[]): Partition {
-		if (partitions.length === 0) throw new Error("No partitions to cover");
-		let first = partitions[0].first;
-		let last = partitions[0].last;
-		for (let i = 1; i < partitions.length; i++) {
-			const p = partitions[i];
-			const firstOrd = NodeId.compare(p.first, first);
-			const lastOrd = NodeId.compare(p.last, last);
-			if (firstOrd < 0 || (!firstOrd && p.first.length < first.length)) first = p.first;
-			if (lastOrd > 0 || (!lastOrd && p.last.length < last.length)) last = p.last;
-		}
-		return Partition.covering(first, last);
 	}
 
 	static checkDisjoint(partitions: Partition[], skipSort: boolean = false): boolean {
