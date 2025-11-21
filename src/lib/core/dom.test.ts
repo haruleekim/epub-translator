@@ -247,23 +247,21 @@ suite("Dom", () => {
 		</tag0>
 	`;
 
-	test("traverse", () => {
+	test("iterate", () => {
 		let dom = Dom.load("");
 		const entries: DomTraversal[] = [];
-		let result = dom.traverse((entry) => entries.push(entry));
+		for (const entry of dom) entries.push(entry);
 		expect(entries).toEqual([
 			{ node: dom.document, nodeId: NodeId.root(), open: true, close: false },
 			{ node: dom.document, nodeId: NodeId.root(), open: false, close: true },
 		]);
-		expect(result).not.toBe(dom);
 
 		dom = Dom.load(sampleXml);
 		const stack: string[] = [];
-		result = dom.traverse(({ nodeId, open, close }) => {
+		for (const { nodeId, open, close } of dom) {
 			if (open) stack.push(nodeId.toString());
 			if (close) expect(stack.pop()).toBe(nodeId.toString());
-		});
-		expect(result).not.toBe(dom);
+		}
 	});
 
 	test("tokenize", () => {
@@ -337,7 +335,7 @@ suite("Dom", () => {
 	const tr7 = {
 		partition: Partition.parse("0/0/1-1"),
 		content: formatXml`
-			<tag1>a!/a!/b!</tag1>
+			<tag1>a!!/a!!/b!!</tag1>
 		`,
 	};
 	const tr8 = {
@@ -411,7 +409,7 @@ suite("Dom", () => {
 			partition: Partition.parse("0/0/0-2"),
 			content: formatXml`
 				<tag0>a?/a?/a?</tag0>
-				<tag1>a!/a!/b!</tag1>
+				<tag1>a!!/a!!/b!!</tag1>
 				<tag2>a!/a!/c!</tag2>
 	        `,
 		});

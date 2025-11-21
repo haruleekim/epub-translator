@@ -352,26 +352,15 @@ export class Dom {
 		return { partition, content };
 	}
 
-	traverse(callback: (traversal: DomTraversal) => void): Document {
-		const iterator = this[Symbol.iterator]();
-		while (true) {
-			const { done, value } = iterator.next();
-			if (done) return value;
-			callback(value);
-		}
-	}
-
 	*[Symbol.iterator](): Generator<DomTraversal, Document> {
-		const root = this.root.cloneNode(true);
+		yield { nodeId: NodeId.root(), node: this.root, open: true, close: false };
 
-		yield { nodeId: NodeId.root(), node: root, open: true, close: false };
-
-		if (!root.firstChild) {
-			yield { nodeId: NodeId.root(), node: root, open: false, close: true };
-			return root;
+		if (!this.root.firstChild) {
+			yield { nodeId: NodeId.root(), node: this.root, open: false, close: true };
+			return this.root;
 		}
 
-		let node = root.firstChild;
+		let node = this.root.firstChild;
 		let nodeId: NodeId | null = new NodeId([0]);
 
 		while (nodeId && node.parent) {
@@ -394,7 +383,7 @@ export class Dom {
 			}
 		}
 
-		return root;
+		return this.root;
 	}
 
 	tokenize(): Token[] {

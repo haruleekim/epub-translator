@@ -36,7 +36,7 @@
 		const dom = await Dom.loadAsync(content);
 
 		const promises: Promise<void>[] = [];
-		const doc = dom.traverse(({ node, nodeId, close }) => {
+		for (const { node, nodeId, close } of dom) {
 			if (close || !(node.type === "tag")) return;
 			node.attribs[NODE_ID_ATTRIBUTE] = nodeId.toString();
 			if (transformUrl) {
@@ -50,10 +50,10 @@
 					}
 				}
 			}
-		});
+		}
 		await Promise.all(promises);
 
-		return render(doc, DOM_OPTIONS);
+		return render(dom.document, DOM_OPTIONS);
 	});
 </script>
 
