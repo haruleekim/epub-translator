@@ -290,7 +290,7 @@ export class Dom {
 		return result;
 	}
 
-	substituteSelf(subpartition: Partition, dom: Dom): void {
+	#substituteSelf(subpartition: Partition, dom: Dom): void {
 		const parent = this.getNode(subpartition.first.parent!);
 		const startNode = this.getNode(subpartition.first);
 		const endNode = this.getNode(subpartition.last);
@@ -328,7 +328,7 @@ export class Dom {
 				const path = top.partition.first.path.slice(partition.first.parent!.length);
 				path.splice(0, 1, path[0] - partition.first.leafOrder!);
 				const relative = new Partition(new NodeId(path), top.partition.size);
-				dom.substituteSelf(relative, top.dom);
+				dom.#substituteSelf(relative, top.dom);
 			}
 			stack.push({ partition, dom });
 		}
