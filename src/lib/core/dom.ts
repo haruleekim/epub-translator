@@ -297,12 +297,27 @@ export class Dom {
 		if (startNode == null || endNode == null || parent == null || !("children" in parent)) {
 			throw new Error("Node not found or invalid");
 		}
+		const [start, end] = [startNode.startIndex!, endNode.endIndex! + 1];
+		for (const { node, close } of dom) {
+			if (close) continue;
+			node.startIndex! += start;
+			node.endIndex! += start;
+		}
+		const diff = dom.text.length - (end - start);
+		let applyDiff = false;
+		for (const { node, open, close } of this) {
+			if (!applyDiff) {
+				if (node === endNode) applyDiff = true;
+				continue;
+			}
+			if (open) node.startIndex! += diff;
+			if (close) node.endIndex! += diff;
+		}
 		parent.children.splice(
 			subpartition.first.leafOrder!,
 			subpartition.size,
 			...dom.root.children,
 		);
-		const [start, end] = [startNode.startIndex!, endNode.endIndex! + 1];
 		this.text = this.text.slice(0, start) + dom.text + this.text.slice(end);
 	}
 
