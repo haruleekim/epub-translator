@@ -37,7 +37,7 @@
 
 		const promises: Promise<void>[] = [];
 		for (const { node, nodeId, close } of dom) {
-			if (close || !(node.type === "tag")) return;
+			if (close || !(node.type === "tag")) continue;
 			node.attribs[NODE_ID_ATTRIBUTE] = nodeId.toString();
 			if (transformUrl) {
 				for (const attr of REFERENCING_ATTRIBUTES) {
