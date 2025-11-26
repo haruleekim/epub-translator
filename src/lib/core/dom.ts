@@ -163,26 +163,6 @@ export class Partition {
 		return true;
 	}
 
-	static checkMergeable(partitions: Partition[], skipSort: boolean = false): boolean {
-		if (!skipSort) partitions = partitions.toSorted(Partition.totalOrderCompare);
-		for (let i = 0; i < partitions.length - 1; i++) {
-			for (let j = i + 1; j < partitions.length; j++) {
-				const a = partitions[i];
-				const b = partitions[j];
-				if (NodeId.compare(a.offset.parent!, b.offset.parent!) !== 0) break;
-
-				const p = NodeId.compare(a.first, b.first);
-				const q = NodeId.compare(a.last.sibling(1)!, b.last.sibling(1)!);
-				if (p == 0 && q == 0) return false;
-
-				const r = NodeId.compare(a.first, b.last.sibling(1)!);
-				const s = NodeId.compare(a.last.sibling(1)!, b.first);
-				if (p * q > 0 && r * s < 0) return false;
-			}
-		}
-		return true;
-	}
-
 	static compare(p1: Partition, p2: Partition): number {
 		if (_.isEqual(p1.offset, p2.offset) && p1.size === p2.size) return 0;
 		if (NodeId.compare(p1.last, p2.first) < 0) return -1;
@@ -328,11 +308,6 @@ export class Dom {
 			(a, b) => -Partition.totalOrderCompare(a.partition, b.partition),
 		);
 
-		const partitions = substitutions.map((tr) => tr.partition);
-		if (!Partition.checkMergeable(partitions, true)) {
-			throw new Error("Some partitions are overlapping or identical");
-		}
-
 		const stack: { partition: Partition; dom: Dom }[] = [];
 		const doms = substitutions.map((s) => Dom.loadAsync(s.content));
 		for (let i = 0; i < substitutions.length; i++) {
@@ -340,10 +315,19 @@ export class Dom {
 			const { partition } = substitutions[i];
 			while (stack.length && partition.covers(stack[stack.length - 1].partition)) {
 				const top = stack.pop()!;
+				if (Partition.compare(top.partition, partition) === 0) {
+					throw new Error("Identical partitions");
+				}
 				const path = top.partition.first.path.slice(partition.first.parent!.length);
 				path.splice(0, 1, path[0] - partition.first.leafOrder!);
 				const relative = new Partition(new NodeId(path), top.partition.size);
 				dom.#substituteSelf(relative, top.dom);
+			}
+			if (stack.length) {
+				const top = stack[stack.length - 1];
+				if (NodeId.compare(top.partition.first, partition.last) <= 0) {
+					throw new Error("Overlapping partitions");
+				}
 			}
 			stack.push({ partition, dom });
 		}

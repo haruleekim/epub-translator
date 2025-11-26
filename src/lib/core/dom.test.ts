@@ -194,27 +194,6 @@ suite("Partition", () => {
 		result = Partition.totalOrderCompare(pid("1/1-4"), pid("1/3-5"));
 		expect(result).toBeLessThan(0);
 	});
-
-	test("checkMergeable", () => {
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/0-1")])).toBe(true);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/0-2")])).toBe(false);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/0-3")])).toBe(false);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/0-4")])).toBe(true);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/0-5")])).toBe(true);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/1-2")])).toBe(false);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/1-3")])).toBe(false);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/1-4")])).toBe(true);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/1-5")])).toBe(true);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/2-2")])).toBe(true);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/2-3")])).toBe(true);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/2-4")])).toBe(false);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/2-5")])).toBe(true);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/3-3")])).toBe(true);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/3-4")])).toBe(true);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/3-5")])).toBe(false);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/4-4")])).toBe(true);
-		expect(Partition.checkMergeable([pid("1/1/2-4"), pid("1/1/4-5")])).toBe(false);
-	});
 });
 
 suite("Dom", () => {
@@ -294,6 +273,7 @@ suite("Dom", () => {
 			</tag0>
 		`,
 	};
+
 	const tr1 = {
 		partition: Partition.parse("0/1/0-1"),
 		content: formatXml`
@@ -301,16 +281,19 @@ suite("Dom", () => {
 			<tag1>a/b/b</tag1>
 		`,
 	};
+
 	const tr2 = {
 		partition: Partition.parse("0/1/2-2"),
 		content: formatXml`
 			<tag2>a/b/c</tag2>
 		`,
 	};
+
 	const tr3 = {
 		partition: Partition.parse("0/1/1/0-0"),
 		content: "a!/b!/b!",
 	};
+
 	const tr4 = {
 		partition: Partition.parse("0/1/1-1"),
 		content: formatXml`
@@ -338,9 +321,18 @@ suite("Dom", () => {
 			<tag1>a!!/a!!/b!!</tag1>
 		`,
 	};
+
 	const tr8 = {
 		partition: Partition.parse("0/0/2/0-0"),
 		content: "a!/a!/c!",
+	};
+
+	const tr9 = {
+		partition: Partition.parse("0/1/1-2"),
+		content: formatXml`
+			<tag1>a/b/b</tag1>
+			<tag2>a/b/c</tag2>
+		`,
 	};
 
 	test("substituteAll", () => {
@@ -386,15 +378,19 @@ suite("Dom", () => {
 					<tag1>a!/b!/b!</tag1>
 					<tag2>a/b/c</tag2>
 				</tag1>
-		       `,
+	       `,
 		});
+
+		expect(dom.mergeSubstitutions([tr0, tr1, tr2, tr3, tr3])).rejects.toThrow();
+
+		expect(dom.mergeSubstitutions([tr0, tr1, tr2, tr3, tr9])).rejects.toThrow();
 
 		expect(await dom.mergeSubstitutions([tr1, tr4])).toEqual({
 			partition: Partition.parse("0/1/0-1"),
 			content: formatXml`
 				<tag0>a/b/a</tag0>
 				<tag1>a?/b?/b?</tag1>
-		       `,
+	       `,
 		});
 
 		expect(await dom.mergeSubstitutions([tr1, tr5])).toEqual({
@@ -402,7 +398,7 @@ suite("Dom", () => {
 			content: formatXml`
 				<tag0>a?/b?/a?</tag0>
 				<tag1>a/b/b</tag1>
-		       `,
+	       `,
 		});
 
 		expect(await dom.mergeSubstitutions([tr6, tr7, tr8])).toEqual({
